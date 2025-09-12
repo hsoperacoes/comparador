@@ -28,13 +28,6 @@
     .pill{background:#222;padding:6px 10px;border-radius:8px}
     .section-title{margin:4px 0 10px;font-weight:700}
     .right{margin-left:auto}
-
-    /* ===== EMBED do App Web ===== */
-    .embed-panel{background:var(--panel);padding:16px;border-radius:10px}
-    .iframe-wrap{width:100%;height:calc(100vh - 190px);background:#111;border-radius:10px;overflow:hidden;border:1px solid #2c2c2c}
-    .iframe-wrap iframe{width:100%;height:100%;border:0;background:#111}
-    .open-btn{padding:10px 12px;border-radius:8px;border:0;background:var(--pri);color:#fff;font-weight:600;cursor:pointer}
-    @media (max-width:768px){ .iframe-wrap{height:calc(100vh - 160px)} }
   </style>
 </head>
 <body>
@@ -42,26 +35,7 @@
 
     <h1>Precificação — HS</h1>
 
-    <!-- NOVO: painel com o App Web embutido -->
-    <div class="embed-panel">
-      <div class="row">
-        <button class="open-btn" onclick="abrirPrecificacaoNovaAba()">Abrir em nova aba</button>
-        <span id="precificacaoStatus" class="muted">Carregando…</span>
-      </div>
-      <div class="iframe-wrap">
-        <iframe
-          id="precificacaoFrame"
-          src="https://script.google.com/macros/s/AKfycbyiGm4Ms9VV-iRb7M74m3c4ySByj46eMZQEoqT37mqTuE9puKdmfvLXd0WFPqwzf5Px/exec"
-          frameborder="0"
-        ></iframe>
-      </div>
-      <div id="precificacaoFallback" class="muted" style="display:none; margin-top:10px;">
-        Não foi possível carregar dentro da página (bloqueio do navegador).
-        <a href="https://script.google.com/macros/s/AKfycbyiGm4Ms9VV-iRb7M74m3c4ySByj46eMZQEoqT37mqTuE9puKdmfvLXd0WFPqwzf5Px/exec" target="_blank" rel="noopener">Abrir em nova aba</a>.
-      </div>
-    </div>
-
-    <!-- BUSCA POR REFERÊNCIA (se você estiver fora do Apps Script, pode ignorar estes painéis abaixo) -->
+    <!-- BUSCA POR REFERÊNCIA -->
     <div class="panel">
       <div class="section-title">Buscar referência</div>
       <div class="row">
@@ -119,29 +93,6 @@
   </div>
 
   <script>
-    // ====== CONTROLE do iFrame ======
-    function abrirPrecificacaoNovaAba(){
-      window.open('https://script.google.com/macros/s/AKfycbyiGm4Ms9VV-iRb7M74m3c4ySByj46eMZQEoqT37mqTuE9puKdmfvLXd0WFPqwzf5Px/exec','_blank');
-    }
-    (function(){
-      const statusEl = document.getElementById('precificacaoStatus');
-      const frame = document.getElementById('precificacaoFrame');
-      const fallback = document.getElementById('precificacaoFallback');
-      if (!frame) return;
-      let loaded = false;
-      frame.addEventListener('load', () => {
-        loaded = true;
-        if (statusEl) statusEl.textContent = '';
-      });
-      setTimeout(() => {
-        if (!loaded) {
-          if (statusEl) statusEl.textContent = '';
-          if (fallback) fallback.style.display = 'block';
-        }
-      }, 5000);
-    })();
-
-    // ====== O QUE JÁ EXISTIA NO SEU HTML (mantido) ======
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 
     // carrega coleções nas selects
@@ -277,11 +228,8 @@
       }).apiMatrix(limit);
     };
 
-    // init — só roda dentro do Apps Script (pra não quebrar no seu site)
-    (function initIfAppsScript(){
-      const isAppsScript = typeof google !== 'undefined' && google.script && google.script.run;
-      if (isAppsScript) { loadCollections(); }
-    })();
+    // init
+    loadCollections();
   </script>
 </body>
 </html>
