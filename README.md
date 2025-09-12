@@ -1,1 +1,235 @@
-# comparador
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Precificação - HS</title>
+  <style>
+    :root { --bg:#111; --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
+    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#000;color:#fff}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    h1{margin:0 0 18px;font-size:22px}
+    .grid{display:grid;gap:16px}
+    .panel{background:var(--panel);padding:16px;border-radius:10px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:13px;color:#ddd}
+    input,select,button{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#121212;color:#fff}
+    button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
+    button.secondary{background:#2f2f2f}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px}
+    th{background:#151515;text-align:left}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+    .ok{background:rgba(40,167,69,.15);color:#6fe18b}
+    .warn{background:rgba(230,126,34,.15);color:#f8b37a}
+    .err{background:rgba(229,57,53,.15);color:#ff9a9a}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{background:#222;padding:6px 10px;border-radius:8px}
+    .section-title{margin:4px 0 10px;font-weight:700}
+    .right{margin-left:auto}
+  </style>
+</head>
+<body>
+  <div class="wrap grid">
+
+    <h1>Precificação — HS</h1>
+
+    <!-- BUSCA POR REFERÊNCIA -->
+    <div class="panel">
+      <div class="section-title">Buscar referência</div>
+      <div class="row">
+        <label>Referência</label>
+        <input id="refInput" placeholder="Ex.: 2441406" style="min-width:200px"/>
+        <button id="btnBuscarRef">Buscar</button>
+        <span id="refStatus" class="muted"></span>
+      </div>
+
+      <div id="refResumo" class="row" style="margin-top:10px;display:none">
+        <span class="pill">Maior preço: <strong id="refMax"></strong></span>
+        <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
+      </div>
+
+      <div id="refTabelaWrap"></div>
+    </div>
+
+    <!-- COMPARAR COLEÇÕES -->
+    <div class="panel">
+      <div class="section-title">Comparar coleções</div>
+      <div class="row">
+        <label>Coleção A</label>
+        <select id="collA"></select>
+        <label>Coleção B</label>
+        <select id="collB"></select>
+        <button id="btnComparar">Comparar</button>
+        <button id="btnSomenteAlterou" class="secondary">Mostrar apenas “Alterou”</button>
+        <span id="cmpStatus" class="muted right"></span>
+      </div>
+      <div id="cmpTabelaWrap"></div>
+    </div>
+
+    <!-- MAX POR REFERÊNCIA -->
+    <div class="panel">
+      <div class="section-title">Maior preço por referência</div>
+      <div class="row">
+        <button id="btnMax">Gerar/Atualizar</button>
+        <span class="muted">Lista todas as referências com seu maior preço no período.</span>
+      </div>
+      <div id="maxTabelaWrap"></div>
+    </div>
+
+    <!-- MATRIZ PREÇOS x COLEÇÕES -->
+    <div class="panel">
+      <div class="section-title">Matriz preços x coleções</div>
+      <div class="row">
+        <label>Limitar primeiras N referências (opcional)</label>
+        <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
+        <button id="btnMatriz">Gerar</button>
+        <span id="matStatus" class="muted right"></span>
+      </div>
+      <div id="matTabelaWrap"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+
+    // carrega coleções nas selects
+    function loadCollections(){
+      google.script.run.withSuccessHandler(colls=>{
+        const a = document.getElementById('collA');
+        const b = document.getElementById('collB');
+        const fill = (sel)=>{ sel.innerHTML=''; colls.forEach(c=>{
+          const o=document.createElement('option'); o.value=o.textContent=c; sel.appendChild(o);
+        }); };
+        fill(a); fill(b);
+      }).apiListCollections();
+    }
+
+    // busca por referência
+    document.getElementById('btnBuscarRef').onclick = ()=>{
+      const ref = document.getElementById('refInput').value.trim();
+      const status = document.getElementById('refStatus');
+      status.textContent = 'Buscando...';
+      google.script.run.withSuccessHandler(res=>{
+        status.textContent = '';
+        const wrap = document.getElementById('refTabelaWrap');
+        wrap.innerHTML = '';
+        document.getElementById('refResumo').style.display = 'none';
+
+        if (!res || !res.items || res.items.length===0){
+          wrap.innerHTML = '<div class="muted">Nenhum dado encontrado para esta referência.</div>';
+          return;
+        }
+
+        // resumo
+        document.getElementById('refMax').textContent = fmtBR(res.max);
+        document.getElementById('refMaxCols').textContent = res.maxCollections.join(', ');
+        document.getElementById('refResumo').style.display = 'flex';
+
+        // tabela
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead><tr><th>Coleção</th><th>Preço</th></tr></thead>
+          <tbody>${res.items.map(i=>`
+            <tr><td>${i.coll}</td><td>${fmtBR(i.price)}</td></tr>
+          `).join('')}</tbody>`;
+        wrap.appendChild(table);
+      }).apiSearchReference(ref);
+    };
+
+    // comparar coleções
+    let cmpOnlyChanged = false;
+    document.getElementById('btnSomenteAlterou').onclick = ()=>{
+      cmpOnlyChanged = !cmpOnlyChanged;
+      document.getElementById('btnComparar').click();
+    };
+    document.getElementById('btnComparar').onclick = ()=>{
+      const a = document.getElementById('collA').value;
+      const b = document.getElementById('collB').value;
+      const status = document.getElementById('cmpStatus');
+      status.textContent = 'Gerando...';
+
+      google.script.run.withSuccessHandler(rows=>{
+        status.textContent = '';
+        const wrap = document.getElementById('cmpTabelaWrap');
+        wrap.innerHTML = '';
+
+        let data = rows || [];
+        if (cmpOnlyChanged) data = data.filter(r=>r.alterou);
+
+        const total = data.length;
+        const alterados = rows.filter(r=>r.alterou).length;
+        status.textContent = `Linhas: ${total} | Alterou: ${alterados}`;
+
+        if (!data.length){
+          wrap.innerHTML = '<div class="muted">Nada a exibir.</div>';
+          return;
+        }
+
+        const body = data.map(r=>`
+          <tr>
+            <td>${r.referencia}</td>
+            <td>${r.precoA==null?'-':fmtBR(r.precoA)}</td>
+            <td>${r.precoB==null?'-':fmtBR(r.precoB)}</td>
+            <td>${r.delta==null?'-':fmtBR(r.delta)}</td>
+            <td>${r.deltaPct==null?'-':(r.deltaPct*100).toFixed(2)+'%'}</td>
+            <td>${r.alterou?'<span class="badge warn">SIM</span>':'<span class="badge ok">NÃO</span>'}</td>
+          </tr>`).join('');
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead><tr>
+            <th>Referência</th><th>Preço (${a})</th><th>Preço (${b})</th>
+            <th>Δ (B - A)</th><th>Δ %</th><th>Alterou?</th>
+          </tr></thead>
+          <tbody>${body}</tbody>`;
+        wrap.appendChild(table);
+      }).apiCompareCollections(a,b);
+    };
+
+    // max por referência
+    document.getElementById('btnMax').onclick = ()=>{
+      const wrap = document.getElementById('maxTabelaWrap');
+      wrap.innerHTML = '<span class="muted">Processando...</span>';
+      google.script.run.withSuccessHandler(list=>{
+        if (!list || !list.length){
+          wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
+        }
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead><tr><th>Referência</th><th>MAX de valor</th></tr></thead>
+          <tbody>${list.map(r=>`<tr><td>${r.referencia}</td><td>${fmtBR(r.max)}</td></tr>`).join('')}</tbody>`;
+        wrap.innerHTML = ''; wrap.appendChild(table);
+      }).apiMaxByReference();
+    };
+
+    // matriz
+    document.getElementById('btnMatriz').onclick = ()=>{
+      const limit = document.getElementById('matLimit').value;
+      const status = document.getElementById('matStatus');
+      status.textContent = 'Gerando...';
+      google.script.run.withSuccessHandler(obj=>{
+        status.textContent = '';
+        const wrap = document.getElementById('matTabelaWrap');
+        wrap.innerHTML = '';
+        if (!obj || !obj.rows || !obj.rows.length){
+          wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
+        }
+        const head = '<tr>' + obj.header.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+        const body = obj.rows.map(row=>{
+          return '<tr>' + row.map((v,i)=> i===0 ? `<td>${v}</td>` : `<td>${v==null?'-':fmtBR(v)}</td>`).join('') + '</tr>';
+        }).join('');
+
+        const table = document.createElement('table');
+        table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+        wrap.appendChild(table);
+      }).apiMatrix(limit);
+    };
+
+    // init
+    loadCollections();
+  </script>
+</body>
+</html>
