@@ -123,12 +123,10 @@
           return;
         }
 
-        // resumo
         document.getElementById('refMax').textContent = fmtBR(res.max);
         document.getElementById('refMaxCols').textContent = res.maxCollections.join(', ');
         document.getElementById('refResumo').style.display = 'flex';
 
-        // tabela
         const table = document.createElement('table');
         table.innerHTML = `
           <thead><tr><th>Coleção</th><th>Preço</th></tr></thead>
