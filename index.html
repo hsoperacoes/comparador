@@ -93,48 +93,54 @@
   </div>
 
   <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 
+    async function api(path, params={}) {
+      const url = new URL(API_URL);
+      url.search = new URLSearchParams({action:path, ...params}).toString();
+      const res = await fetch(url);
+      return res.json();
+    }
+
     // carrega coleções nas selects
-    function loadCollections(){
-      google.script.run.withSuccessHandler(colls=>{
-        const a = document.getElementById('collA');
-        const b = document.getElementById('collB');
-        const fill = (sel)=>{ sel.innerHTML=''; colls.forEach(c=>{
-          const o=document.createElement('option'); o.value=o.textContent=c; sel.appendChild(o);
-        }); };
-        fill(a); fill(b);
-      }).apiListCollections();
+    async function loadCollections(){
+      const colls = await api("listCollections");
+      const a = document.getElementById('collA');
+      const b = document.getElementById('collB');
+      const fill = (sel)=>{ sel.innerHTML=''; colls.forEach(c=>{
+        const o=document.createElement('option'); o.value=o.textContent=c; sel.appendChild(o);
+      }); };
+      fill(a); fill(b);
     }
 
     // busca por referência
-    document.getElementById('btnBuscarRef').onclick = ()=>{
+    document.getElementById('btnBuscarRef').onclick = async ()=>{
       const ref = document.getElementById('refInput').value.trim();
       const status = document.getElementById('refStatus');
       status.textContent = 'Buscando...';
-      google.script.run.withSuccessHandler(res=>{
-        status.textContent = '';
-        const wrap = document.getElementById('refTabelaWrap');
-        wrap.innerHTML = '';
-        document.getElementById('refResumo').style.display = 'none';
+      const res = await api("searchReference",{ref});
+      status.textContent = '';
+      const wrap = document.getElementById('refTabelaWrap');
+      wrap.innerHTML = '';
+      document.getElementById('refResumo').style.display = 'none';
 
-        if (!res || !res.items || res.items.length===0){
-          wrap.innerHTML = '<div class="muted">Nenhum dado encontrado para esta referência.</div>';
-          return;
-        }
+      if (!res || !res.items || res.items.length===0){
+        wrap.innerHTML = '<div class="muted">Nenhum dado encontrado para esta referência.</div>';
+        return;
+      }
 
-        document.getElementById('refMax').textContent = fmtBR(res.max);
-        document.getElementById('refMaxCols').textContent = res.maxCollections.join(', ');
-        document.getElementById('refResumo').style.display = 'flex';
+      document.getElementById('refMax').textContent = fmtBR(res.max);
+      document.getElementById('refMaxCols').textContent = res.maxCollections.join(', ');
+      document.getElementById('refResumo').style.display = 'flex';
 
-        const table = document.createElement('table');
-        table.innerHTML = `
-          <thead><tr><th>Coleção</th><th>Preço</th></tr></thead>
-          <tbody>${res.items.map(i=>`
-            <tr><td>${i.coll}</td><td>${fmtBR(i.price)}</td></tr>
-          `).join('')}</tbody>`;
-        wrap.appendChild(table);
-      }).apiSearchReference(ref);
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead><tr><th>Coleção</th><th>Preço</th></tr></thead>
+        <tbody>${res.items.map(i=>`
+          <tr><td>${i.coll}</td><td>${fmtBR(i.price)}</td></tr>
+        `).join('')}</tbody>`;
+      wrap.appendChild(table);
     };
 
     // comparar coleções
@@ -143,87 +149,84 @@
       cmpOnlyChanged = !cmpOnlyChanged;
       document.getElementById('btnComparar').click();
     };
-    document.getElementById('btnComparar').onclick = ()=>{
+    document.getElementById('btnComparar').onclick = async ()=>{
       const a = document.getElementById('collA').value;
       const b = document.getElementById('collB').value;
       const status = document.getElementById('cmpStatus');
       status.textContent = 'Gerando...';
 
-      google.script.run.withSuccessHandler(rows=>{
-        status.textContent = '';
-        const wrap = document.getElementById('cmpTabelaWrap');
-        wrap.innerHTML = '';
+      const rows = await api("compareCollections",{a,b});
+      status.textContent = '';
+      const wrap = document.getElementById('cmpTabelaWrap');
+      wrap.innerHTML = '';
 
-        let data = rows || [];
-        if (cmpOnlyChanged) data = data.filter(r=>r.alterou);
+      let data = rows || [];
+      if (cmpOnlyChanged) data = data.filter(r=>r.alterou);
 
-        const total = data.length;
-        const alterados = rows.filter(r=>r.alterou).length;
-        status.textContent = `Linhas: ${total} | Alterou: ${alterados}`;
+      const total = data.length;
+      const alterados = rows.filter(r=>r.alterou).length;
+      status.textContent = `Linhas: ${total} | Alterou: ${alterados}`;
 
-        if (!data.length){
-          wrap.innerHTML = '<div class="muted">Nada a exibir.</div>';
-          return;
-        }
+      if (!data.length){
+        wrap.innerHTML = '<div class="muted">Nada a exibir.</div>';
+        return;
+      }
 
-        const body = data.map(r=>`
-          <tr>
-            <td>${r.referencia}</td>
-            <td>${r.precoA==null?'-':fmtBR(r.precoA)}</td>
-            <td>${r.precoB==null?'-':fmtBR(r.precoB)}</td>
-            <td>${r.delta==null?'-':fmtBR(r.delta)}</td>
-            <td>${r.deltaPct==null?'-':(r.deltaPct*100).toFixed(2)+'%'}</td>
-            <td>${r.alterou?'<span class="badge warn">SIM</span>':'<span class="badge ok">NÃO</span>'}</td>
-          </tr>`).join('');
+      const body = data.map(r=>`
+        <tr>
+          <td>${r.referencia}</td>
+          <td>${r.precoA==null?'-':fmtBR(r.precoA)}</td>
+          <td>${r.precoB==null?'-':fmtBR(r.precoB)}</td>
+          <td>${r.delta==null?'-':fmtBR(r.delta)}</td>
+          <td>${r.deltaPct==null?'-':(r.deltaPct*100).toFixed(2)+'%'}</td>
+          <td>${r.alterou?'<span class="badge warn">SIM</span>':'<span class="badge ok">NÃO</span>'}</td>
+        </tr>`).join('');
 
-        const table = document.createElement('table');
-        table.innerHTML = `
-          <thead><tr>
-            <th>Referência</th><th>Preço (${a})</th><th>Preço (${b})</th>
-            <th>Δ (B - A)</th><th>Δ %</th><th>Alterou?</th>
-          </tr></thead>
-          <tbody>${body}</tbody>`;
-        wrap.appendChild(table);
-      }).apiCompareCollections(a,b);
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead><tr>
+          <th>Referência</th><th>Preço (${a})</th><th>Preço (${b})</th>
+          <th>Δ (B - A)</th><th>Δ %</th><th>Alterou?</th>
+        </tr></thead>
+        <tbody>${body}</tbody>`;
+      wrap.appendChild(table);
     };
 
     // max por referência
-    document.getElementById('btnMax').onclick = ()=>{
+    document.getElementById('btnMax').onclick = async ()=>{
       const wrap = document.getElementById('maxTabelaWrap');
       wrap.innerHTML = '<span class="muted">Processando...</span>';
-      google.script.run.withSuccessHandler(list=>{
-        if (!list || !list.length){
-          wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
-        }
-        const table = document.createElement('table');
-        table.innerHTML = `
-          <thead><tr><th>Referência</th><th>MAX de valor</th></tr></thead>
-          <tbody>${list.map(r=>`<tr><td>${r.referencia}</td><td>${fmtBR(r.max)}</td></tr>`).join('')}</tbody>`;
-        wrap.innerHTML = ''; wrap.appendChild(table);
-      }).apiMaxByReference();
+      const list = await api("maxByReference");
+      if (!list || !list.length){
+        wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
+      }
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead><tr><th>Referência</th><th>MAX de valor</th></tr></thead>
+        <tbody>${list.map(r=>`<tr><td>${r.referencia}</td><td>${fmtBR(r.max)}</td></tr>`).join('')}</tbody>`;
+      wrap.innerHTML = ''; wrap.appendChild(table);
     };
 
     // matriz
-    document.getElementById('btnMatriz').onclick = ()=>{
+    document.getElementById('btnMatriz').onclick = async ()=>{
       const limit = document.getElementById('matLimit').value;
       const status = document.getElementById('matStatus');
       status.textContent = 'Gerando...';
-      google.script.run.withSuccessHandler(obj=>{
-        status.textContent = '';
-        const wrap = document.getElementById('matTabelaWrap');
-        wrap.innerHTML = '';
-        if (!obj || !obj.rows || !obj.rows.length){
-          wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
-        }
-        const head = '<tr>' + obj.header.map(h=>`<th>${h}</th>`).join('') + '</tr>';
-        const body = obj.rows.map(row=>{
-          return '<tr>' + row.map((v,i)=> i===0 ? `<td>${v}</td>` : `<td>${v==null?'-':fmtBR(v)}</td>`).join('') + '</tr>';
-        }).join('');
+      const obj = await api("matrix",{limit});
+      status.textContent = '';
+      const wrap = document.getElementById('matTabelaWrap');
+      wrap.innerHTML = '';
+      if (!obj || !obj.rows || !obj.rows.length){
+        wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
+      }
+      const head = '<tr>' + obj.header.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+      const body = obj.rows.map(row=>{
+        return '<tr>' + row.map((v,i)=> i===0 ? `<td>${v}</td>` : `<td>${v==null?'-':fmtBR(v)}</td>`).join('') + '</tr>';
+      }).join('');
 
-        const table = document.createElement('table');
-        table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
-        wrap.appendChild(table);
-      }).apiMatrix(limit);
+      const table = document.createElement('table');
+      table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+      wrap.appendChild(table);
     };
 
     // init
