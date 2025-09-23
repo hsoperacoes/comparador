@@ -72,19 +72,23 @@
     <div class="panel">
       <div class="section-title">Maior preço por referência</div>
       <div class="row">
+        <label>Filtrar coleção</label>
+        <select id="maxColl"></select>
         <button id="btnMax">Gerar/Atualizar</button>
-        <span class="muted">Lista todas as referências com seu maior preço no período.</span>
+        <span class="muted">Lista as referências com maior preço (todas ou só da coleção escolhida).</span>
       </div>
       <div id="maxTabelaWrap"></div>
     </div>
 
     <!-- MATRIZ PREÇOS x COLEÇÕES -->
     <div class="panel">
-      <div class="section-title">Matriz preços x coleções</div>
+      <div class="section-title">Tabela preços x coleções</div>
       <div class="row">
         <label>Limitar primeiras N referências (opcional)</label>
         <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
-        <button id="btnMatriz">Gerar</button>
+        <label>Filtrar referência</label>
+        <input id="matSearch" placeholder="Ex.: 2441406" style="width:200px"/>
+        <button id="btnMatriz">Gerar TABELA</button>
         <span id="matStatus" class="muted right"></span>
       </div>
       <div id="matTabelaWrap"></div>
@@ -108,10 +112,11 @@
       const colls = await api("listCollections");
       const a = document.getElementById('collA');
       const b = document.getElementById('collB');
-      const fill = (sel)=>{ sel.innerHTML=''; colls.forEach(c=>{
+      const m = document.getElementById('maxColl');
+      const fill = (sel)=>{ sel.innerHTML='<option value="">Todas</option>'; colls.forEach(c=>{
         const o=document.createElement('option'); o.value=o.textContent=c; sel.appendChild(o);
       }); };
-      fill(a); fill(b);
+      fill(a); fill(b); fill(m);
     }
 
     // busca por referência
@@ -194,9 +199,10 @@
 
     // max por referência
     document.getElementById('btnMax').onclick = async ()=>{
+      const coll = document.getElementById('maxColl').value;
       const wrap = document.getElementById('maxTabelaWrap');
       wrap.innerHTML = '<span class="muted">Processando...</span>';
-      const list = await api("maxByReference");
+      const list = await api("maxByReference",{coll});
       if (!list || !list.length){
         wrap.innerHTML = '<div class="muted">Sem dados.</div>'; return;
       }
@@ -227,6 +233,16 @@
       const table = document.createElement('table');
       table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
       wrap.appendChild(table);
+
+      // filtro de pesquisa
+      document.getElementById('matSearch').oninput = ()=>{
+        const term = document.getElementById('matSearch').value.trim().toLowerCase();
+        const rows = wrap.querySelectorAll('tbody tr');
+        rows.forEach(tr=>{
+          const ref = tr.querySelector('td')?.textContent.toLowerCase() || "";
+          tr.style.display = term && !ref.includes(term) ? "none" : "";
+        });
+      };
     };
 
     // init
