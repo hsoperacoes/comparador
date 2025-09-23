@@ -17,18 +17,32 @@
     button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
     button.secondary{background:#2f2f2f}
     button:disabled{opacity:.6;cursor:not-allowed}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px}
+    table{border-collapse:collapse;min-width:100%}
+    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px;white-space:nowrap}
     th{background:#151515;text-align:left}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
     .ok{background:rgba(40,167,69,.15);color:#6fe18b}
     .warn{background:rgba(230,126,34,.15);color:#f8b37a}
+    .err{background:rgba(229,57,53,.15);color:#ff9a9a}
     .muted{color:var(--muted);font-size:12px}
     .pill{background:#222;padding:6px 10px;border-radius:8px}
     .section-title{margin:4px 0 10px;font-weight:700}
     .right{margin-left:auto}
+    /* SCROLL COM FIXO */
     .scroll {max-height:500px; overflow:auto; border:1px solid #333; margin-top:10px;}
-    .filter-box{margin-top:8px;}
+    .scroll table th {
+      position: sticky;
+      top: 0;
+      background: #151515;
+      z-index: 2;
+    }
+    .scroll table td:first-child,
+    .scroll table th:first-child {
+      position: sticky;
+      left: 0;
+      background: #1c1c1c;
+      z-index: 3;
+    }
   </style>
 </head>
 <body>
@@ -43,17 +57,15 @@
         <label>Referência</label>
         <input id="refInput" placeholder="Ex.: 2441406" style="min-width:200px"/>
         <button id="btnBuscarRef">Buscar</button>
-        <button id="btnIncluir">Incluir na lista</button>
+        <button id="btnIncluir" class="secondary">Incluir na lista</button>
         <button id="btnFinalizar" class="secondary">Finalizar lista</button>
         <span id="refStatus" class="muted"></span>
       </div>
-
       <div id="refResumo" class="row" style="margin-top:10px;display:none">
         <span class="pill">Maior preço: <strong id="refMax"></strong></span>
         <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
       </div>
-
-      <div id="refTabelaWrap" class="scroll"></div>
+      <div id="refTabelaWrap"></div>
     </div>
 
     <!-- COMPARAR COLEÇÕES -->
@@ -68,33 +80,33 @@
         <button id="btnSomenteAlterou" class="secondary">Mostrar apenas “Alterou”</button>
         <span id="cmpStatus" class="muted right"></span>
       </div>
-      <input id="cmpFilter" placeholder="Filtrar..." class="filter-box"/>
-      <div id="cmpTabelaWrap" class="scroll"></div>
+      <div id="cmpTabelaWrap"></div>
     </div>
 
     <!-- MAX POR REFERÊNCIA -->
     <div class="panel">
       <div class="section-title">Maior preço por referência</div>
       <div class="row">
-        <label>Coleção</label>
+        <label>Filtrar coleção</label>
         <select id="maxColl"></select>
-        <button id="btnMax">Gerar</button>
+        <button id="btnMax">Gerar/Atualizar</button>
+        <span class="muted">Lista as referências com maior preço (todas ou só da coleção escolhida).</span>
       </div>
-      <input id="maxFilter" placeholder="Filtrar..." class="filter-box"/>
-      <div id="maxTabelaWrap" class="scroll"></div>
+      <div id="maxTabelaWrap"></div>
     </div>
 
-    <!-- MATRIZ -->
+    <!-- MATRIZ PREÇOS x COLEÇÕES -->
     <div class="panel">
-      <div class="section-title">Gerar tabela</div>
+      <div class="section-title">Tabela preços x coleções</div>
       <div class="row">
         <label>Limitar primeiras N referências (opcional)</label>
         <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
-        <button id="btnMatriz">Gerar</button>
+        <label>Filtrar referência</label>
+        <input id="matSearch" placeholder="Ex.: 2441406" style="width:200px"/>
+        <button id="btnMatriz">Gerar TABELA</button>
         <span id="matStatus" class="muted right"></span>
       </div>
-      <input id="matFilter" placeholder="Filtrar..." class="filter-box"/>
-      <div id="matTabelaWrap" class="scroll"></div>
+      <div id="matTabelaWrap"></div>
     </div>
 
   </div>
@@ -102,91 +114,64 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
-    let listaTemp = [];
+    let listaTemp=[];
 
     async function api(path, params={}) {
-      const url = new URL(API_URL);
-      url.search = new URLSearchParams({action:path, ...params}).toString();
-      const res = await fetch(url);
+      const url=new URL(API_URL);
+      url.search=new URLSearchParams({action:path,...params}).toString();
+      const res=await fetch(url);
       return res.json();
     }
     async function postData(payload){
-      const res = await fetch(API_URL, {
-        method:"POST",
-        body: JSON.stringify(payload),
-        headers: {"Content-Type":"application/json"}
-      });
+      const res=await fetch(API_URL,{method:'POST',body:JSON.stringify(payload)});
       return res.json();
     }
 
-    function renderTable(id, head, rows){
-      const wrap = document.getElementById(id);
-      wrap.innerHTML = '';
-      if (!rows.length){ wrap.innerHTML='<div class="muted">Nada encontrado.</div>'; return; }
-      const table = document.createElement('table');
-      table.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-                         <tbody>${rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')}</tbody>`;
-      wrap.appendChild(table);
-    }
-    function addFilter(inputId, wrapId){
-      const inp = document.getElementById(inputId);
-      inp.oninput = ()=>{
-        const val = inp.value.toLowerCase();
-        const rows = document.querySelectorAll(`#${wrapId} tbody tr`);
-        rows.forEach(r=>{
-          r.style.display = r.textContent.toLowerCase().includes(val)?'':'none';
-        });
-      };
+    function renderTable(containerId, head, rows){
+      const wrap=document.getElementById(containerId);
+      wrap.innerHTML='';
+      const table=document.createElement('table');
+      table.innerHTML=`<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+                       <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      const scroll=document.createElement('div');
+      scroll.className='scroll';
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
     }
 
-    // carrega coleções
     async function loadCollections(){
-      const colls = await api("listCollections");
-      ["collA","collB","maxColl"].forEach(id=>{
-        const sel = document.getElementById(id);
-        sel.innerHTML='';
-        const opt = document.createElement('option');
-        opt.value=''; opt.textContent='(Todas)';
-        if (id==="maxColl") sel.appendChild(opt);
-        colls.forEach(c=>{
-          const o=document.createElement('option'); o.value=o.textContent=c; sel.appendChild(o);
-        });
-      });
+      const colls=await api("listCollections");
+      const fill=(sel)=>{sel.innerHTML='<option value="">Todas</option>';colls.forEach(c=>{const o=document.createElement('option');o.value=o.textContent=c;sel.appendChild(o);});};
+      fill(document.getElementById('collA'));
+      fill(document.getElementById('collB'));
+      fill(document.getElementById('maxColl'));
     }
 
-    // buscar referência
-    document.getElementById('btnBuscarRef').onclick = async ()=>{
-      const ref = document.getElementById('refInput').value.trim().toUpperCase();
-      const status = document.getElementById('refStatus');
-      status.textContent = 'Buscando...';
-      const res = await api("searchReference",{ref});
-      status.textContent = '';
-      document.getElementById('refResumo').style.display='none';
-      const wrap = document.getElementById('refTabelaWrap'); wrap.innerHTML='';
-      if (!res.items || !res.items.length){ wrap.innerHTML='<div class="muted">Nenhum dado encontrado.</div>'; return; }
+    // buscar ref
+    document.getElementById('btnBuscarRef').onclick=async ()=>{
+      const ref=document.getElementById('refInput').value.trim().toUpperCase();
+      const status=document.getElementById('refStatus');status.textContent='Buscando...';
+      const res=await api("searchReference",{ref});
+      status.textContent='';
+      if(!res.items||!res.items.length){document.getElementById('refTabelaWrap').innerHTML='<div class="muted">Nenhum dado encontrado.</div>';return;}
       document.getElementById('refMax').textContent=fmtBR(res.max);
       document.getElementById('refMaxCols').textContent=res.maxCollections.join(', ');
       document.getElementById('refResumo').style.display='flex';
-      const head=["Coleção","Preço"];
       const rows=res.items.map(i=>[i.coll,fmtBR(i.price)]);
-      renderTable('refTabelaWrap',head,rows);
+      renderTable('refTabelaWrap',["Coleção","Preço"],rows);
     };
 
-    // incluir na lista
+    // incluir/finalizar lista
     document.getElementById('btnIncluir').onclick=async ()=>{
       const ref=document.getElementById('refInput').value.trim().toUpperCase();
-      if(!ref) return;
+      if(!ref)return;
       const res=await api("searchReference",{ref});
-      if(res.items && res.items.length){
-        res.items.forEach(i=> listaTemp.push({ref:ref, coll:i.coll, price:i.price}));
-        alert("Adicionado à lista: "+ref);
-      }
+      if(res.items&&res.items.length){res.items.forEach(i=>listaTemp.push({ref:ref,coll:i.coll,price:i.price}));alert("Adicionado: "+ref);}
     };
-    // finalizar lista
     document.getElementById('btnFinalizar').onclick=async ()=>{
       if(!listaTemp.length){alert("Lista vazia.");return;}
       const resp=await postData({items:listaTemp});
-      if(resp.status==="ok"){ alert("Enviado "+resp.enviados+" itens para o email."); listaTemp=[]; }
+      if(resp.status==="ok"){alert("Enviado "+resp.enviados+" itens.");listaTemp=[];}
     };
 
     // comparar coleções
@@ -195,48 +180,36 @@
     document.getElementById('btnComparar').onclick=async ()=>{
       const a=document.getElementById('collA').value;
       const b=document.getElementById('collB').value;
-      const status=document.getElementById('cmpStatus');
-      status.textContent='Gerando...';
       const rows=await api("compareCollections",{a,b});
-      status.textContent='';
-      let data=rows||[];
-      if(cmpOnlyChanged) data=data.filter(r=>r.alterou);
-      const total=data.length, alterados=rows.filter(r=>r.alterou).length;
-      status.textContent=`Linhas: ${total} | Alterou: ${alterados}`;
-      const head=["Referência",`Preço (${a})`,`Preço (${b})`,"Δ","Δ %","Alterou?"];
+      let data=rows||[];if(cmpOnlyChanged)data=data.filter(r=>r.alterou);
       const body=data.map(r=>[r.referencia,r.precoA==null?'-':fmtBR(r.precoA),r.precoB==null?'-':fmtBR(r.precoB),r.delta==null?'-':fmtBR(r.delta),r.deltaPct==null?'-':(r.deltaPct*100).toFixed(2)+'%',r.alterou?'<span class="badge warn">SIM</span>':'<span class="badge ok">NÃO</span>']);
-      renderTable('cmpTabelaWrap',head,body);
+      renderTable('cmpTabelaWrap',["Referência",`Preço (${a})`,`Preço (${b})`,"Δ","Δ %","Alterou?"],body);
     };
 
-    // max por referência
+    // max
     document.getElementById('btnMax').onclick=async ()=>{
       const coll=document.getElementById('maxColl').value;
-      const wrap=document.getElementById('maxTabelaWrap'); wrap.innerHTML='<span class="muted">Processando...</span>';
       const list=await api("maxByReference",{colecao:coll});
-      if(!list.length){wrap.innerHTML='<div class="muted">Sem dados.</div>';return;}
-      const head=["Referência","MAX de valor"];
+      if(!list.length){document.getElementById('maxTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';return;}
       const rows=list.map(r=>[r.referencia,fmtBR(r.max)]);
-      renderTable('maxTabelaWrap',head,rows);
+      renderTable('maxTabelaWrap',["Referência","MAX de valor"],rows);
     };
 
     // matriz
     document.getElementById('btnMatriz').onclick=async ()=>{
       const limit=document.getElementById('matLimit').value;
-      const status=document.getElementById('matStatus'); status.textContent='Gerando...';
       const obj=await api("matrix",{limit});
-      status.textContent='';
-      const wrap=document.getElementById('matTabelaWrap');
-      if(!obj.rows.length){wrap.innerHTML='<div class="muted">Sem dados.</div>';return;}
-      const head=obj.header;
-      const rows=obj.rows.map(r=> r.map((v,i)=> i===0?v:(v==null?'-':fmtBR(v))));
-      renderTable('matTabelaWrap',head,rows);
+      if(!obj.rows.length){document.getElementById('matTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';return;}
+      const rows=obj.rows.map(r=>r.map((v,i)=>i===0?v:(v==null?'-':fmtBR(v))));
+      renderTable('matTabelaWrap',obj.header,rows);
+      document.getElementById('matSearch').oninput=()=>{
+        const term=document.getElementById('matSearch').value.trim().toLowerCase();
+        const trs=document.querySelectorAll('#matTabelaWrap tbody tr');
+        trs.forEach(tr=>{const ref=tr.querySelector('td')?.textContent.toLowerCase()||"";tr.style.display=term&&!ref.includes(term)?"none":"";});
+      };
     };
 
-    // init
     loadCollections();
-    addFilter("cmpFilter","cmpTabelaWrap");
-    addFilter("maxFilter","maxTabelaWrap");
-    addFilter("matFilter","matTabelaWrap");
   </script>
 </body>
 </html>
