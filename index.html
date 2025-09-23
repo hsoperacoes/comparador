@@ -17,7 +17,7 @@
     button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
     button.secondary{background:#2f2f2f}
     button:disabled{opacity:.6;cursor:not-allowed}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
+    table{width:100%;border-collapse:collapse}
     th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px}
     th{background:#151515;text-align:left}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
@@ -28,6 +28,13 @@
     .pill{background:#222;padding:6px 10px;border-radius:8px}
     .section-title{margin:4px 0 10px;font-weight:700}
     .right{margin-left:auto}
+    /* SCROLL INTERNO NOS RELATÓRIOS */
+    .table-container{
+      max-height:500px;
+      overflow-y:auto;
+      border:1px solid #333;
+      margin-top:10px;
+    }
   </style>
 </head>
 <body>
@@ -44,12 +51,10 @@
         <button id="btnBuscarRef">Buscar</button>
         <span id="refStatus" class="muted"></span>
       </div>
-
       <div id="refResumo" class="row" style="margin-top:10px;display:none">
         <span class="pill">Maior preço: <strong id="refMax"></strong></span>
         <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
       </div>
-
       <div id="refTabelaWrap"></div>
     </div>
 
@@ -100,6 +105,13 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 
+    function clearAllReports(){
+      document.getElementById('cmpTabelaWrap').innerHTML = '';
+      document.getElementById('maxTabelaWrap').innerHTML = '';
+      document.getElementById('matTabelaWrap').innerHTML = '';
+      document.getElementById('refTabelaWrap').innerHTML = '';
+    }
+
     async function api(path, params={}) {
       const url = new URL(API_URL);
       url.search = new URLSearchParams({action:path, ...params}).toString();
@@ -121,6 +133,7 @@
 
     // busca por referência
     document.getElementById('btnBuscarRef').onclick = async ()=>{
+      clearAllReports();
       const ref = document.getElementById('refInput').value.trim();
       const status = document.getElementById('refStatus');
       status.textContent = 'Buscando...';
@@ -145,7 +158,10 @@
         <tbody>${res.items.map(i=>`
           <tr><td>${i.coll}</td><td>${fmtBR(i.price)}</td></tr>
         `).join('')}</tbody>`;
-      wrap.appendChild(table);
+      const container = document.createElement('div');
+      container.className = 'table-container';
+      container.appendChild(table);
+      wrap.appendChild(container);
     };
 
     // comparar coleções
@@ -155,6 +171,7 @@
       document.getElementById('btnComparar').click();
     };
     document.getElementById('btnComparar').onclick = async ()=>{
+      clearAllReports();
       const a = document.getElementById('collA').value;
       const b = document.getElementById('collB').value;
       const status = document.getElementById('cmpStatus');
@@ -194,11 +211,15 @@
           <th>Δ (B - A)</th><th>Δ %</th><th>Alterou?</th>
         </tr></thead>
         <tbody>${body}</tbody>`;
-      wrap.appendChild(table);
+      const container = document.createElement('div');
+      container.className = 'table-container';
+      container.appendChild(table);
+      wrap.appendChild(container);
     };
 
     // max por referência
     document.getElementById('btnMax').onclick = async ()=>{
+      clearAllReports();
       const coll = document.getElementById('maxColl').value;
       const wrap = document.getElementById('maxTabelaWrap');
       wrap.innerHTML = '<span class="muted">Processando...</span>';
@@ -210,11 +231,16 @@
       table.innerHTML = `
         <thead><tr><th>Referência</th><th>MAX de valor</th></tr></thead>
         <tbody>${list.map(r=>`<tr><td>${r.referencia}</td><td>${fmtBR(r.max)}</td></tr>`).join('')}</tbody>`;
-      wrap.innerHTML = ''; wrap.appendChild(table);
+      wrap.innerHTML = '';
+      const container = document.createElement('div');
+      container.className = 'table-container';
+      container.appendChild(table);
+      wrap.appendChild(container);
     };
 
     // matriz
     document.getElementById('btnMatriz').onclick = async ()=>{
+      clearAllReports();
       const limit = document.getElementById('matLimit').value;
       const status = document.getElementById('matStatus');
       status.textContent = 'Gerando...';
@@ -232,7 +258,10 @@
 
       const table = document.createElement('table');
       table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
-      wrap.appendChild(table);
+      const container = document.createElement('div');
+      container.className = 'table-container';
+      container.appendChild(table);
+      wrap.appendChild(container);
 
       // filtro de pesquisa
       document.getElementById('matSearch').oninput = ()=>{
