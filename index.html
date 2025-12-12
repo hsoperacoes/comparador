@@ -1,278 +1,317 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Precificação — HS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-:root{
-  --bg:#000;
-  --panel:#1c1c1c;
-  --line:#2a2a2a;
-  --pri:#673ab7;
-  --ok:#2ecc71;
-  --down:#e74c3c;
-  --same:#f1c40f;
-  --txt:#fff;
-  --muted:#aaa;
-}
-
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--txt);
-  font-family:Segoe UI,Arial,sans-serif;
-}
-
-.wrap{
-  max-width:1200px;
-  margin:auto;
-  padding:20px;
-}
-
-h1{
-  margin:0 0 16px;
-  font-size:22px;
-}
-
-.panel{
-  background:var(--panel);
-  border-radius:10px;
-  padding:16px;
-  margin-bottom:16px;
-}
-
-.section-title{
-  font-weight:700;
-  margin-bottom:10px;
-}
-
-.row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-}
-
-input,select,textarea,button{
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:8px;
-  padding:10px;
-}
-
-textarea{
-  width:100%;
-  min-height:120px;
-  font-family:monospace;
-}
-
-button{
-  background:var(--pri);
-  border:0;
-  cursor:pointer;
-  font-weight:600;
-}
-
-button.secondary{background:#333}
-button:disabled{opacity:.6}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-  font-size:14px;
-}
-
-th,td{
-  padding:8px 10px;
-  border-bottom:1px solid var(--line);
-  white-space:nowrap;
-}
-
-th{
-  background:#141414;
-  position:sticky;
-  top:0;
-}
-
-.scroll{
-  max-height:420px;
-  overflow:auto;
-  border:1px solid #333;
-  border-radius:8px;
-}
-
-.badge{
-  padding:3px 8px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:600;
-}
-
-.up{background:rgba(46,204,113,.15);color:var(--ok)}
-.down{background:rgba(231,76,60,.15);color:var(--down)}
-.same{background:rgba(241,196,15,.15);color:var(--same)}
-
-.muted{color:var(--muted);font-size:12px}
-.right{margin-left:auto}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Precificação - HS</title>
+  <style>
+    :root { --bg:#111; --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
+    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#000;color:#fff}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    h1{margin:0 0 18px;font-size:22px}
+    .grid{display:grid;gap:16px}
+    .panel{background:var(--panel);padding:16px;border-radius:10px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:13px;color:#ddd}
+    input,select,button,textarea{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#121212;color:#fff}
+    textarea{width:100%;min-height:120px;font-family:Consolas,monospace}
+    button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
+    button.secondary{background:#2f2f2f}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    table{border-collapse:collapse;min-width:100%}
+    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px;white-space:nowrap}
+    th{background:#151515;text-align:left}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+    .ok{background:rgba(40,167,69,.15);color:#6fe18b}
+    .warn{background:rgba(230,126,34,.15);color:#f8b37a}
+    .err{background:rgba(229,57,53,.15);color:#ff9a9a}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{background:#222;padding:6px 10px;border-radius:8px}
+    .section-title{margin:4px 0 10px;font-weight:700}
+    .right{margin-left:auto}
+    .scroll {max-height:500px; overflow:auto; border:1px solid #333; margin-top:10px;border-radius:10px;}
+    .scroll table th { position: sticky; top: 0; background: #151515; z-index: 2; }
+    .scroll table td:first-child, .scroll table th:first-child { position: sticky; left: 0; background: #1c1c1c; z-index: 3; }
+  </style>
 </head>
-
 <body>
-<div class="wrap">
+  <div class="wrap grid">
+    <h1>Precificação — HS</h1>
 
-<h1>Precificação — HS</h1>
+    <!-- NOVA COLEÇÃO -->
+    <div class="panel">
+      <div class="section-title">Nova coleção (REM automático)</div>
+      <div class="row">
+        <label>Nome da coleção</label>
+        <input id="newCollName" placeholder="Ex.: ALTO VERÃO 2025 REM" style="min-width:260px"/>
+        <button id="btnSalvarColecao">Salvar coleção</button>
+        <span id="newStatus" class="muted"></span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b> (cola direto do Excel).
+      </div>
+      <textarea id="newItems" placeholder="ABC123;199,90&#10;XYZ999\t159,90"></textarea>
+    </div>
 
-<!-- NOVA COLEÇÃO -->
-<div class="panel">
-  <div class="section-title">Nova coleção</div>
+    <!-- BUSCA POR REFERÊNCIA -->
+    <div class="panel">
+      <div class="section-title">Buscar referência</div>
+      <div class="row">
+        <label>Referência</label>
+        <input id="refInput" placeholder="Ex.: 2441406" style="min-width:200px"/>
+        <button id="btnBuscarRef">Buscar</button>
+        <button id="btnIncluir" class="secondary">Incluir na lista</button>
+        <button id="btnFinalizar" class="secondary">Finalizar lista</button>
+        <span id="refStatus" class="muted"></span>
+      </div>
+      <div id="refResumo" class="row" style="margin-top:10px;display:none">
+        <span class="pill">Maior preço (histórico): <strong id="refMax"></strong></span>
+        <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
+        <span class="pill">Preço atual (última coleção): <strong id="refAtual"></strong></span>
+        <span class="pill">Coleção atual: <strong id="refAtualColl"></strong></span>
+      </div>
+      <div id="refTabelaWrap"></div>
+    </div>
 
-  <div class="row">
-    <label>Nome da coleção</label>
-    <input id="colecaoNome" placeholder="Ex: ALTO VERÃO 2025 REM" style="min-width:260px">
+    <!-- COMPARAR COLEÇÕES -->
+    <div class="panel">
+      <div class="section-title">Comparar coleções</div>
+      <div class="row">
+        <label>Coleção A</label>
+        <select id="collA"></select>
+
+        <label>Coleção B</label>
+        <select id="collB"></select>
+
+        <label>Mostrar</label>
+        <select id="cmpOnly">
+          <option value="0">Tudo</option>
+          <option value="1">Só Alterou</option>
+        </select>
+
+        <label>Direção</label>
+        <select id="cmpDir">
+          <option value="ALL">Todas</option>
+          <option value="SUBIU">Subiu</option>
+          <option value="DESCEU">Desceu</option>
+          <option value="IGUAL">Igual</option>
+        </select>
+
+        <button id="btnComparar">Comparar</button>
+        <span id="cmpStatus" class="muted right"></span>
+      </div>
+      <div id="cmpTabelaWrap"></div>
+    </div>
+
+    <!-- MAX POR REFERÊNCIA -->
+    <div class="panel">
+      <div class="section-title">Maior preço por referência</div>
+      <div class="row">
+        <label>Filtrar coleção</label>
+        <select id="maxColl"></select>
+        <button id="btnMax">Gerar/Atualizar</button>
+        <span class="muted">Lista as referências com maior preço (todas ou só da coleção escolhida).</span>
+      </div>
+      <div id="maxTabelaWrap"></div>
+    </div>
+
+    <!-- MATRIZ PREÇOS x COLEÇÕES -->
+    <div class="panel">
+      <div class="section-title">Tabela preços x coleções</div>
+      <div class="row">
+        <label>Limitar primeiras N referências (opcional)</label>
+        <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
+        <label>Filtrar referência</label>
+        <input id="matSearch" placeholder="Ex.: 2441406" style="width:200px"/>
+        <button id="btnMatriz">Gerar TABELA</button>
+        <span id="matStatus" class="muted right"></span>
+      </div>
+      <div id="matTabelaWrap"></div>
+    </div>
   </div>
 
-  <div class="row" style="margin-top:10px">
-    <label>Itens (cole do Excel)</label>
-  </div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
+    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+    let listaTemp=[];
 
-  <textarea id="colecaoItens" placeholder="REF<TAB>PREÇO ou REF;PREÇO"></textarea>
+    async function api(path, params={}) {
+      const url=new URL(API_URL);
+      url.search=new URLSearchParams({action:path,...params}).toString();
+      const res=await fetch(url);
+      return res.json();
+    }
+    async function postData(payload){
+      const res=await fetch(API_URL,{method:'POST',body:JSON.stringify(payload)});
+      return res.json();
+    }
 
-  <div class="row" style="margin-top:10px">
-    <button onclick="salvarColecao()">Salvar coleção</button>
-    <span id="statusNova" class="muted"></span>
-  </div>
-</div>
+    function renderTable(containerId, head, rows){
+      const wrap=document.getElementById(containerId);
+      wrap.innerHTML='';
+      const table=document.createElement('table');
+      table.innerHTML=`<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+                       <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      const scroll=document.createElement('div');
+      scroll.className='scroll';
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+    }
 
-<!-- COMPARAR COLEÇÕES -->
-<div class="panel">
-  <div class="section-title">Comparar coleções</div>
+    async function loadCollections(){
+      const colls=await api("listCollections");
 
-  <div class="row">
-    <label>Coleção A</label>
-    <select id="collA"></select>
+      const fill=(sel, withAll=true)=>{
+        sel.innerHTML = withAll ? '<option value="">Todas</option>' : '';
+        colls.forEach(c=>{
+          const o=document.createElement('option');
+          o.value=o.textContent=c;
+          sel.appendChild(o);
+        });
+      };
 
-    <label>Coleção B</label>
-    <select id="collB"></select>
+      fill(document.getElementById('collA'), false);
+      fill(document.getElementById('collB'), false);
+      fill(document.getElementById('maxColl'), true);
 
-    <button onclick="comparar()">Comparar</button>
-    <span id="cmpStatus" class="muted right"></span>
-  </div>
+      // auto seleciona A e B com as duas últimas (se existirem)
+      const a=document.getElementById('collA');
+      const b=document.getElementById('collB');
+      if (colls.length>=2){
+        a.value = colls[colls.length-2];
+        b.value = colls[colls.length-1];
+      }
+    }
 
-  <div class="scroll">
-    <table id="cmpTable"></table>
-  </div>
-</div>
+    // ===== NOVA COLEÇÃO =====
+    document.getElementById('btnSalvarColecao').onclick = async ()=>{
+      const name = document.getElementById('newCollName').value.trim();
+      const txt  = document.getElementById('newItems').value.trim();
+      const st   = document.getElementById('newStatus');
 
-</div>
+      if(!name || !txt){ alert("Informe o nome da coleção e os itens."); return; }
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
+      const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      const items = lines.map(l=>{
+        let ref, preco;
+        if (l.includes(";")) [ref, preco] = l.split(";");
+        else [ref, preco] = l.split("\t");
+        return { ref: (ref||"").trim(), preco: (preco||"").trim() };
+      }).filter(i=>i.ref && i.preco);
 
-const fmt = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+      st.textContent = "Salvando...";
+      const res = await postData({ action:"addCollection", colecaoNome:name, items });
 
-async function apiGet(params){
-  const url = API_URL + "?" + new URLSearchParams(params).toString();
-  const r = await fetch(url);
-  return r.json();
-}
+      if(res.status==="ok"){
+        st.textContent = `OK — gravada como "${res.colecao}" (${res.inseridos} itens)`;
+        document.getElementById('newItems').value = "";
+        await loadCollections();
+      } else {
+        st.textContent = "Erro: " + (res.erro || "desconhecido");
+      }
+    };
 
-async function apiPost(payload){
-  const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
-  return r.json();
-}
+    // ===== BUSCAR REF =====
+    document.getElementById('btnBuscarRef').onclick=async ()=>{
+      const ref=document.getElementById('refInput').value.trim().toUpperCase();
+      const status=document.getElementById('refStatus'); status.textContent='Buscando...';
 
-/* ========= LOAD INICIAL ========= */
-async function loadCollections(){
-  const colls = await apiGet({action:"listCollections"});
-  const a = document.getElementById("collA");
-  const b = document.getElementById("collB");
-  a.innerHTML = "";
-  b.innerHTML = "";
-  colls.forEach(c=>{
-    a.add(new Option(c,c));
-    b.add(new Option(c,c));
-  });
-}
-loadCollections();
+      const res=await api("searchReference",{ref});
+      status.textContent='';
 
-/* ========= SALVAR COLEÇÃO ========= */
-async function salvarColecao(){
-  const nome = document.getElementById("colecaoNome").value.trim();
-  const txt  = document.getElementById("colecaoItens").value.trim();
-  const status = document.getElementById("statusNova");
+      if(!res.items || !res.items.length){
+        document.getElementById('refTabelaWrap').innerHTML='<div class="muted">Nenhum dado encontrado.</div>';
+        document.getElementById('refResumo').style.display='none';
+        return;
+      }
 
-  if(!nome || !txt){
-    alert("Informe nome da coleção e itens.");
-    return;
-  }
+      document.getElementById('refMax').textContent = fmtBR(res.max);
+      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
 
-  const items = txt.split("\n").map(l=>{
-    let [r,p] = l.includes(";") ? l.split(";") : l.split("\t");
-    return {ref:r?.trim(), preco:p?.trim()};
-  }).filter(i=>i.ref && i.preco);
+      document.getElementById('refAtual').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
+      document.getElementById('refAtualColl').textContent = res.atual ? res.atual.colecao : '-';
 
-  status.textContent = "Salvando...";
+      document.getElementById('refResumo').style.display='flex';
 
-  const res = await apiPost({
-    action:"addCollection",
-    colecaoNome:nome,
-    items
-  });
+      const rows=res.items.map(i=>[i.coll, fmtBR(i.price)]);
+      renderTable('refTabelaWrap',["Coleção","Preço"],rows);
+    };
 
-  if(res.status==="ok"){
-    status.textContent = `OK — gravada como "${res.colecao}" (${res.inseridos} itens)`;
-    document.getElementById("colecaoItens").value="";
+    document.getElementById('btnIncluir').onclick=async ()=>{
+      const ref=document.getElementById('refInput').value.trim().toUpperCase();
+      if(!ref) return;
+      const res=await api("searchReference",{ref});
+      if(res.items && res.items.length){
+        res.items.forEach(i=>listaTemp.push({ref:ref,coll:i.coll,price:i.price}));
+        alert("Adicionado: "+ref);
+      }
+    };
+    document.getElementById('btnFinalizar').onclick=async ()=>{
+      if(!listaTemp.length){alert("Lista vazia.");return;}
+      const resp=await postData({items:listaTemp});
+      if(resp.status==="ok"){alert("Enviado "+resp.enviados+" itens.");listaTemp=[];}
+      else alert("Erro: "+(resp.erro||""));
+    };
+
+    // ===== COMPARAR =====
+    document.getElementById('btnComparar').onclick=async ()=>{
+      const a=document.getElementById('collA').value;
+      const b=document.getElementById('collB').value;
+      const onlyChanged=document.getElementById('cmpOnly').value; // 0/1
+      const direction=document.getElementById('cmpDir').value;    // ALL/SUBIU/DESCEU/IGUAL
+
+      const rows=await api("compareCollections",{a,b, onlyChanged, direction});
+      const data=rows||[];
+
+      const body=data.map(r=>{
+        const delta = (r.delta==null) ? '-' : fmtBR(r.delta);
+        const badge = r.direcao==="SUBIU"
+          ? '<span class="badge ok">SUBIU</span>'
+          : r.direcao==="DESCEU"
+            ? '<span class="badge err">DESCEU</span>'
+            : '<span class="badge warn">IGUAL</span>';
+
+        return [
+          r.referencia,
+          r.precoA==null?'-':fmtBR(r.precoA),
+          r.precoB==null?'-':fmtBR(r.precoB),
+          delta,
+          badge
+        ];
+      });
+
+      renderTable('cmpTabelaWrap',["Referência",`Preço (${a})`,`Preço (${b})`,"Δ","Status"],body);
+      document.getElementById('cmpStatus').textContent = `${data.length} itens`;
+    };
+
+    // ===== MAX =====
+    document.getElementById('btnMax').onclick=async ()=>{
+      const coll=document.getElementById('maxColl').value;
+      const list=await api("maxByReference",{colecao:coll});
+      if(!list.length){document.getElementById('maxTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';return;}
+      const rows=list.map(r=>[r.referencia,fmtBR(r.max)]);
+      renderTable('maxTabelaWrap',["Referência","MAX de valor"],rows);
+    };
+
+    // ===== MATRIZ =====
+    document.getElementById('btnMatriz').onclick=async ()=>{
+      const limit=document.getElementById('matLimit').value;
+      const obj=await api("matrix",{limit});
+      if(!obj.rows.length){document.getElementById('matTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';return;}
+      const rows=obj.rows.map(r=>r.map((v,i)=>i===0?v:(v==null?'-':fmtBR(v))));
+      renderTable('matTabelaWrap',obj.header,rows);
+
+      document.getElementById('matSearch').oninput=()=>{
+        const term=document.getElementById('matSearch').value.trim().toLowerCase();
+        const trs=document.querySelectorAll('#matTabelaWrap tbody tr');
+        trs.forEach(tr=>{
+          const ref=tr.querySelector('td')?.textContent.toLowerCase()||"";
+          tr.style.display=term && !ref.includes(term) ? "none" : "";
+        });
+      };
+    };
+
     loadCollections();
-  }else{
-    status.textContent = "Erro: "+(res.erro||"");
-  }
-}
-
-/* ========= COMPARAR ========= */
-async function comparar(){
-  const A = document.getElementById("collA").value;
-  const B = document.getElementById("collB").value;
-  const tbl = document.getElementById("cmpTable");
-  tbl.innerHTML = "<tr><td class='muted'>Carregando...</td></tr>";
-
-  const rows = await apiGet({action:"compareCollections",a:A,b:B});
-  if(!rows.length){
-    tbl.innerHTML = "<tr><td class='muted'>Sem dados</td></tr>";
-    return;
-  }
-
-  tbl.innerHTML = `
-    <tr>
-      <th>REF</th>
-      <th>${A}</th>
-      <th>${B}</th>
-      <th>Δ</th>
-      <th>Status</th>
-    </tr>
-  `;
-
-  rows.forEach(r=>{
-    let badge="same",label="IGUAL";
-    if(r.direcao==="SUBIU"){badge="up";label="SUBIU";}
-    if(r.direcao==="DESCEU"){badge="down";label="DESCEU";}
-
-    tbl.innerHTML += `
-      <tr>
-        <td>${r.referencia}</td>
-        <td>${r.precoA==null?"-":fmt(r.precoA)}</td>
-        <td>${r.precoB==null?"-":fmt(r.precoB)}</td>
-        <td>${r.delta==null?"-":fmt(r.delta)}</td>
-        <td><span class="badge ${badge}">${label}</span></td>
-      </tr>
-    `;
-  });
-}
-</script>
-
+  </script>
 </body>
 </html>
