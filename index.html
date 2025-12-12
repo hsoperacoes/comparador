@@ -48,7 +48,7 @@
         <span id="newStatus" class="muted"></span>
       </div>
       <div class="muted" style="margin-top:8px">
-        Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b> (cola direto do Excel).
+        Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b>.
       </div>
       <textarea id="newItems" placeholder="ABC123;199,90&#10;XYZ999\t159,90"></textarea>
     </div>
@@ -95,6 +95,7 @@
           <option value="SUBIU">Subiu</option>
           <option value="DESCEU">Desceu</option>
           <option value="IGUAL">Igual</option>
+          <option value="SEM_DADO">Sem dado</option>
         </select>
 
         <button id="btnComparar">Gerar comparação</button>
@@ -136,7 +137,6 @@
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
     let listaTemp = [];
 
-    // ✅ cache da comparação para filtros em tempo real
     let cmpCache = [];
     let cmpHeaderA = "";
     let cmpHeaderB = "";
@@ -147,7 +147,6 @@
       const res = await fetch(url);
       return res.json();
     }
-
     async function postData(payload){
       const res = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload) });
       return res.json();
@@ -183,7 +182,6 @@
       fill(document.getElementById('collB'), false);
       fill(document.getElementById('maxColl'), true);
 
-      // seleciona as 2 últimas por padrão
       if (colls.length >= 2) {
         document.getElementById('collA').value = colls[colls.length-2];
         document.getElementById('collB').value = colls[colls.length-1];
@@ -244,7 +242,7 @@
       renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
     };
 
-    // LEGADO: incluir / finalizar lista (envia CSV por e-mail)
+    // LEGADO: incluir/finalizar lista (envia CSV por e-mail)
     document.getElementById('btnIncluir').onclick = async ()=>{
       const ref = document.getElementById('refInput').value.trim().toUpperCase();
       if(!ref) return;
@@ -255,49 +253,48 @@
         alert("Adicionado: " + ref);
       }
     };
-
     document.getElementById('btnFinalizar').onclick = async ()=>{
       if(!listaTemp.length){ alert("Lista vazia."); return; }
-
       const resp = await postData({ items: listaTemp });
-      if(resp.status==="ok"){
-        alert("Enviado " + resp.enviados + " itens.");
-        listaTemp = [];
-      } else {
-        alert("Erro: " + (resp.erro || ""));
-      }
+      if(resp.status==="ok"){ alert("Enviado " + resp.enviados + " itens."); listaTemp = []; }
+      else { alert("Erro: " + (resp.erro || "")); }
     };
 
     /* ===================== COMPARAÇÃO ===================== */
-
-    // 1) gera comparação (busca UMA vez no backend)
     document.getElementById('btnComparar').onclick = async ()=>{
       const a = document.getElementById('collA').value;
       const b = document.getElementById('collB').value;
-
       if(!a || !b){ alert("Selecione Coleção A e B."); return; }
 
       document.getElementById('cmpStatus').textContent = "Carregando comparação...";
-
       cmpHeaderA = a;
       cmpHeaderB = b;
 
-      // ✅ busca tudo uma vez só
       cmpCache = await api("compareCollections", { a, b });
 
-      document.getElementById('cmpStatus').textContent = `${cmpCache.length} total`;
-      aplicarFiltrosComparacao(); // renderiza já filtrando
+      aplicarFiltrosComparacao();
     };
 
-    // 2) filtros em tempo real (SEM chamar o backend)
+    function countResumo_(arr){
+      let subiu=0, desceu=0, igual=0, sem=0;
+      arr.forEach(r=>{
+        if (r.direcao==="SUBIU") subiu++;
+        else if (r.direcao==="DESCEU") desceu++;
+        else if (r.direcao==="IGUAL") igual++;
+        else sem++;
+      });
+      return {subiu, desceu, igual, sem};
+    }
+
     function aplicarFiltrosComparacao(){
       if(!cmpCache || !cmpCache.length){
         document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Gere a comparação primeiro.</div>';
+        document.getElementById('cmpStatus').textContent = '';
         return;
       }
 
       const onlyChanged = document.getElementById('cmpOnly').value === "1";
-      const direction   = document.getElementById('cmpDir').value; // ALL/SUBIU/DESCEU/IGUAL
+      const direction   = document.getElementById('cmpDir').value; // ALL/SUBIU/DESCEU/IGUAL/SEM_DADO
 
       let data = cmpCache;
 
@@ -306,17 +303,16 @@
 
       const body = data.map(r=>{
         const badge =
-          r.direcao==="SUBIU"  ? '<span class="badge ok">SUBIU</span>' :
-          r.direcao==="DESCEU" ? '<span class="badge err">DESCEU</span>' :
-                                 '<span class="badge warn">IGUAL</span>';
+          r.direcao==="SUBIU"    ? '<span class="badge ok">SUBIU</span>' :
+          r.direcao==="DESCEU"   ? '<span class="badge err">DESCEU</span>' :
+          r.direcao==="IGUAL"    ? '<span class="badge warn">IGUAL</span>' :
+                                   '<span class="badge warn">SEM DADO</span>';
 
-        return [
-          r.referencia,
-          r.precoA==null?'-':fmtBR(r.precoA),
-          r.precoB==null?'-':fmtBR(r.precoB),
-          r.delta==null?'-':fmtBR(r.delta),
-          badge
-        ];
+        const pa = (r.precoA==null) ? '-' : fmtBR(r.precoA);
+        const pb = (r.precoB==null) ? '-' : fmtBR(r.precoB);
+        const dl = (r.delta==null)  ? '-' : fmtBR(r.delta);
+
+        return [ r.referencia, pa, pb, dl, badge ];
       });
 
       renderTable('cmpTabelaWrap',
@@ -324,14 +320,18 @@
         body
       );
 
-      document.getElementById('cmpStatus').textContent = `${data.length} exibidos / ${cmpCache.length} total`;
+      const resumoTotal = countResumo_(cmpCache);
+      const resumoExib  = countResumo_(data);
+
+      document.getElementById('cmpStatus').textContent =
+        `${data.length} exibidos / ${cmpCache.length} total — ` +
+        `Exibidos: ↑${resumoExib.subiu} ↓${resumoExib.desceu} =${resumoExib.igual} ?${resumoExib.sem} — ` +
+        `Total: ↑${resumoTotal.subiu} ↓${resumoTotal.desceu} =${resumoTotal.igual} ?${resumoTotal.sem}`;
     }
 
-    // ✅ agora sim: mudou filtro => atualiza NA HORA
     document.getElementById('cmpOnly').onchange = aplicarFiltrosComparacao;
     document.getElementById('cmpDir').onchange  = aplicarFiltrosComparacao;
 
-    // ✅ se trocar A/B, “limpa” cache pra não confundir
     document.getElementById('collA').onchange = ()=>{
       cmpCache = [];
       document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Clique em “Gerar comparação”.</div>';
