@@ -70,7 +70,26 @@
       font-size:12px;
     }
     .pill strong{font-size:13px}
-    .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:800}
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      border:1px solid rgba(123,78,240,.35);
+      background:rgba(123,78,240,.14);
+      color:#e7dcff;
+    }
+
+    .badge .dot{
+      width:9px;height:9px;border-radius:99px;
+      background:rgba(123,78,240,.95);
+      box-shadow:0 0 10px rgba(123,78,240,.55);
+    }
+
     .b-ok{background:rgba(40,167,69,.14);color:#7af0a0;border:1px solid rgba(40,167,69,.25)}
     .b-warn{background:rgba(230,126,34,.16);color:#ffc08c;border:1px solid rgba(230,126,34,.25)}
     .b-err{background:rgba(229,57,53,.16);color:#ffb0b0;border:1px solid rgba(229,57,53,.25)}
@@ -109,8 +128,6 @@
       border-right:1px solid #222;
       font-weight:800;
     }
-
-    /* Para o header da REF ficar acima */
     th:first-child{z-index:10;background:#101010}
 
     /* Drag style */
@@ -123,18 +140,35 @@
       outline:2px dashed rgba(123,78,240,.85);
       outline-offset:-4px;
     }
-    th.dragging{
-      opacity:.55;
-    }
+    th.dragging{opacity:.55}
 
     .small-gap{gap:8px}
-    .spacer{height:6px}
   </style>
 </head>
 
 <body>
   <div class="wrap grid">
     <h1>Precificação — HS</h1>
+
+    <!-- COLEÇÃO ATIVA -->
+    <div class="panel">
+      <div class="section-title">Coleção ativa (manual)</div>
+      <div class="row">
+        <label>Escolher coleção</label>
+        <select id="activeCollSelect" style="min-width:320px"></select>
+        <button id="btnSetActive">Definir coleção ativa</button>
+        <button id="btnClearActive" class="secondary">Limpar</button>
+
+        <span class="right badge" id="activeBadge" style="display:none">
+          <span class="dot"></span>
+          <span>Coleção ativa:</span>
+          <span id="activeBadgeText"></span>
+        </span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        A coleção ativa fica salva <b>somente neste navegador</b>. Use ela como referência para gerar/exportar/imprimir (vamos ligar esses botões nela no próximo passo).
+      </div>
+    </div>
 
     <!-- BUSCA POR REFERÊNCIA -->
     <div class="panel">
@@ -144,8 +178,11 @@
         <label>Referência</label>
         <input id="refInput" placeholder="Ex.: 0227" style="min-width:180px;text-transform:uppercase"/>
         <button id="btnBuscarRef">Buscar</button>
-        <button id="btnIncluir" class="secondary">Incluir na lista</button>
-        <button id="btnFinalizar" class="secondary">Finalizar lista</button>
+
+        <!-- Mantive seus botões, mas agora isso é uma “lista para e-mail”, não coleção -->
+        <button id="btnIncluir" class="secondary">Incluir na lista (e-mail)</button>
+        <button id="btnFinalizar" class="secondary">Finalizar lista (e-mail)</button>
+
         <span id="refStatus" class="muted right"></span>
       </div>
 
@@ -214,8 +251,9 @@
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
     const safe = (s)=> String(s ?? "");
 
-    // localStorage key (ordem da matriz)
-    const LS_KEY_COL_ORDER = "HS_PRECO_COL_ORDER_v1";
+    // localStorage keys
+    const LS_KEY_COL_ORDER   = "HS_PRECO_COL_ORDER_v1";
+    const LS_KEY_ACTIVE_COLL = "HS_COLECAO_ATIVA_v1";
 
     let listaTemp = [];
     let cmpOnlyChanged = false;
@@ -223,7 +261,7 @@
     let cmpOnlyDown = false;
 
     // estado matriz
-    let matrizState = null; // {header, rows, collsOnly, order}
+    let matrizState = null; // {refs, colls, priceIndex, order}
 
     async function api(action, params={}) {
       const url = new URL(API_URL);
@@ -274,19 +312,39 @@
       localStorage.removeItem(LS_KEY_COL_ORDER);
     }
 
-    function applyOrderToMatrix(originalColls, desiredOrder){
-      // desiredOrder pode conter colunas antigas; removemos as que não existem mais
-      // e adicionamos ao final as novas que não estão no desiredOrder
-      const set = new Set(originalColls);
+    function getActiveCollection(){
+      return safe(localStorage.getItem(LS_KEY_ACTIVE_COLL)).trim();
+    }
+    function setActiveCollection(name){
+      localStorage.setItem(LS_KEY_ACTIVE_COLL, safe(name).trim());
+      updateActiveBadge();
+    }
+    function clearActiveCollection(){
+      localStorage.removeItem(LS_KEY_ACTIVE_COLL);
+      updateActiveBadge();
+    }
 
+    function updateActiveBadge(){
+      const coll = getActiveCollection();
+      const badge = document.getElementById('activeBadge');
+      const text  = document.getElementById('activeBadgeText');
+      if(coll){
+        badge.style.display = 'inline-flex';
+        text.textContent = coll;
+      }else{
+        badge.style.display = 'none';
+        text.textContent = '';
+      }
+    }
+
+    function applyOrderToMatrix(originalColls, desiredOrder){
+      const set = new Set(originalColls);
       const cleaned = (desiredOrder || []).filter(c => set.has(c));
       const remaining = originalColls.filter(c => !cleaned.includes(c));
-
       return cleaned.concat(remaining);
     }
 
     function buildMatrixView(state){
-      // state: {refs, colls, priceIndex, order}
       const head = ["REF"].concat(state.order);
 
       const rows = state.refs.map(ref => {
@@ -386,7 +444,6 @@
           const dropCol = th.dataset.col;
           if(!dragCol || !dropCol || dragCol === dropCol) return;
 
-          // reordenar state.order
           const order = state.order.slice();
           const from = order.indexOf(dragCol);
           const to = order.indexOf(dropCol);
@@ -397,8 +454,6 @@
 
           state.order = order;
           saveLocalOrder(order);
-
-          // re-render matriz inteira com nova ordem
           renderMatrix(state);
         });
       });
@@ -407,8 +462,8 @@
     async function loadCollections(){
       const colls = await api("listCollections");
 
-      const fill=(sel)=>{
-        sel.innerHTML = '<option value="">Selecione</option>';
+      const fill=(sel, addPlaceholder=true)=>{
+        sel.innerHTML = addPlaceholder ? '<option value="">Selecione</option>' : '';
         colls.forEach(c=>{
           const o=document.createElement('option');
           o.value = c;
@@ -417,9 +472,42 @@
         });
       };
 
-      fill(document.getElementById('collA'));
-      fill(document.getElementById('collB'));
+      fill(document.getElementById('collA'), true);
+      fill(document.getElementById('collB'), true);
+
+      // coleção ativa (sem placeholder vazio)
+      const activeSel = document.getElementById('activeCollSelect');
+      activeSel.innerHTML = '<option value="">Selecione</option>';
+      colls.forEach(c=>{
+        const o=document.createElement('option');
+        o.value = c;
+        o.textContent = c;
+        activeSel.appendChild(o);
+      });
+
+      // se já tiver coleção ativa salva, seleciona
+      const currentActive = getActiveCollection();
+      if(currentActive){
+        activeSel.value = currentActive;
+        updateActiveBadge();
+      }else{
+        updateActiveBadge();
+      }
     }
+
+    // ===== Coleção ativa =====
+    document.getElementById('btnSetActive').onclick = () => {
+      const sel = document.getElementById('activeCollSelect');
+      const v = safe(sel.value).trim();
+      if(!v){ alert("Selecione uma coleção para definir como ativa."); return; }
+      setActiveCollection(v);
+      alert("Coleção ativa definida: " + v);
+    };
+    document.getElementById('btnClearActive').onclick = () => {
+      clearActiveCollection();
+      document.getElementById('activeCollSelect').value = "";
+      alert("Coleção ativa limpa.");
+    };
 
     // ===== Buscar referência =====
     document.getElementById('btnBuscarRef').onclick = async () => {
@@ -439,19 +527,17 @@
         return;
       }
 
-      // resumo
       document.getElementById('refMax').textContent = fmtBR(res.max);
       document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
       document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
       document.getElementById('refAtualCol').textContent = res.atual ? safe(res.atual.colecao) : '-';
       document.getElementById('refResumo').style.display = 'flex';
 
-      // tabela: coleção x preço
       const rows = res.items.map(i => [safe(i.coll), fmtBR(i.price)]);
       renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
     };
 
-    // ===== Incluir/Finalizar lista (mantive como você tinha) =====
+    // ===== Lista para e-mail (mantida) =====
     document.getElementById('btnIncluir').onclick = async () => {
       const ref = normalizeRef(document.getElementById('refInput').value);
       if(!ref) return;
@@ -459,17 +545,17 @@
       const res = await api("searchReference",{ ref });
       if(res.items && res.items.length){
         res.items.forEach(i => listaTemp.push({ ref: ref, coll: i.coll, price: i.price }));
-        alert("Adicionado: " + ref);
+        alert("Adicionado na lista (e-mail): " + ref);
       } else {
         alert("Sem dados para essa referência.");
       }
     };
 
     document.getElementById('btnFinalizar').onclick = async () => {
-      if(!listaTemp.length){ alert("Lista vazia."); return; }
+      if(!listaTemp.length){ alert("Lista (e-mail) vazia."); return; }
       const resp = await postData({ items: listaTemp });
       if(resp.status === "ok"){
-        alert("Enviado " + resp.enviados + " itens.");
+        alert("E-mail enviado com " + resp.enviados + " itens.");
         listaTemp = [];
       } else {
         alert("Erro ao enviar: " + (resp.erro || "desconhecido"));
@@ -552,11 +638,9 @@
         return;
       }
 
-      // obj.header = ["REF", ...colls]
       const colls = obj.header.slice(1);
       const refs = obj.rows.map(r => r[0]);
 
-      // index rápido ref||coll
       const priceIndex = Object.create(null);
       obj.rows.forEach(r => {
         const ref = safe(r[0]);
@@ -567,20 +651,13 @@
         }
       });
 
-      // aplica ordem salva
       const stored = loadLocalOrder();
       const order = applyOrderToMatrix(colls, stored);
 
-      matrizState = {
-        refs,
-        colls,
-        order,
-        priceIndex
-      };
-
+      matrizState = { refs, colls, order, priceIndex };
       renderMatrix(matrizState);
 
-      // filtro de REF em tempo real (sem precisar clicar em gerar)
+      // filtro em tempo real
       const input = document.getElementById('matSearch');
       input.oninput = () => {
         const term = normalizeRef(input.value);
@@ -600,7 +677,7 @@
       if(!confirm("Resetar a ordem das colunas para o padrão (ordem do sistema)?")) return;
 
       clearLocalOrder();
-      matrizState.order = matrizState.colls.slice(); // padrão do GS
+      matrizState.order = matrizState.colls.slice();
       renderMatrix(matrizState);
     };
 
