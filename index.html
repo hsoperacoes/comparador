@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Precificação - HS</title>
   <style>
-    :root { --bg:#111; --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
+    :root { --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
     *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#000;color:#fff}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .wrap{max-width:1150px;margin:0 auto;padding:24px}
     h1{margin:0 0 18px;font-size:22px}
     .grid{display:grid;gap:16px}
     .panel{background:var(--panel);padding:16px;border-radius:10px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     label{font-size:13px;color:#ddd}
     input,select,button,textarea{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#121212;color:#fff}
-    textarea{width:100%;min-height:120px;font-family:Consolas,monospace}
+    textarea{width:100%;min-height:110px;font-family:Consolas,monospace}
     button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
     button.secondary{background:#2f2f2f}
+    button.danger{background:#a01f1f}
     button:disabled{opacity:.6;cursor:not-allowed}
     table{border-collapse:collapse;min-width:100%}
     th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px;white-space:nowrap}
@@ -29,9 +30,10 @@
     .pill{background:#222;padding:6px 10px;border-radius:8px}
     .section-title{margin:4px 0 10px;font-weight:700}
     .right{margin-left:auto}
-    .scroll {max-height:500px; overflow:auto; border:1px solid #333; margin-top:10px;border-radius:10px;}
+    .scroll {max-height:520px; overflow:auto; border:1px solid #333; margin-top:10px;border-radius:10px;}
     .scroll table th { position: sticky; top: 0; background: #151515; z-index: 2; }
     .scroll table td:first-child, .scroll table th:first-child { position: sticky; left: 0; background: #1c1c1c; z-index: 3; }
+    .divider{height:1px;background:#2c2c2c;margin:12px 0}
   </style>
 </head>
 <body>
@@ -51,6 +53,38 @@
         Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b>.
       </div>
       <textarea id="newItems" placeholder="ABC123;199,90&#10;XYZ999\t159,90"></textarea>
+    </div>
+
+    <!-- LISTA DE PREÇO (ATUAL OU ATÉ COLEÇÃO) + EXPORTAR -->
+    <div class="panel">
+      <div class="section-title">Lista de preço (gerar / exportar)</div>
+      <div class="row">
+        <label>Modo</label>
+        <select id="plistMode">
+          <option value="latest">Última lista (mais atual)</option>
+          <option value="upto">Até coleção selecionada</option>
+        </select>
+
+        <label>Escolher coleção</label>
+        <select id="plistColecao" disabled></select>
+
+        <button id="btnGerarLista">Gerar lista</button>
+
+        <label class="right">Buscar ref</label>
+        <input id="plistSearch" placeholder="Ex.: 0227" style="width:200px"/>
+
+        <span id="plistStatus" class="muted"></span>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="btnExportarAtual" class="danger">Gravar Coleção Atual</button>
+        <span class="muted">
+          Grava na planilha destino (aba Leonardo) com coluna C = "COLEÇÃO ATUAL" — requer senha.
+        </span>
+        <span id="exportStatus" class="muted right"></span>
+      </div>
+
+      <div id="plistTabelaWrap"></div>
     </div>
 
     <!-- BUSCA POR REFERÊNCIA -->
@@ -77,10 +111,10 @@
     <div class="panel">
       <div class="section-title">Comparar coleções</div>
       <div class="row">
-        <label>Coleção A</label>
+        <label>Coleção A (anterior)</label>
         <select id="collA"></select>
 
-        <label>Coleção B</label>
+        <label>Coleção B (atual)</label>
         <select id="collB"></select>
 
         <label>Mostrar</label>
@@ -99,6 +133,8 @@
         </select>
 
         <button id="btnComparar">Gerar comparação</button>
+        <button id="btnPrintRem" class="secondary" disabled>Imprimir remarcação</button>
+
         <span id="cmpStatus" class="muted right"></span>
       </div>
 
@@ -117,7 +153,7 @@
       <div id="maxTabelaWrap"></div>
     </div>
 
-    <!-- MATRIZ PREÇOS x COLEÇÕES -->
+    <!-- MATRIZ -->
     <div class="panel">
       <div class="section-title">Tabela preços x coleções</div>
       <div class="row">
@@ -130,16 +166,22 @@
       </div>
       <div id="matTabelaWrap"></div>
     </div>
+
   </div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
     const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+
     let listaTemp = [];
 
+    // comparação cache
     let cmpCache = [];
     let cmpHeaderA = "";
     let cmpHeaderB = "";
+
+    // lista preço cache
+    let priceListCache = [];
 
     async function api(path, params={}) {
       const url = new URL(API_URL);
@@ -182,9 +224,20 @@
       fill(document.getElementById('collB'), false);
       fill(document.getElementById('maxColl'), true);
 
+      // painel lista preço: select de cutoff
+      const plistSel = document.getElementById('plistColecao');
+      plistSel.innerHTML = '';
+      colls.forEach(c=>{
+        const o = document.createElement('option');
+        o.value = o.textContent = c;
+        plistSel.appendChild(o);
+      });
+
+      // padrão: A = penúltima, B = última
       if (colls.length >= 2) {
         document.getElementById('collA').value = colls[colls.length-2];
         document.getElementById('collB').value = colls[colls.length-1];
+        plistSel.value = colls[colls.length-1];
       }
     }
 
@@ -216,6 +269,61 @@
       }
     };
 
+    /* ===================== LISTA DE PREÇO ===================== */
+    const plistMode = document.getElementById('plistMode');
+    const plistColecao = document.getElementById('plistColecao');
+
+    plistMode.onchange = ()=>{
+      plistColecao.disabled = (plistMode.value !== "upto");
+    };
+
+    document.getElementById('btnGerarLista').onclick = async ()=>{
+      const mode = plistMode.value;
+      const colecao = plistColecao.value;
+
+      document.getElementById('plistStatus').textContent = "Gerando...";
+      const res = await api("priceList", mode === "upto" ? { mode, colecao } : { mode });
+
+      if (res.erro) {
+        document.getElementById('plistStatus').textContent = "Erro: " + res.erro;
+        return;
+      }
+
+      priceListCache = res.items || [];
+      document.getElementById('plistStatus').textContent =
+        `${res.count} itens — base: ${res.cutoffColecao || "ATUAL"}`;
+
+      renderPriceList();
+    };
+
+    function renderPriceList(){
+      const term = document.getElementById('plistSearch').value.trim().toUpperCase();
+      let data = priceListCache || [];
+      if (term) data = data.filter(x => String(x.ref||"").includes(term));
+
+      const rows = data.map(x=>[x.ref, fmtBR(x.preco), "COLEÇÃO ATUAL"]);
+      renderTable("plistTabelaWrap", ["REF","PREÇO","COLEÇÃO"], rows);
+    }
+
+    document.getElementById('plistSearch').oninput = renderPriceList;
+
+    // ✅ EXPORTAR (senha fica só no GS)
+    document.getElementById('btnExportarAtual').onclick = async ()=>{
+      const pass = prompt("Digite a senha para gravar a COLEÇÃO ATUAL:");
+      if (pass == null) return;
+
+      document.getElementById('exportStatus').textContent = "Gravando...";
+      const resp = await postData({ action:"exportCurrentPrices", password: pass, mode:"latest" });
+
+      if (resp.status === "ok") {
+        document.getElementById('exportStatus').textContent = `OK — gravados ${resp.gravados} itens.`;
+        alert("Coleção atual gravada com sucesso!");
+      } else {
+        document.getElementById('exportStatus').textContent = "Erro: " + (resp.erro || "desconhecido");
+        alert("Erro: " + (resp.erro || "desconhecido"));
+      }
+    };
+
     /* ===================== BUSCAR REF ===================== */
     document.getElementById('btnBuscarRef').onclick = async ()=>{
       const ref = document.getElementById('refInput').value.trim().toUpperCase();
@@ -232,7 +340,6 @@
 
       document.getElementById('refMax').textContent = fmtBR(res.max);
       document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
-
       document.getElementById('refAtual').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
       document.getElementById('refAtualColl').textContent = res.atual ? res.atual.colecao : '-';
 
@@ -242,7 +349,7 @@
       renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
     };
 
-    // LEGADO: incluir/finalizar lista (envia CSV por e-mail)
+    // legado incluir/finalizar
     document.getElementById('btnIncluir').onclick = async ()=>{
       const ref = document.getElementById('refInput').value.trim().toUpperCase();
       if(!ref) return;
@@ -266,12 +373,13 @@
       const b = document.getElementById('collB').value;
       if(!a || !b){ alert("Selecione Coleção A e B."); return; }
 
-      document.getElementById('cmpStatus').textContent = "Carregando comparação...";
+      document.getElementById('cmpStatus').textContent = "Carregando...";
       cmpHeaderA = a;
       cmpHeaderB = b;
 
       cmpCache = await api("compareCollections", { a, b });
 
+      document.getElementById('btnPrintRem').disabled = false;
       aplicarFiltrosComparacao();
     };
 
@@ -294,10 +402,9 @@
       }
 
       const onlyChanged = document.getElementById('cmpOnly').value === "1";
-      const direction   = document.getElementById('cmpDir').value; // ALL/SUBIU/DESCEU/IGUAL/SEM_DADO
+      const direction   = document.getElementById('cmpDir').value;
 
       let data = cmpCache;
-
       if (onlyChanged) data = data.filter(r => r.alterou);
       if (direction !== "ALL") data = data.filter(r => r.direcao === direction);
 
@@ -316,32 +423,89 @@
       });
 
       renderTable('cmpTabelaWrap',
-        ["Referência", `Preço (${cmpHeaderA})`, `Preço (${cmpHeaderB})`, "Δ", "Status"],
+        ["REF", `PREÇO (${cmpHeaderA})`, `PREÇO (${cmpHeaderB})`, "Δ", "STATUS"],
         body
       );
 
-      const resumoTotal = countResumo_(cmpCache);
-      const resumoExib  = countResumo_(data);
+      const total = countResumo_(cmpCache);
+      const shown = countResumo_(data);
 
       document.getElementById('cmpStatus').textContent =
-        `${data.length} exibidos / ${cmpCache.length} total — ` +
-        `Exibidos: ↑${resumoExib.subiu} ↓${resumoExib.desceu} =${resumoExib.igual} ?${resumoExib.sem} — ` +
-        `Total: ↑${resumoTotal.subiu} ↓${resumoTotal.desceu} =${resumoTotal.igual} ?${resumoTotal.sem}`;
+        `${data.length}/${cmpCache.length} — Exibidos: ↑${shown.subiu} ↓${shown.desceu} =${shown.igual} ?${shown.sem} — ` +
+        `Total: ↑${total.subiu} ↓${total.desceu} =${total.igual} ?${total.sem}`;
     }
 
     document.getElementById('cmpOnly').onchange = aplicarFiltrosComparacao;
     document.getElementById('cmpDir').onchange  = aplicarFiltrosComparacao;
 
-    document.getElementById('collA').onchange = ()=>{
-      cmpCache = [];
-      document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Clique em “Gerar comparação”.</div>';
-      document.getElementById('cmpStatus').textContent = '';
+    // ✅ IMPRIMIR REMARCAÇÃO (bonito)
+    document.getElementById('btnPrintRem').onclick = ()=>{
+      if (!cmpCache || !cmpCache.length) { alert("Gere a comparação primeiro."); return; }
+
+      // só subiu/desceu e com dados completos
+      const items = cmpCache.filter(r => (r.direcao==="SUBIU" || r.direcao==="DESCEU") && r.precoA!=null && r.precoB!=null);
+
+      if (!items.length) { alert("Nenhuma remarcação (subiu/desceu) encontrada."); return; }
+
+      const html = `
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Remarcação</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:24px;color:#111}
+  h1{margin:0 0 6px;font-size:18px}
+  .sub{margin:0 0 14px;color:#555;font-size:12px}
+  table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid #ddd;padding:8px 10px;font-size:12px;white-space:nowrap}
+  th{background:#f3f3f3;text-align:left}
+  .up{color:#0a7a2a;font-weight:700}
+  .down{color:#b00020;font-weight:700}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#eee}
+</style>
+</head>
+<body>
+  <h1>REMARCAÇÃO — ${escapeHtml(cmpHeaderA)} → ${escapeHtml(cmpHeaderB)}</h1>
+  <p class="sub">Gerado em ${new Date().toLocaleString("pt-BR")}. Itens: ${items.length}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>REF</th>
+        <th>PREÇO ANTERIOR</th>
+        <th>PREÇO ATUAL</th>
+        <th>STATUS</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${items.map(r=>{
+        const cls = r.direcao==="SUBIU" ? "up" : "down";
+        const st  = r.direcao==="SUBIU" ? "SUBIU" : "DESCEU";
+        return `<tr>
+          <td>${escapeHtml(r.referencia)}</td>
+          <td>${fmtBR(r.precoA)}</td>
+          <td>${fmtBR(r.precoB)}</td>
+          <td class="${cls}"><span class="pill">${st}</span></td>
+        </tr>`;
+      }).join("")}
+    </tbody>
+  </table>
+<script>
+  setTimeout(()=>window.print(), 300);
+<\/script>
+</body>
+</html>`;
+
+      const w = window.open("", "_blank");
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
     };
-    document.getElementById('collB').onchange = ()=>{
-      cmpCache = [];
-      document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Clique em “Gerar comparação”.</div>';
-      document.getElementById('cmpStatus').textContent = '';
-    };
+
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
 
     /* ===================== MAX ===================== */
     document.getElementById('btnMax').onclick = async ()=>{
@@ -354,7 +518,7 @@
       }
 
       const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
-      renderTable('maxTabelaWrap', ["Referência","MAX de valor"], rows);
+      renderTable('maxTabelaWrap', ["REF","MAX"], rows);
     };
 
     /* ===================== MATRIZ ===================== */
