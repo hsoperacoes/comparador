@@ -1,688 +1,409 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Precificação - HS</title>
+/*******************************************************
+ * HS — Precificação / Comparador / Coleções
+ * - Banco: uma linha por (REF, COLEÇÃO, PREÇO)
+ * - Rotas GET: listCollections, searchReference, compareCollections, matrix
+ * - Rotas POST: addCollection, exportCurrentPrices
+ *******************************************************/
 
-  <style>
-    :root{
-      --bg:#000;
-      --panel:#141414;
-      --panel2:#101010;
-      --line:#2a2a2a;
-      --muted:#bdbdbd;
-      --pri:#673ab7;
-      --pri2:#7b4ef0;
-      --ok:#28a745;
-      --warn:#e67e22;
-      --err:#e53935;
+const SPREADSHEET_ID = "1v9GBXW-gqfU9Jx1MRkJQLkX8y8jJVbdhtlRM3Mh7dXM";
+const SHEET_NAME     = "atualizada 11.04";
+
+// Export "Leonardo"
+const EXPORT_SHEET_ID  = "1T2_9rYF5DDfLuvS4H96UmEwxZeBgcWNaw3Hm9W2SEPE";
+const EXPORT_TAB_NAME  = "Leonardo";
+const EXPORT_PASSWORD  = "1234"; // <<<<< TROQUE AQUI
+
+// Ordem das estações (VOCÊ confirmou que é: VERÃO, ALTO VERÃO, OUTONO, INVERNO)
+const SEASON_ORDER = {
+  "VERAO": 1, "VERÃO": 1,
+  "ALTO VERAO": 2, "ALTO VERÃO": 2,
+  "OUTONO": 3,
+  "INVERNO": 4
+};
+
+// Cache (para ficar “instantâneo” no site)
+const CACHE_KEY = "HS_PRECOS_CACHE_V2";
+const CACHE_TTL = 60; // segundos (1 min já ajuda muito)
+
+function doGet(e) {
+  try {
+    const action = e?.parameter?.action || "";
+    const db = loadDb_(); // carrega + indexa + cache
+
+    if (action === "listCollections") {
+      return jsonOut_(db.collectionsSorted);
     }
 
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:#fff}
+    if (action === "searchReference") {
+      const ref = normRef_(e.parameter.ref);
+      const items = db.rowsByRef.get(ref) || [];
+      const valid = items.filter(x => x.preco != null && x.preco > 0);
 
-    .wrap{max-width:1200px;margin:0 auto;padding:22px}
-    h1{margin:0 0 14px;font-size:20px;font-weight:800}
+      if (!valid.length) return jsonOut_({ items: [] });
 
-    .grid{display:grid;gap:14px}
-    .panel{
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border:1px solid #1f1f1f;
-      padding:14px;
-      border-radius:12px;
+      // maior preço histórico
+      let max = -Infinity;
+      valid.forEach(v => { if (v.preco > max) max = v.preco; });
+      const maxCols = valid.filter(v => v.preco === max).map(v => v.colecao);
+
+      // "atual" = última coleção (pela ordenação)
+      const lastItem = valid.slice().sort((a,b)=> a.key - b.key).pop();
+      const atual = lastItem ? { colecao: lastItem.colecao, preco: lastItem.preco } : null;
+
+      // lista por coleção (ordenada)
+      const out = valid.slice().sort((a,b)=> a.key - b.key).map(v => ({ coll: v.colecao, price: v.preco }));
+
+      return jsonOut_({
+        items: out,
+        max,
+        maxCollections: sortCollections_(maxCols),
+        atual
+      });
     }
 
-    .section-title{margin:0 0 10px;font-weight:800}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{font-size:12px;color:#ddd}
-    input,select,button{
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid #333;
-      background:#0e0e0e;
-      color:#fff;
-      outline:none;
-    }
-    select{cursor:pointer}
-    button{
-      background:var(--pri);
-      border:0;
-      cursor:pointer;
-      font-weight:800;
-      transition:.12s transform ease, .12s background ease;
-    }
-    button:hover{background:var(--pri2);transform:translateY(-1px)}
-    button.secondary{background:#2a2a2a}
-    button.secondary:hover{background:#363636}
-    button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    if (action === "compareCollections") {
+      const a = (e.parameter.a || "").trim();
+      const b = (e.parameter.b || "").trim();
+      if (!a || !b) return jsonOut_([]);
 
-    .muted{color:var(--muted);font-size:12px}
-    .right{margin-left:auto}
-    .pill{
-      background:#0e0e0e;
-      border:1px solid #222;
-      padding:8px 10px;
-      border-radius:10px;
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      font-size:12px;
-    }
-    .pill strong{font-size:13px}
+      const keyA = collectionKey_(a);
+      const keyB = collectionKey_(b);
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      border:1px solid rgba(123,78,240,.35);
-      background:rgba(123,78,240,.14);
-      color:#e7dcff;
+      // mapa ref -> preço na coleção A/B (rápido)
+      const mapA = db.priceByRefColl.get(a) || new Map();
+      const mapB = db.priceByRefColl.get(b) || new Map();
+
+      const refs = db.allRefs;
+      const list = refs.map(ref => {
+        const va = mapA.has(ref) ? mapA.get(ref) : null;
+        const vb = mapB.has(ref) ? mapB.get(ref) : null;
+
+        const delta = (va!=null && vb!=null) ? round2_(vb - va) : null;
+        const alterou = (delta != null && delta !== 0);
+
+        let direcao = "SEM DADO";
+        if (va!=null && vb!=null) {
+          if (vb > va) direcao = "SUBIU";
+          else if (vb < va) direcao = "DESCEU";
+          else direcao = "IGUAL";
+        }
+
+        return {
+          referencia: ref,
+          precoA: va,
+          precoB: vb,
+          delta,
+          alterou,
+          direcao,
+          keyA,
+          keyB
+        };
+      });
+
+      return jsonOut_(list);
     }
 
-    .badge .dot{
-      width:9px;height:9px;border-radius:99px;
-      background:rgba(123,78,240,.95);
-      box-shadow:0 0 10px rgba(123,78,240,.55);
-    }
+    if (action === "matrix") {
+      const limit = Math.max(1, parseInt(e.parameter.limit || db.allRefs.length, 10) || db.allRefs.length);
 
-    .b-ok{background:rgba(40,167,69,.14);color:#7af0a0;border:1px solid rgba(40,167,69,.25)}
-    .b-warn{background:rgba(230,126,34,.16);color:#ffc08c;border:1px solid rgba(230,126,34,.25)}
-    .b-err{background:rgba(229,57,53,.16);color:#ffb0b0;border:1px solid rgba(229,57,53,.25)}
+      const refs = db.allRefs.slice(0, limit);
+      const colls = db.collectionsSorted;
 
-    /* ===== Scroll + sticky header + sticky first col ===== */
-    .scroll{
-      max-height:520px;
-      overflow:auto;
-      border:1px solid #242424;
-      border-radius:12px;
-      margin-top:10px;
-    }
-    table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px}
-    th,td{
-      padding:10px 10px;
-      border-bottom:1px solid #1f1f1f;
-      font-size:13px;
-      white-space:nowrap;
-      vertical-align:middle;
-    }
-    th{
-      background:#0f0f0f;
-      position:sticky;
-      top:0;
-      z-index:5;
-      text-align:left;
-      border-bottom:1px solid #2b2b2b;
-    }
-
-    /* REF fixa (primeira coluna) */
-    th:first-child, td:first-child{
-      position:sticky;
-      left:0;
-      z-index:6;
-      background:#121212;
-      border-right:1px solid #222;
-      font-weight:800;
-    }
-    th:first-child{z-index:10;background:#101010}
-
-    /* Drag style */
-    th.draggable{
-      cursor:grab;
-      user-select:none;
-    }
-    th.draggable:active{cursor:grabbing}
-    th.drag-over{
-      outline:2px dashed rgba(123,78,240,.85);
-      outline-offset:-4px;
-    }
-    th.dragging{opacity:.55}
-
-    .small-gap{gap:8px}
-  </style>
-</head>
-
-<body>
-  <div class="wrap grid">
-    <h1>Precificação — HS</h1>
-
-    <!-- COLEÇÃO ATIVA -->
-    <div class="panel">
-      <div class="section-title">Coleção ativa (manual)</div>
-      <div class="row">
-        <label>Escolher coleção</label>
-        <select id="activeCollSelect" style="min-width:320px"></select>
-        <button id="btnSetActive">Definir coleção ativa</button>
-        <button id="btnClearActive" class="secondary">Limpar</button>
-
-        <span class="right badge" id="activeBadge" style="display:none">
-          <span class="dot"></span>
-          <span>Coleção ativa:</span>
-          <span id="activeBadgeText"></span>
-        </span>
-      </div>
-      <div class="muted" style="margin-top:8px">
-        A coleção ativa fica salva <b>somente neste navegador</b>. Use ela como referência para gerar/exportar/imprimir (vamos ligar esses botões nela no próximo passo).
-      </div>
-    </div>
-
-    <!-- BUSCA POR REFERÊNCIA -->
-    <div class="panel">
-      <div class="section-title">Buscar referência</div>
-
-      <div class="row">
-        <label>Referência</label>
-        <input id="refInput" placeholder="Ex.: 0227" style="min-width:180px;text-transform:uppercase"/>
-        <button id="btnBuscarRef">Buscar</button>
-
-        <!-- Mantive seus botões, mas agora isso é uma “lista para e-mail”, não coleção -->
-        <button id="btnIncluir" class="secondary">Incluir na lista (e-mail)</button>
-        <button id="btnFinalizar" class="secondary">Finalizar lista (e-mail)</button>
-
-        <span id="refStatus" class="muted right"></span>
-      </div>
-
-      <div class="row small-gap" id="refResumo" style="margin-top:10px;display:none;flex-wrap:wrap">
-        <span class="pill">Maior preço (histórico): <strong id="refMax"></strong></span>
-        <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
-        <span class="pill">Preço atual (última coleção): <strong id="refAtualPreco"></strong></span>
-        <span class="pill">Coleção atual: <strong id="refAtualCol"></strong></span>
-      </div>
-
-      <div id="refTabelaWrap"></div>
-    </div>
-
-    <!-- COMPARAR COLEÇÕES -->
-    <div class="panel">
-      <div class="section-title">Comparar coleções</div>
-
-      <div class="row">
-        <label>Coleção A</label>
-        <select id="collA"></select>
-
-        <label>Coleção B</label>
-        <select id="collB"></select>
-
-        <button id="btnComparar">Comparar</button>
-
-        <button id="btnSomenteAlterou" class="secondary">Somente alterou</button>
-        <button id="btnSomenteSubiu" class="secondary">Somente subiu</button>
-        <button id="btnSomenteDesceu" class="secondary">Somente desceu</button>
-
-        <span id="cmpStatus" class="muted right"></span>
-      </div>
-
-      <div id="cmpTabelaWrap"></div>
-    </div>
-
-    <!-- MATRIZ PREÇOS x COLEÇÕES -->
-    <div class="panel">
-      <div class="section-title">Tabela preços x coleções (Matriz)</div>
-
-      <div class="row">
-        <label>Limitar primeiras N referências (opcional)</label>
-        <input id="matLimit" type="number" min="1" style="width:140px" placeholder="ex.: 200"/>
-
-        <label>Filtrar referência</label>
-        <input id="matSearch" placeholder="Ex.: 0227" style="width:200px;text-transform:uppercase"/>
-
-        <button id="btnMatriz">Gerar TABELA</button>
-        <button id="btnResetOrdem" class="secondary" disabled>Resetar ordem</button>
-
-        <span id="matStatus" class="muted right"></span>
-      </div>
-
-      <div class="muted" style="margin-top:8px">
-        Dica: arraste o nome da coleção no cabeçalho para reorganizar. A coluna <b>REF</b> fica fixa. A ordem fica salva neste navegador.
-      </div>
-
-      <div id="matTabelaWrap"></div>
-    </div>
-
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
-
-    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
-    const safe = (s)=> String(s ?? "");
-
-    // localStorage keys
-    const LS_KEY_COL_ORDER   = "HS_PRECO_COL_ORDER_v1";
-    const LS_KEY_ACTIVE_COLL = "HS_COLECAO_ATIVA_v1";
-
-    let listaTemp = [];
-    let cmpOnlyChanged = false;
-    let cmpOnlyUp = false;
-    let cmpOnlyDown = false;
-
-    // estado matriz
-    let matrizState = null; // {refs, colls, priceIndex, order}
-
-    async function api(action, params={}) {
-      const url = new URL(API_URL);
-      url.search = new URLSearchParams({ action, ...params }).toString();
-      const res = await fetch(url);
-      return res.json();
-    }
-
-    async function postData(payload){
-      const res = await fetch(API_URL,{ method:'POST', body: JSON.stringify(payload) });
-      return res.json();
-    }
-
-    function renderTable(targetId, head, rows){
-      const wrap = document.getElementById(targetId);
-      wrap.innerHTML = '';
-
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-      `;
-
-      const scroll = document.createElement('div');
-      scroll.className = 'scroll';
-      scroll.appendChild(table);
-      wrap.appendChild(scroll);
-    }
-
-    function normalizeRef(v){
-      return safe(v).trim().toUpperCase();
-    }
-
-    function loadLocalOrder(){
-      try{
-        const raw = localStorage.getItem(LS_KEY_COL_ORDER);
-        if(!raw) return null;
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr : null;
-      }catch(e){
-        return null;
-      }
-    }
-    function saveLocalOrder(order){
-      localStorage.setItem(LS_KEY_COL_ORDER, JSON.stringify(order));
-    }
-    function clearLocalOrder(){
-      localStorage.removeItem(LS_KEY_COL_ORDER);
-    }
-
-    function getActiveCollection(){
-      return safe(localStorage.getItem(LS_KEY_ACTIVE_COLL)).trim();
-    }
-    function setActiveCollection(name){
-      localStorage.setItem(LS_KEY_ACTIVE_COLL, safe(name).trim());
-      updateActiveBadge();
-    }
-    function clearActiveCollection(){
-      localStorage.removeItem(LS_KEY_ACTIVE_COLL);
-      updateActiveBadge();
-    }
-
-    function updateActiveBadge(){
-      const coll = getActiveCollection();
-      const badge = document.getElementById('activeBadge');
-      const text  = document.getElementById('activeBadgeText');
-      if(coll){
-        badge.style.display = 'inline-flex';
-        text.textContent = coll;
-      }else{
-        badge.style.display = 'none';
-        text.textContent = '';
-      }
-    }
-
-    function applyOrderToMatrix(originalColls, desiredOrder){
-      const set = new Set(originalColls);
-      const cleaned = (desiredOrder || []).filter(c => set.has(c));
-      const remaining = originalColls.filter(c => !cleaned.includes(c));
-      return cleaned.concat(remaining);
-    }
-
-    function buildMatrixView(state){
-      const head = ["REF"].concat(state.order);
-
-      const rows = state.refs.map(ref => {
+      // monta rows com lookup O(1)
+      const rows = refs.map(ref => {
         const line = [ref];
-        state.order.forEach(c => {
-          const v = state.priceIndex[ref + "||" + c];
-          line.push(v == null ? "-" : fmtBR(v));
+        colls.forEach(c => {
+          const m = db.priceByRefColl.get(c);
+          const v = m ? m.get(ref) : null;
+          line.push(v == null ? null : v);
         });
         return line;
       });
 
-      return { head, rows };
+      return jsonOut_({ header: ["REF"].concat(colls), rows });
     }
 
-    function renderMatrix(state){
-      const wrap = document.getElementById('matTabelaWrap');
-      wrap.innerHTML = '';
+    return jsonOut_({ erro: "Ação inválida: " + action });
 
-      const view = buildMatrixView(state);
+  } catch (err) {
+    return jsonOut_({ erro: err.message });
+  }
+}
 
-      const table = document.createElement('table');
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents || "{}");
+    const action = (payload.action || "").trim();
 
-      // HEADER com draggable nos TH (exceto REF)
-      const thead = document.createElement('thead');
-      const trh = document.createElement('tr');
+    if (action === "addCollection") {
+      // payload: {action:"addCollection", name:"OUTONO 25 REM", items:[{ref,price}]}
+      const name = String(payload.name || "").trim();
+      const items = payload.items || [];
+      if (!name) throw new Error("Nome da coleção vazio.");
+      if (!Array.isArray(items) || !items.length) throw new Error("Lista de itens vazia.");
 
-      view.head.forEach((h, idx) => {
-        const th = document.createElement('th');
-        th.textContent = h;
+      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+      const sh = ss.getSheetByName(SHEET_NAME);
+      if (!sh) throw new Error("Aba '" + SHEET_NAME + "' não encontrada.");
 
-        if(idx > 0){
-          th.classList.add('draggable');
-          th.setAttribute('draggable', 'true');
-          th.dataset.col = h;
+      const data = sh.getDataRange().getValues();
+      const headers = (data[0] || []).map(h => String(h).trim().toUpperCase());
+
+      const idxRef = headers.indexOf("REF");
+      const idxPreco = headers.indexOf("PREÇO");
+      const idxCol = headers.indexOf("COLEÇÃO");
+      if (idxRef === -1 || idxPreco === -1 || idxCol === -1) {
+        throw new Error("Cabeçalhos obrigatórios não encontrados: REF, PREÇO, COLEÇÃO");
+      }
+
+      const out = [];
+      items.forEach(it => {
+        const ref = normRef_(it.ref);
+        const preco = parsePrice_(it.price);
+        if (!ref) return;
+        if (preco == null) return;
+        out.push([ref, preco, name]);
+      });
+
+      if (!out.length) throw new Error("Nenhum item válido após validação.");
+
+      // append (não mexe em linhas antigas)
+      const startRow = sh.getLastRow() + 1;
+      sh.getRange(startRow, 1, out.length, 3).setValues(out);
+
+      // limpa cache para refletir instantâneo
+      CacheService.getScriptCache().remove(CACHE_KEY);
+
+      return jsonOut_({ status: "ok", inserted: out.length, colecao: name });
+    }
+
+    if (action === "exportCurrentPrices") {
+      // payload: {action:"exportCurrentPrices", password:"...", baseCollection:"OUTONO 25" (opcional)}
+      const pass = String(payload.password || "");
+      if (pass !== EXPORT_PASSWORD) {
+        return jsonOut_({ status:"erro", erro:"Senha inválida." });
+      }
+
+      const baseCollection = String(payload.baseCollection || "").trim(); // se vazio, usa "última"
+      const db = loadDb_();
+
+      // define "cutoff"
+      const cutoffKey = baseCollection ? collectionKey_(baseCollection) : (db.lastCollectionKey || 0);
+
+      // Para cada REF: pegar último preço conhecido ATÉ cutoffKey
+      const out = [];
+      db.allRefs.forEach(ref => {
+        const items = db.rowsByRef.get(ref) || [];
+        // pega o último <= cutoff
+        let best = null;
+        for (let i=0;i<items.length;i++){
+          const it = items[i];
+          if (it.preco == null) continue;
+          if (it.key <= cutoffKey) {
+            if (!best || it.key > best.key) best = it;
+          }
         }
-
-        trh.appendChild(th);
-      });
-
-      thead.appendChild(trh);
-      table.appendChild(thead);
-
-      // BODY
-      const tbody = document.createElement('tbody');
-      view.rows.forEach(r => {
-        const tr = document.createElement('tr');
-        r.forEach((cell) => {
-          const td = document.createElement('td');
-          td.textContent = cell;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-
-      const scroll = document.createElement('div');
-      scroll.className = 'scroll';
-      scroll.appendChild(table);
-      wrap.appendChild(scroll);
-
-      enableMatrixDrag(table, state);
-      document.getElementById('btnResetOrdem').disabled = false;
-    }
-
-    function enableMatrixDrag(table, state){
-      let dragCol = null;
-
-      const ths = table.querySelectorAll('thead th.draggable');
-
-      ths.forEach(th => {
-        th.addEventListener('dragstart', (ev) => {
-          dragCol = th.dataset.col;
-          th.classList.add('dragging');
-          ev.dataTransfer.effectAllowed = "move";
-        });
-
-        th.addEventListener('dragend', () => {
-          th.classList.remove('dragging');
-          ths.forEach(x => x.classList.remove('drag-over'));
-          dragCol = null;
-        });
-
-        th.addEventListener('dragover', (ev) => {
-          ev.preventDefault();
-          th.classList.add('drag-over');
-          ev.dataTransfer.dropEffect = "move";
-        });
-
-        th.addEventListener('dragleave', () => {
-          th.classList.remove('drag-over');
-        });
-
-        th.addEventListener('drop', (ev) => {
-          ev.preventDefault();
-          th.classList.remove('drag-over');
-
-          const dropCol = th.dataset.col;
-          if(!dragCol || !dropCol || dragCol === dropCol) return;
-
-          const order = state.order.slice();
-          const from = order.indexOf(dragCol);
-          const to = order.indexOf(dropCol);
-          if(from === -1 || to === -1) return;
-
-          order.splice(from, 1);
-          order.splice(to, 0, dragCol);
-
-          state.order = order;
-          saveLocalOrder(order);
-          renderMatrix(state);
-        });
-      });
-    }
-
-    async function loadCollections(){
-      const colls = await api("listCollections");
-
-      const fill=(sel, addPlaceholder=true)=>{
-        sel.innerHTML = addPlaceholder ? '<option value="">Selecione</option>' : '';
-        colls.forEach(c=>{
-          const o=document.createElement('option');
-          o.value = c;
-          o.textContent = c;
-          sel.appendChild(o);
-        });
-      };
-
-      fill(document.getElementById('collA'), true);
-      fill(document.getElementById('collB'), true);
-
-      // coleção ativa (sem placeholder vazio)
-      const activeSel = document.getElementById('activeCollSelect');
-      activeSel.innerHTML = '<option value="">Selecione</option>';
-      colls.forEach(c=>{
-        const o=document.createElement('option');
-        o.value = c;
-        o.textContent = c;
-        activeSel.appendChild(o);
-      });
-
-      // se já tiver coleção ativa salva, seleciona
-      const currentActive = getActiveCollection();
-      if(currentActive){
-        activeSel.value = currentActive;
-        updateActiveBadge();
-      }else{
-        updateActiveBadge();
-      }
-    }
-
-    // ===== Coleção ativa =====
-    document.getElementById('btnSetActive').onclick = () => {
-      const sel = document.getElementById('activeCollSelect');
-      const v = safe(sel.value).trim();
-      if(!v){ alert("Selecione uma coleção para definir como ativa."); return; }
-      setActiveCollection(v);
-      alert("Coleção ativa definida: " + v);
-    };
-    document.getElementById('btnClearActive').onclick = () => {
-      clearActiveCollection();
-      document.getElementById('activeCollSelect').value = "";
-      alert("Coleção ativa limpa.");
-    };
-
-    // ===== Buscar referência =====
-    document.getElementById('btnBuscarRef').onclick = async () => {
-      const ref = normalizeRef(document.getElementById('refInput').value);
-      const status = document.getElementById('refStatus');
-      status.textContent = 'Buscando...';
-
-      const res = await api("searchReference",{ ref });
-      status.textContent = '';
-
-      const wrap = document.getElementById('refTabelaWrap');
-      wrap.innerHTML = '';
-
-      if(!res.items || !res.items.length){
-        document.getElementById('refResumo').style.display = 'none';
-        wrap.innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
-        return;
-      }
-
-      document.getElementById('refMax').textContent = fmtBR(res.max);
-      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
-      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
-      document.getElementById('refAtualCol').textContent = res.atual ? safe(res.atual.colecao) : '-';
-      document.getElementById('refResumo').style.display = 'flex';
-
-      const rows = res.items.map(i => [safe(i.coll), fmtBR(i.price)]);
-      renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
-    };
-
-    // ===== Lista para e-mail (mantida) =====
-    document.getElementById('btnIncluir').onclick = async () => {
-      const ref = normalizeRef(document.getElementById('refInput').value);
-      if(!ref) return;
-
-      const res = await api("searchReference",{ ref });
-      if(res.items && res.items.length){
-        res.items.forEach(i => listaTemp.push({ ref: ref, coll: i.coll, price: i.price }));
-        alert("Adicionado na lista (e-mail): " + ref);
-      } else {
-        alert("Sem dados para essa referência.");
-      }
-    };
-
-    document.getElementById('btnFinalizar').onclick = async () => {
-      if(!listaTemp.length){ alert("Lista (e-mail) vazia."); return; }
-      const resp = await postData({ items: listaTemp });
-      if(resp.status === "ok"){
-        alert("E-mail enviado com " + resp.enviados + " itens.");
-        listaTemp = [];
-      } else {
-        alert("Erro ao enviar: " + (resp.erro || "desconhecido"));
-      }
-    };
-
-    // ===== Comparar coleções =====
-    function badgeStatus(dir){
-      if(dir === "SUBIU") return '<span class="badge b-ok">SUBIU</span>';
-      if(dir === "DESCEU") return '<span class="badge b-err">DESCEU</span>';
-      if(dir === "IGUAL") return '<span class="badge b-warn">IGUAL</span>';
-      return '<span class="badge b-warn">SEM DADO</span>';
-    }
-
-    function applyCompareFilters(list){
-      let data = list || [];
-      if(cmpOnlyChanged) data = data.filter(r => r.alterou);
-      if(cmpOnlyUp) data = data.filter(r => r.direcao === "SUBIU");
-      if(cmpOnlyDown) data = data.filter(r => r.direcao === "DESCEU");
-      return data;
-    }
-
-    async function doCompare(){
-      const a = document.getElementById('collA').value;
-      const b = document.getElementById('collB').value;
-      if(!a || !b){ alert("Selecione Coleção A e B"); return; }
-
-      document.getElementById('cmpStatus').textContent = 'Comparando...';
-      const list = await api("compareCollections",{ a, b });
-      document.getElementById('cmpStatus').textContent = '';
-
-      const data = applyCompareFilters(list);
-
-      const body = data.map(r => [
-        safe(r.referencia),
-        r.precoA == null ? '-' : fmtBR(r.precoA),
-        r.precoB == null ? '-' : fmtBR(r.precoB),
-        r.delta == null ? '-' : fmtBR(r.delta),
-        badgeStatus(r.direcao)
-      ]);
-
-      renderTable('cmpTabelaWrap', ["REF", `Preço (${a})`, `Preço (${b})`, "Δ", "Status"], body);
-    }
-
-    document.getElementById('btnComparar').onclick = doCompare;
-
-    document.getElementById('btnSomenteAlterou').onclick = () => {
-      cmpOnlyChanged = !cmpOnlyChanged;
-      cmpOnlyUp = false;
-      cmpOnlyDown = false;
-      doCompare();
-    };
-
-    document.getElementById('btnSomenteSubiu').onclick = () => {
-      cmpOnlyUp = !cmpOnlyUp;
-      cmpOnlyChanged = false;
-      cmpOnlyDown = false;
-      doCompare();
-    };
-
-    document.getElementById('btnSomenteDesceu').onclick = () => {
-      cmpOnlyDown = !cmpOnlyDown;
-      cmpOnlyChanged = false;
-      cmpOnlyUp = false;
-      doCompare();
-    };
-
-    // ===== Matriz =====
-    document.getElementById('btnMatriz').onclick = async () => {
-      const limit = document.getElementById('matLimit').value;
-      document.getElementById('matStatus').textContent = 'Gerando...';
-
-      const obj = await api("matrix",{ limit });
-      document.getElementById('matStatus').textContent = '';
-
-      if(!obj || !obj.rows || !obj.rows.length){
-        document.getElementById('matTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
-        document.getElementById('btnResetOrdem').disabled = true;
-        matrizState = null;
-        return;
-      }
-
-      const colls = obj.header.slice(1);
-      const refs = obj.rows.map(r => r[0]);
-
-      const priceIndex = Object.create(null);
-      obj.rows.forEach(r => {
-        const ref = safe(r[0]);
-        for(let i=1;i<obj.header.length;i++){
-          const coll = obj.header[i];
-          const v = r[i];
-          if(v != null && v !== "" && v !== "-") priceIndex[ref + "||" + coll] = v;
+        if (best) {
+          out.push([ref, best.preco, "COLEÇÃO ATUAL"]);
         }
       });
 
-      const stored = loadLocalOrder();
-      const order = applyOrderToMatrix(colls, stored);
+      // grava na planilha Leonardo
+      const ss = SpreadsheetApp.openById(EXPORT_SHEET_ID);
+      const sh = ss.getSheetByName(EXPORT_TAB_NAME);
+      if (!sh) throw new Error("Aba '" + EXPORT_TAB_NAME + "' não encontrada na planilha de export.");
 
-      matrizState = { refs, colls, order, priceIndex };
-      renderMatrix(matrizState);
+      // sobrescreve A:C (conforme você decidiu que não precisa histórico)
+      sh.getRange("A:C").clearContent();
+      if (out.length) {
+        sh.getRange(1, 1, out.length, 3).setValues(out);
+      }
 
-      // filtro em tempo real
-      const input = document.getElementById('matSearch');
-      input.oninput = () => {
-        const term = normalizeRef(input.value);
-        if(!matrizState) return;
+      return jsonOut_({ status:"ok", exported: out.length, cutoff: baseCollection || "ÚLTIMA" });
+    }
 
-        const wrap = document.getElementById('matTabelaWrap');
-        const trs = wrap.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-          const ref = normalizeRef(tr.querySelector('td')?.textContent || "");
-          tr.style.display = term && !ref.includes(term) ? "none" : "";
-        });
-      };
-    };
+    return jsonOut_({ status:"erro", erro:"Ação POST inválida: " + action });
 
-    document.getElementById('btnResetOrdem').onclick = () => {
-      if(!matrizState) return;
-      if(!confirm("Resetar a ordem das colunas para o padrão (ordem do sistema)?")) return;
+  } catch (err) {
+    return jsonOut_({ status:"erro", erro: err.message });
+  }
+}
 
-      clearLocalOrder();
-      matrizState.order = matrizState.colls.slice();
-      renderMatrix(matrizState);
-    };
+/* =========================
+   DB / CACHE / INDEX
+========================= */
+function loadDb_(){
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(CACHE_KEY);
+  if (cached) {
+    return JSON.parse(cached);
+  }
 
-    // init
-    loadCollections();
-  </script>
-</body>
-</html>
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) throw new Error("Aba '" + SHEET_NAME + "' não encontrada.");
+
+  const values = sh.getDataRange().getValues();
+  if (!values || values.length < 2) {
+    const empty = { collectionsSorted:[], rowsByRef: new Map(), priceByRefColl: new Map(), allRefs:[], lastCollectionKey:0 };
+    cache.put(CACHE_KEY, JSON.stringify(serializeDb_(empty)), CACHE_TTL);
+    return deserializeDb_(JSON.parse(cache.get(CACHE_KEY)));
+  }
+
+  const headers = values[0].map(h => String(h).trim().toUpperCase());
+  const idxRef = headers.indexOf("REF");
+  const idxPreco = headers.indexOf("PREÇO");
+  const idxCol = headers.indexOf("COLEÇÃO");
+  if (idxRef === -1 || idxPreco === -1 || idxCol === -1) {
+    throw new Error("Cabeçalhos obrigatórios não encontrados: REF, PREÇO, COLEÇÃO");
+  }
+
+  const rowsByRef = new Map();
+  const priceByRefColl = new Map();
+  const collsSet = new Set();
+  const refsSet = new Set();
+
+  let lastCollectionKey = 0;
+
+  for (let i=1;i<values.length;i++){
+    const r = values[i];
+    const ref = normRef_(r[idxRef]);
+    const preco = parsePrice_(r[idxPreco]);
+    const colecao = String(r[idxCol] || "").trim();
+    if (!ref || !colecao) continue;
+
+    const key = collectionKey_(colecao);
+    if (key > lastCollectionKey) lastCollectionKey = key;
+
+    collsSet.add(colecao);
+    refsSet.add(ref);
+
+    const obj = { ref, preco, colecao, key };
+
+    if (!rowsByRef.has(ref)) rowsByRef.set(ref, []);
+    rowsByRef.get(ref).push(obj);
+
+    if (!priceByRefColl.has(colecao)) priceByRefColl.set(colecao, new Map());
+    // se repetiu a mesma ref na mesma coleção, mantém o último (ou o maior, se preferir)
+    priceByRefColl.get(colecao).set(ref, (preco == null ? null : round2_(preco)));
+  }
+
+  // ordena coleções
+  const collectionsSorted = sortCollections_(Array.from(collsSet));
+  // ordena itens por ref (para export ficar rápido)
+  rowsByRef.forEach(arr => arr.sort((a,b)=> a.key - b.key));
+
+  const db = {
+    collectionsSorted,
+    allRefs: Array.from(refsSet).sort(),
+    lastCollectionKey,
+    rowsByRef,
+    priceByRefColl
+  };
+
+  // cache precisa serializar Map
+  cache.put(CACHE_KEY, JSON.stringify(serializeDb_(db)), CACHE_TTL);
+  return deserializeDb_(JSON.parse(cache.get(CACHE_KEY)));
+}
+
+function serializeDb_(db){
+  return {
+    collectionsSorted: db.collectionsSorted,
+    allRefs: db.allRefs,
+    lastCollectionKey: db.lastCollectionKey,
+    rowsByRef: Array.from(db.rowsByRef.entries()),
+    priceByRefColl: Array.from(db.priceByRefColl.entries()).map(([coll, mp]) => [coll, Array.from(mp.entries())])
+  };
+}
+function deserializeDb_(raw){
+  const rowsByRef = new Map(raw.rowsByRef || []);
+  // rowsByRef vem como arrays de objetos ok
+  const priceByRefColl = new Map();
+  (raw.priceByRefColl || []).forEach(([coll, entries])=>{
+    priceByRefColl.set(coll, new Map(entries));
+  });
+  return {
+    collectionsSorted: raw.collectionsSorted || [],
+    allRefs: raw.allRefs || [],
+    lastCollectionKey: raw.lastCollectionKey || 0,
+    rowsByRef,
+    priceByRefColl
+  };
+}
+
+/* =========================
+   COLEÇÕES / PARSE
+========================= */
+function collectionKey_(name){
+  const info = parseCollName_(name);
+  // chave crescente: AAAA * 1000 + seasonOrder*100 + remIndex
+  return (info.ano * 1000) + (info.ordem * 100) + (info.remIndex || 0);
+}
+
+function parseCollName_(name){
+  const raw = String(name || "").trim();
+  const upper = raw
+    .toUpperCase()
+    .replace(/\s+/g," ")
+    .replace(/\s*-\s*/g," ");
+
+  // ano (pega 20xx ou último 2 dígitos)
+  let ano = 9999;
+  const m4 = upper.match(/20\d{2}/g);
+  if (m4 && m4.length) ano = parseInt(m4[m4.length-1], 10);
+  else {
+    const m2 = upper.match(/(\d{2})(?!.*\d)/);
+    if (m2) ano = 2000 + parseInt(m2[1], 10);
+  }
+
+  // estação
+  let season = "EXTRA";
+  if (upper.includes("INVERNO")) season = "INVERNO";
+  else if (upper.includes("OUTONO")) season = "OUTONO";
+  else if (upper.includes("ALTO") && (upper.includes("VERAO") || upper.includes("VERÃO"))) season = "ALTO VERÃO";
+  else if (upper.includes("VERAO") || upper.includes("VERÃO")) season = "VERÃO";
+
+  const ordem = SEASON_ORDER[season.toUpperCase().replace("Ã","A")] || 99;
+
+  // REM: pode ter várias “remarcações”
+  // exemplos aceitos: "REM", "REM 2", "REM2"
+  let remIndex = 0;
+  const rem = upper.match(/\bREM\s*([0-9]+)?\b/);
+  if (rem) remIndex = rem[1] ? parseInt(rem[1],10) : 1;
+
+  return { raw, ano, season, ordem, remIndex };
+}
+
+function sortCollections_(colls){
+  const uniq = Array.from(new Set((colls||[]).filter(Boolean)));
+  return uniq
+    .map(c => ({ c, key: collectionKey_(c) }))
+    .sort((a,b)=> a.key - b.key || a.c.localeCompare(b.c))
+    .map(x => x.c);
+}
+
+/* =========================
+   HELPERS
+========================= */
+function normRef_(v){
+  return String(v || "").trim().toUpperCase();
+}
+
+function parsePrice_(v){
+  if (v === "" || v == null) return null;
+  // aceita "89,99", "89.99", "R$ 89,99"
+  const s = String(v).replace(/[R$\s]/g,"").replace(/\./g,"").replace(",",".");
+  const n = parseFloat(s);
+  if (isNaN(n)) return null;
+  return round2_(n);
+}
+
+function round2_(n){
+  return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+}
+
+function jsonOut_(obj){
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
