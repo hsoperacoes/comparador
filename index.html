@@ -4,136 +4,177 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Precificação - HS</title>
+
   <style>
-    :root { --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
-    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#000;color:#fff}
-    .wrap{max-width:1150px;margin:0 auto;padding:24px}
-    h1{margin:0 0 18px;font-size:22px}
-    .grid{display:grid;gap:16px}
-    .panel{background:var(--panel);padding:16px;border-radius:10px}
+    :root{
+      --bg:#000;
+      --panel:#141414;
+      --panel2:#101010;
+      --line:#2a2a2a;
+      --muted:#bdbdbd;
+      --pri:#673ab7;
+      --pri2:#7b4ef0;
+      --ok:#28a745;
+      --warn:#e67e22;
+      --err:#e53935;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:#fff}
+
+    .wrap{max-width:1200px;margin:0 auto;padding:22px}
+    h1{margin:0 0 14px;font-size:20px;font-weight:800}
+
+    .grid{display:grid;gap:14px}
+    .panel{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border:1px solid #1f1f1f;
+      padding:14px;
+      border-radius:12px;
+    }
+
+    .section-title{margin:0 0 10px;font-weight:800}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{font-size:13px;color:#ddd}
-    input,select,button,textarea{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#121212;color:#fff}
-    textarea{width:100%;min-height:110px;font-family:Consolas,monospace}
-    button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
-    button.secondary{background:#2f2f2f}
-    button.danger{background:#a01f1f}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    table{border-collapse:collapse;min-width:100%}
-    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px;white-space:nowrap}
-    th{background:#151515;text-align:left}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
-    .ok{background:rgba(40,167,69,.15);color:#6fe18b}
-    .warn{background:rgba(230,126,34,.15);color:#f8b37a}
-    .err{background:rgba(229,57,53,.15);color:#ff9a9a}
+    label{font-size:12px;color:#ddd}
+    input,select,button{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #333;
+      background:#0e0e0e;
+      color:#fff;
+      outline:none;
+    }
+    select{cursor:pointer}
+    button{
+      background:var(--pri);
+      border:0;
+      cursor:pointer;
+      font-weight:800;
+      transition:.12s transform ease, .12s background ease;
+    }
+    button:hover{background:var(--pri2);transform:translateY(-1px)}
+    button.secondary{background:#2a2a2a}
+    button.secondary:hover{background:#363636}
+    button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
     .muted{color:var(--muted);font-size:12px}
-    .pill{background:#222;padding:6px 10px;border-radius:8px}
-    .section-title{margin:4px 0 10px;font-weight:700}
     .right{margin-left:auto}
-    .scroll {max-height:520px; overflow:auto; border:1px solid #333; margin-top:10px;border-radius:10px;}
-    .scroll table th { position: sticky; top: 0; background: #151515; z-index: 2; }
-    .scroll table td:first-child, .scroll table th:first-child { position: sticky; left: 0; background: #1c1c1c; z-index: 3; }
-    .divider{height:1px;background:#2c2c2c;margin:12px 0}
+    .pill{
+      background:#0e0e0e;
+      border:1px solid #222;
+      padding:8px 10px;
+      border-radius:10px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+    }
+    .pill strong{font-size:13px}
+    .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:800}
+    .b-ok{background:rgba(40,167,69,.14);color:#7af0a0;border:1px solid rgba(40,167,69,.25)}
+    .b-warn{background:rgba(230,126,34,.16);color:#ffc08c;border:1px solid rgba(230,126,34,.25)}
+    .b-err{background:rgba(229,57,53,.16);color:#ffb0b0;border:1px solid rgba(229,57,53,.25)}
+
+    /* ===== Scroll + sticky header + sticky first col ===== */
+    .scroll{
+      max-height:520px;
+      overflow:auto;
+      border:1px solid #242424;
+      border-radius:12px;
+      margin-top:10px;
+    }
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px}
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid #1f1f1f;
+      font-size:13px;
+      white-space:nowrap;
+      vertical-align:middle;
+    }
+    th{
+      background:#0f0f0f;
+      position:sticky;
+      top:0;
+      z-index:5;
+      text-align:left;
+      border-bottom:1px solid #2b2b2b;
+    }
+
+    /* REF fixa (primeira coluna) */
+    th:first-child, td:first-child{
+      position:sticky;
+      left:0;
+      z-index:6;
+      background:#121212;
+      border-right:1px solid #222;
+      font-weight:800;
+    }
+
+    /* Para o header da REF ficar acima */
+    th:first-child{z-index:10;background:#101010}
+
+    /* Drag style */
+    th.draggable{
+      cursor:grab;
+      user-select:none;
+    }
+    th.draggable:active{cursor:grabbing}
+    th.drag-over{
+      outline:2px dashed rgba(123,78,240,.85);
+      outline-offset:-4px;
+    }
+    th.dragging{
+      opacity:.55;
+    }
+
+    .small-gap{gap:8px}
+    .spacer{height:6px}
   </style>
 </head>
+
 <body>
   <div class="wrap grid">
     <h1>Precificação — HS</h1>
 
-    <!-- NOVA COLEÇÃO -->
-    <div class="panel">
-      <div class="section-title">Nova coleção (REM automático)</div>
-      <div class="row">
-        <label>Nome da coleção</label>
-        <input id="newCollName" placeholder="Ex.: ALTO VERÃO 2025 REM" style="min-width:260px"/>
-        <button id="btnSalvarColecao">Salvar coleção</button>
-        <span id="newStatus" class="muted"></span>
-      </div>
-      <div class="muted" style="margin-top:8px">
-        Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b>.
-      </div>
-      <textarea id="newItems" placeholder="ABC123;199,90&#10;XYZ999\t159,90"></textarea>
-    </div>
-
-    <!-- LISTA DE PREÇO (ATUAL OU ATÉ COLEÇÃO) + EXPORTAR -->
-    <div class="panel">
-      <div class="section-title">Lista de preço (gerar / exportar)</div>
-      <div class="row">
-        <label>Modo</label>
-        <select id="plistMode">
-          <option value="latest">Última lista (mais atual)</option>
-          <option value="upto">Até coleção selecionada</option>
-        </select>
-
-        <label>Escolher coleção</label>
-        <select id="plistColecao" disabled></select>
-
-        <button id="btnGerarLista">Gerar lista</button>
-
-        <label class="right">Buscar ref</label>
-        <input id="plistSearch" placeholder="Ex.: 0227" style="width:200px"/>
-
-        <span id="plistStatus" class="muted"></span>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="btnExportarAtual" class="danger">Gravar Coleção Atual</button>
-        <span class="muted">
-          Grava na planilha destino (aba Leonardo) com coluna C = "COLEÇÃO ATUAL" — requer senha.
-        </span>
-        <span id="exportStatus" class="muted right"></span>
-      </div>
-
-      <div id="plistTabelaWrap"></div>
-    </div>
-
     <!-- BUSCA POR REFERÊNCIA -->
     <div class="panel">
       <div class="section-title">Buscar referência</div>
+
       <div class="row">
         <label>Referência</label>
-        <input id="refInput" placeholder="Ex.: 2441406" style="min-width:200px"/>
+        <input id="refInput" placeholder="Ex.: 0227" style="min-width:180px;text-transform:uppercase"/>
         <button id="btnBuscarRef">Buscar</button>
         <button id="btnIncluir" class="secondary">Incluir na lista</button>
         <button id="btnFinalizar" class="secondary">Finalizar lista</button>
-        <span id="refStatus" class="muted"></span>
+        <span id="refStatus" class="muted right"></span>
       </div>
-      <div id="refResumo" class="row" style="margin-top:10px;display:none">
+
+      <div class="row small-gap" id="refResumo" style="margin-top:10px;display:none;flex-wrap:wrap">
         <span class="pill">Maior preço (histórico): <strong id="refMax"></strong></span>
         <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
-        <span class="pill">Preço atual (última coleção): <strong id="refAtual"></strong></span>
-        <span class="pill">Coleção atual: <strong id="refAtualColl"></strong></span>
+        <span class="pill">Preço atual (última coleção): <strong id="refAtualPreco"></strong></span>
+        <span class="pill">Coleção atual: <strong id="refAtualCol"></strong></span>
       </div>
+
       <div id="refTabelaWrap"></div>
     </div>
 
     <!-- COMPARAR COLEÇÕES -->
     <div class="panel">
       <div class="section-title">Comparar coleções</div>
+
       <div class="row">
-        <label>Coleção A (anterior)</label>
+        <label>Coleção A</label>
         <select id="collA"></select>
 
-        <label>Coleção B (atual)</label>
+        <label>Coleção B</label>
         <select id="collB"></select>
 
-        <label>Mostrar</label>
-        <select id="cmpOnly">
-          <option value="0">Tudo</option>
-          <option value="1">Só Alterou</option>
-        </select>
+        <button id="btnComparar">Comparar</button>
 
-        <label>Direção</label>
-        <select id="cmpDir">
-          <option value="ALL">Todas</option>
-          <option value="SUBIU">Subiu</option>
-          <option value="DESCEU">Desceu</option>
-          <option value="IGUAL">Igual</option>
-          <option value="SEM_DADO">Sem dado</option>
-        </select>
-
-        <button id="btnComparar">Gerar comparação</button>
-        <button id="btnPrintRem" class="secondary" disabled>Imprimir remarcação</button>
+        <button id="btnSomenteAlterou" class="secondary">Somente alterou</button>
+        <button id="btnSomenteSubiu" class="secondary">Somente subiu</button>
+        <button id="btnSomenteDesceu" class="secondary">Somente desceu</button>
 
         <span id="cmpStatus" class="muted right"></span>
       </div>
@@ -141,29 +182,27 @@
       <div id="cmpTabelaWrap"></div>
     </div>
 
-    <!-- MAX POR REFERÊNCIA -->
+    <!-- MATRIZ PREÇOS x COLEÇÕES -->
     <div class="panel">
-      <div class="section-title">Maior preço por referência</div>
-      <div class="row">
-        <label>Filtrar coleção</label>
-        <select id="maxColl"></select>
-        <button id="btnMax">Gerar/Atualizar</button>
-        <span class="muted">Lista as referências com maior preço (todas ou só da coleção escolhida).</span>
-      </div>
-      <div id="maxTabelaWrap"></div>
-    </div>
+      <div class="section-title">Tabela preços x coleções (Matriz)</div>
 
-    <!-- MATRIZ -->
-    <div class="panel">
-      <div class="section-title">Tabela preços x coleções</div>
       <div class="row">
         <label>Limitar primeiras N referências (opcional)</label>
-        <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
+        <input id="matLimit" type="number" min="1" style="width:140px" placeholder="ex.: 200"/>
+
         <label>Filtrar referência</label>
-        <input id="matSearch" placeholder="Ex.: 2441406" style="width:200px"/>
+        <input id="matSearch" placeholder="Ex.: 0227" style="width:200px;text-transform:uppercase"/>
+
         <button id="btnMatriz">Gerar TABELA</button>
+        <button id="btnResetOrdem" class="secondary" disabled>Resetar ordem</button>
+
         <span id="matStatus" class="muted right"></span>
       </div>
+
+      <div class="muted" style="margin-top:8px">
+        Dica: arraste o nome da coleção no cabeçalho para reorganizar. A coluna <b>REF</b> fica fixa. A ordem fica salva neste navegador.
+      </div>
+
       <div id="matTabelaWrap"></div>
     </div>
 
@@ -171,379 +210,401 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
-    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+
+    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
+    const safe = (s)=> String(s ?? "");
+
+    // localStorage key (ordem da matriz)
+    const LS_KEY_COL_ORDER = "HS_PRECO_COL_ORDER_v1";
 
     let listaTemp = [];
+    let cmpOnlyChanged = false;
+    let cmpOnlyUp = false;
+    let cmpOnlyDown = false;
 
-    // comparação cache
-    let cmpCache = [];
-    let cmpHeaderA = "";
-    let cmpHeaderB = "";
+    // estado matriz
+    let matrizState = null; // {header, rows, collsOnly, order}
 
-    // lista preço cache
-    let priceListCache = [];
-
-    async function api(path, params={}) {
+    async function api(action, params={}) {
       const url = new URL(API_URL);
-      url.search = new URLSearchParams({action:path, ...params}).toString();
+      url.search = new URLSearchParams({ action, ...params }).toString();
       const res = await fetch(url);
       return res.json();
     }
+
     async function postData(payload){
-      const res = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload) });
+      const res = await fetch(API_URL,{ method:'POST', body: JSON.stringify(payload) });
       return res.json();
     }
 
-    function renderTable(containerId, head, rows){
-      const wrap = document.getElementById(containerId);
+    function renderTable(targetId, head, rows){
+      const wrap = document.getElementById(targetId);
       wrap.innerHTML = '';
+
       const table = document.createElement('table');
       table.innerHTML = `
         <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
         <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
       `;
+
       const scroll = document.createElement('div');
       scroll.className = 'scroll';
       scroll.appendChild(table);
       wrap.appendChild(scroll);
     }
 
+    function normalizeRef(v){
+      return safe(v).trim().toUpperCase();
+    }
+
+    function loadLocalOrder(){
+      try{
+        const raw = localStorage.getItem(LS_KEY_COL_ORDER);
+        if(!raw) return null;
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : null;
+      }catch(e){
+        return null;
+      }
+    }
+    function saveLocalOrder(order){
+      localStorage.setItem(LS_KEY_COL_ORDER, JSON.stringify(order));
+    }
+    function clearLocalOrder(){
+      localStorage.removeItem(LS_KEY_COL_ORDER);
+    }
+
+    function applyOrderToMatrix(originalColls, desiredOrder){
+      // desiredOrder pode conter colunas antigas; removemos as que não existem mais
+      // e adicionamos ao final as novas que não estão no desiredOrder
+      const set = new Set(originalColls);
+
+      const cleaned = (desiredOrder || []).filter(c => set.has(c));
+      const remaining = originalColls.filter(c => !cleaned.includes(c));
+
+      return cleaned.concat(remaining);
+    }
+
+    function buildMatrixView(state){
+      // state: {refs, colls, priceIndex, order}
+      const head = ["REF"].concat(state.order);
+
+      const rows = state.refs.map(ref => {
+        const line = [ref];
+        state.order.forEach(c => {
+          const v = state.priceIndex[ref + "||" + c];
+          line.push(v == null ? "-" : fmtBR(v));
+        });
+        return line;
+      });
+
+      return { head, rows };
+    }
+
+    function renderMatrix(state){
+      const wrap = document.getElementById('matTabelaWrap');
+      wrap.innerHTML = '';
+
+      const view = buildMatrixView(state);
+
+      const table = document.createElement('table');
+
+      // HEADER com draggable nos TH (exceto REF)
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+
+      view.head.forEach((h, idx) => {
+        const th = document.createElement('th');
+        th.textContent = h;
+
+        if(idx > 0){
+          th.classList.add('draggable');
+          th.setAttribute('draggable', 'true');
+          th.dataset.col = h;
+        }
+
+        trh.appendChild(th);
+      });
+
+      thead.appendChild(trh);
+      table.appendChild(thead);
+
+      // BODY
+      const tbody = document.createElement('tbody');
+      view.rows.forEach(r => {
+        const tr = document.createElement('tr');
+        r.forEach((cell) => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+
+      const scroll = document.createElement('div');
+      scroll.className = 'scroll';
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+
+      enableMatrixDrag(table, state);
+      document.getElementById('btnResetOrdem').disabled = false;
+    }
+
+    function enableMatrixDrag(table, state){
+      let dragCol = null;
+
+      const ths = table.querySelectorAll('thead th.draggable');
+
+      ths.forEach(th => {
+        th.addEventListener('dragstart', (ev) => {
+          dragCol = th.dataset.col;
+          th.classList.add('dragging');
+          ev.dataTransfer.effectAllowed = "move";
+        });
+
+        th.addEventListener('dragend', () => {
+          th.classList.remove('dragging');
+          ths.forEach(x => x.classList.remove('drag-over'));
+          dragCol = null;
+        });
+
+        th.addEventListener('dragover', (ev) => {
+          ev.preventDefault();
+          th.classList.add('drag-over');
+          ev.dataTransfer.dropEffect = "move";
+        });
+
+        th.addEventListener('dragleave', () => {
+          th.classList.remove('drag-over');
+        });
+
+        th.addEventListener('drop', (ev) => {
+          ev.preventDefault();
+          th.classList.remove('drag-over');
+
+          const dropCol = th.dataset.col;
+          if(!dragCol || !dropCol || dragCol === dropCol) return;
+
+          // reordenar state.order
+          const order = state.order.slice();
+          const from = order.indexOf(dragCol);
+          const to = order.indexOf(dropCol);
+          if(from === -1 || to === -1) return;
+
+          order.splice(from, 1);
+          order.splice(to, 0, dragCol);
+
+          state.order = order;
+          saveLocalOrder(order);
+
+          // re-render matriz inteira com nova ordem
+          renderMatrix(state);
+        });
+      });
+    }
+
     async function loadCollections(){
       const colls = await api("listCollections");
 
-      const fill=(sel, withAll=true)=>{
-        sel.innerHTML = withAll ? '<option value="">Todas</option>' : '';
+      const fill=(sel)=>{
+        sel.innerHTML = '<option value="">Selecione</option>';
         colls.forEach(c=>{
-          const o = document.createElement('option');
-          o.value = o.textContent = c;
+          const o=document.createElement('option');
+          o.value = c;
+          o.textContent = c;
           sel.appendChild(o);
         });
       };
 
-      fill(document.getElementById('collA'), false);
-      fill(document.getElementById('collB'), false);
-      fill(document.getElementById('maxColl'), true);
-
-      // painel lista preço: select de cutoff
-      const plistSel = document.getElementById('plistColecao');
-      plistSel.innerHTML = '';
-      colls.forEach(c=>{
-        const o = document.createElement('option');
-        o.value = o.textContent = c;
-        plistSel.appendChild(o);
-      });
-
-      // padrão: A = penúltima, B = última
-      if (colls.length >= 2) {
-        document.getElementById('collA').value = colls[colls.length-2];
-        document.getElementById('collB').value = colls[colls.length-1];
-        plistSel.value = colls[colls.length-1];
-      }
+      fill(document.getElementById('collA'));
+      fill(document.getElementById('collB'));
     }
 
-    /* ===================== NOVA COLEÇÃO ===================== */
-    document.getElementById('btnSalvarColecao').onclick = async ()=>{
-      const name = document.getElementById('newCollName').value.trim();
-      const txt  = document.getElementById('newItems').value.trim();
-      const st   = document.getElementById('newStatus');
+    // ===== Buscar referência =====
+    document.getElementById('btnBuscarRef').onclick = async () => {
+      const ref = normalizeRef(document.getElementById('refInput').value);
+      const status = document.getElementById('refStatus');
+      status.textContent = 'Buscando...';
 
-      if(!name || !txt){ alert("Informe o nome da coleção e os itens."); return; }
+      const res = await api("searchReference",{ ref });
+      status.textContent = '';
 
-      const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-      const items = lines.map(l=>{
-        let ref, preco;
-        if (l.includes(";")) [ref, preco] = l.split(";");
-        else [ref, preco] = l.split("\t");
-        return { ref:(ref||"").trim(), preco:(preco||"").trim() };
-      }).filter(i=>i.ref && i.preco);
-
-      st.textContent = "Salvando...";
-      const res = await postData({ action:"addCollection", colecaoNome:name, items });
-
-      if(res.status==="ok"){
-        st.textContent = `OK — gravada como "${res.colecao}" (${res.inseridos} itens)`;
-        document.getElementById('newItems').value = "";
-        await loadCollections();
-      } else {
-        st.textContent = "Erro: " + (res.erro || "desconhecido");
-      }
-    };
-
-    /* ===================== LISTA DE PREÇO ===================== */
-    const plistMode = document.getElementById('plistMode');
-    const plistColecao = document.getElementById('plistColecao');
-
-    plistMode.onchange = ()=>{
-      plistColecao.disabled = (plistMode.value !== "upto");
-    };
-
-    document.getElementById('btnGerarLista').onclick = async ()=>{
-      const mode = plistMode.value;
-      const colecao = plistColecao.value;
-
-      document.getElementById('plistStatus').textContent = "Gerando...";
-      const res = await api("priceList", mode === "upto" ? { mode, colecao } : { mode });
-
-      if (res.erro) {
-        document.getElementById('plistStatus').textContent = "Erro: " + res.erro;
-        return;
-      }
-
-      priceListCache = res.items || [];
-      document.getElementById('plistStatus').textContent =
-        `${res.count} itens — base: ${res.cutoffColecao || "ATUAL"}`;
-
-      renderPriceList();
-    };
-
-    function renderPriceList(){
-      const term = document.getElementById('plistSearch').value.trim().toUpperCase();
-      let data = priceListCache || [];
-      if (term) data = data.filter(x => String(x.ref||"").includes(term));
-
-      const rows = data.map(x=>[x.ref, fmtBR(x.preco), "COLEÇÃO ATUAL"]);
-      renderTable("plistTabelaWrap", ["REF","PREÇO","COLEÇÃO"], rows);
-    }
-
-    document.getElementById('plistSearch').oninput = renderPriceList;
-
-    // ✅ EXPORTAR (senha fica só no GS)
-    document.getElementById('btnExportarAtual').onclick = async ()=>{
-      const pass = prompt("Digite a senha para gravar a COLEÇÃO ATUAL:");
-      if (pass == null) return;
-
-      document.getElementById('exportStatus').textContent = "Gravando...";
-      const resp = await postData({ action:"exportCurrentPrices", password: pass, mode:"latest" });
-
-      if (resp.status === "ok") {
-        document.getElementById('exportStatus').textContent = `OK — gravados ${resp.gravados} itens.`;
-        alert("Coleção atual gravada com sucesso!");
-      } else {
-        document.getElementById('exportStatus').textContent = "Erro: " + (resp.erro || "desconhecido");
-        alert("Erro: " + (resp.erro || "desconhecido"));
-      }
-    };
-
-    /* ===================== BUSCAR REF ===================== */
-    document.getElementById('btnBuscarRef').onclick = async ()=>{
-      const ref = document.getElementById('refInput').value.trim().toUpperCase();
-      const status = document.getElementById('refStatus'); status.textContent='Buscando...';
-
-      const res = await api("searchReference", { ref });
-      status.textContent='';
+      const wrap = document.getElementById('refTabelaWrap');
+      wrap.innerHTML = '';
 
       if(!res.items || !res.items.length){
-        document.getElementById('refTabelaWrap').innerHTML='<div class="muted">Nenhum dado encontrado.</div>';
-        document.getElementById('refResumo').style.display='none';
+        document.getElementById('refResumo').style.display = 'none';
+        wrap.innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
         return;
       }
 
+      // resumo
       document.getElementById('refMax').textContent = fmtBR(res.max);
       document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
-      document.getElementById('refAtual').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
-      document.getElementById('refAtualColl').textContent = res.atual ? res.atual.colecao : '-';
+      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
+      document.getElementById('refAtualCol').textContent = res.atual ? safe(res.atual.colecao) : '-';
+      document.getElementById('refResumo').style.display = 'flex';
 
-      document.getElementById('refResumo').style.display='flex';
-
-      const rows = res.items.map(i=>[i.coll, fmtBR(i.price)]);
+      // tabela: coleção x preço
+      const rows = res.items.map(i => [safe(i.coll), fmtBR(i.price)]);
       renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
     };
 
-    // legado incluir/finalizar
-    document.getElementById('btnIncluir').onclick = async ()=>{
-      const ref = document.getElementById('refInput').value.trim().toUpperCase();
+    // ===== Incluir/Finalizar lista (mantive como você tinha) =====
+    document.getElementById('btnIncluir').onclick = async () => {
+      const ref = normalizeRef(document.getElementById('refInput').value);
       if(!ref) return;
 
-      const res = await api("searchReference", { ref });
+      const res = await api("searchReference",{ ref });
       if(res.items && res.items.length){
         res.items.forEach(i => listaTemp.push({ ref: ref, coll: i.coll, price: i.price }));
         alert("Adicionado: " + ref);
+      } else {
+        alert("Sem dados para essa referência.");
       }
     };
-    document.getElementById('btnFinalizar').onclick = async ()=>{
+
+    document.getElementById('btnFinalizar').onclick = async () => {
       if(!listaTemp.length){ alert("Lista vazia."); return; }
       const resp = await postData({ items: listaTemp });
-      if(resp.status==="ok"){ alert("Enviado " + resp.enviados + " itens."); listaTemp = []; }
-      else { alert("Erro: " + (resp.erro || "")); }
+      if(resp.status === "ok"){
+        alert("Enviado " + resp.enviados + " itens.");
+        listaTemp = [];
+      } else {
+        alert("Erro ao enviar: " + (resp.erro || "desconhecido"));
+      }
     };
 
-    /* ===================== COMPARAÇÃO ===================== */
-    document.getElementById('btnComparar').onclick = async ()=>{
+    // ===== Comparar coleções =====
+    function badgeStatus(dir){
+      if(dir === "SUBIU") return '<span class="badge b-ok">SUBIU</span>';
+      if(dir === "DESCEU") return '<span class="badge b-err">DESCEU</span>';
+      if(dir === "IGUAL") return '<span class="badge b-warn">IGUAL</span>';
+      return '<span class="badge b-warn">SEM DADO</span>';
+    }
+
+    function applyCompareFilters(list){
+      let data = list || [];
+      if(cmpOnlyChanged) data = data.filter(r => r.alterou);
+      if(cmpOnlyUp) data = data.filter(r => r.direcao === "SUBIU");
+      if(cmpOnlyDown) data = data.filter(r => r.direcao === "DESCEU");
+      return data;
+    }
+
+    async function doCompare(){
       const a = document.getElementById('collA').value;
       const b = document.getElementById('collB').value;
-      if(!a || !b){ alert("Selecione Coleção A e B."); return; }
+      if(!a || !b){ alert("Selecione Coleção A e B"); return; }
 
-      document.getElementById('cmpStatus').textContent = "Carregando...";
-      cmpHeaderA = a;
-      cmpHeaderB = b;
+      document.getElementById('cmpStatus').textContent = 'Comparando...';
+      const list = await api("compareCollections",{ a, b });
+      document.getElementById('cmpStatus').textContent = '';
 
-      cmpCache = await api("compareCollections", { a, b });
+      const data = applyCompareFilters(list);
 
-      document.getElementById('btnPrintRem').disabled = false;
-      aplicarFiltrosComparacao();
-    };
+      const body = data.map(r => [
+        safe(r.referencia),
+        r.precoA == null ? '-' : fmtBR(r.precoA),
+        r.precoB == null ? '-' : fmtBR(r.precoB),
+        r.delta == null ? '-' : fmtBR(r.delta),
+        badgeStatus(r.direcao)
+      ]);
 
-    function countResumo_(arr){
-      let subiu=0, desceu=0, igual=0, sem=0;
-      arr.forEach(r=>{
-        if (r.direcao==="SUBIU") subiu++;
-        else if (r.direcao==="DESCEU") desceu++;
-        else if (r.direcao==="IGUAL") igual++;
-        else sem++;
-      });
-      return {subiu, desceu, igual, sem};
+      renderTable('cmpTabelaWrap', ["REF", `Preço (${a})`, `Preço (${b})`, "Δ", "Status"], body);
     }
 
-    function aplicarFiltrosComparacao(){
-      if(!cmpCache || !cmpCache.length){
-        document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Gere a comparação primeiro.</div>';
-        document.getElementById('cmpStatus').textContent = '';
-        return;
-      }
+    document.getElementById('btnComparar').onclick = doCompare;
 
-      const onlyChanged = document.getElementById('cmpOnly').value === "1";
-      const direction   = document.getElementById('cmpDir').value;
-
-      let data = cmpCache;
-      if (onlyChanged) data = data.filter(r => r.alterou);
-      if (direction !== "ALL") data = data.filter(r => r.direcao === direction);
-
-      const body = data.map(r=>{
-        const badge =
-          r.direcao==="SUBIU"    ? '<span class="badge ok">SUBIU</span>' :
-          r.direcao==="DESCEU"   ? '<span class="badge err">DESCEU</span>' :
-          r.direcao==="IGUAL"    ? '<span class="badge warn">IGUAL</span>' :
-                                   '<span class="badge warn">SEM DADO</span>';
-
-        const pa = (r.precoA==null) ? '-' : fmtBR(r.precoA);
-        const pb = (r.precoB==null) ? '-' : fmtBR(r.precoB);
-        const dl = (r.delta==null)  ? '-' : fmtBR(r.delta);
-
-        return [ r.referencia, pa, pb, dl, badge ];
-      });
-
-      renderTable('cmpTabelaWrap',
-        ["REF", `PREÇO (${cmpHeaderA})`, `PREÇO (${cmpHeaderB})`, "Δ", "STATUS"],
-        body
-      );
-
-      const total = countResumo_(cmpCache);
-      const shown = countResumo_(data);
-
-      document.getElementById('cmpStatus').textContent =
-        `${data.length}/${cmpCache.length} — Exibidos: ↑${shown.subiu} ↓${shown.desceu} =${shown.igual} ?${shown.sem} — ` +
-        `Total: ↑${total.subiu} ↓${total.desceu} =${total.igual} ?${total.sem}`;
-    }
-
-    document.getElementById('cmpOnly').onchange = aplicarFiltrosComparacao;
-    document.getElementById('cmpDir').onchange  = aplicarFiltrosComparacao;
-
-    // ✅ IMPRIMIR REMARCAÇÃO (bonito)
-    document.getElementById('btnPrintRem').onclick = ()=>{
-      if (!cmpCache || !cmpCache.length) { alert("Gere a comparação primeiro."); return; }
-
-      // só subiu/desceu e com dados completos
-      const items = cmpCache.filter(r => (r.direcao==="SUBIU" || r.direcao==="DESCEU") && r.precoA!=null && r.precoB!=null);
-
-      if (!items.length) { alert("Nenhuma remarcação (subiu/desceu) encontrada."); return; }
-
-      const html = `
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Remarcação</title>
-<style>
-  body{font-family:Arial,sans-serif;margin:24px;color:#111}
-  h1{margin:0 0 6px;font-size:18px}
-  .sub{margin:0 0 14px;color:#555;font-size:12px}
-  table{border-collapse:collapse;width:100%}
-  th,td{border:1px solid #ddd;padding:8px 10px;font-size:12px;white-space:nowrap}
-  th{background:#f3f3f3;text-align:left}
-  .up{color:#0a7a2a;font-weight:700}
-  .down{color:#b00020;font-weight:700}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#eee}
-</style>
-</head>
-<body>
-  <h1>REMARCAÇÃO — ${escapeHtml(cmpHeaderA)} → ${escapeHtml(cmpHeaderB)}</h1>
-  <p class="sub">Gerado em ${new Date().toLocaleString("pt-BR")}. Itens: ${items.length}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>REF</th>
-        <th>PREÇO ANTERIOR</th>
-        <th>PREÇO ATUAL</th>
-        <th>STATUS</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${items.map(r=>{
-        const cls = r.direcao==="SUBIU" ? "up" : "down";
-        const st  = r.direcao==="SUBIU" ? "SUBIU" : "DESCEU";
-        return `<tr>
-          <td>${escapeHtml(r.referencia)}</td>
-          <td>${fmtBR(r.precoA)}</td>
-          <td>${fmtBR(r.precoB)}</td>
-          <td class="${cls}"><span class="pill">${st}</span></td>
-        </tr>`;
-      }).join("")}
-    </tbody>
-  </table>
-<script>
-  setTimeout(()=>window.print(), 300);
-<\/script>
-</body>
-</html>`;
-
-      const w = window.open("", "_blank");
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
+    document.getElementById('btnSomenteAlterou').onclick = () => {
+      cmpOnlyChanged = !cmpOnlyChanged;
+      cmpOnlyUp = false;
+      cmpOnlyDown = false;
+      doCompare();
     };
 
-    function escapeHtml(s){
-      return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
-
-    /* ===================== MAX ===================== */
-    document.getElementById('btnMax').onclick = async ()=>{
-      const coll = document.getElementById('maxColl').value;
-      const list = await api("maxByReference", { colecao: coll });
-
-      if(!list.length){
-        document.getElementById('maxTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';
-        return;
-      }
-
-      const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
-      renderTable('maxTabelaWrap', ["REF","MAX"], rows);
+    document.getElementById('btnSomenteSubiu').onclick = () => {
+      cmpOnlyUp = !cmpOnlyUp;
+      cmpOnlyChanged = false;
+      cmpOnlyDown = false;
+      doCompare();
     };
 
-    /* ===================== MATRIZ ===================== */
-    document.getElementById('btnMatriz').onclick = async ()=>{
+    document.getElementById('btnSomenteDesceu').onclick = () => {
+      cmpOnlyDown = !cmpOnlyDown;
+      cmpOnlyChanged = false;
+      cmpOnlyUp = false;
+      doCompare();
+    };
+
+    // ===== Matriz =====
+    document.getElementById('btnMatriz').onclick = async () => {
       const limit = document.getElementById('matLimit').value;
-      const obj = await api("matrix", { limit });
+      document.getElementById('matStatus').textContent = 'Gerando...';
 
-      if(!obj.rows || !obj.rows.length){
-        document.getElementById('matTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';
+      const obj = await api("matrix",{ limit });
+      document.getElementById('matStatus').textContent = '';
+
+      if(!obj || !obj.rows || !obj.rows.length){
+        document.getElementById('matTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
+        document.getElementById('btnResetOrdem').disabled = true;
+        matrizState = null;
         return;
       }
 
-      const rows = obj.rows.map(r => r.map((v,i)=> i===0 ? v : (v==null?'-':fmtBR(v))));
-      renderTable('matTabelaWrap', obj.header, rows);
+      // obj.header = ["REF", ...colls]
+      const colls = obj.header.slice(1);
+      const refs = obj.rows.map(r => r[0]);
 
-      document.getElementById('matSearch').oninput = ()=>{
-        const term = document.getElementById('matSearch').value.trim().toLowerCase();
-        const trs = document.querySelectorAll('#matTabelaWrap tbody tr');
-        trs.forEach(tr=>{
-          const ref = tr.querySelector('td')?.textContent.toLowerCase() || "";
-          tr.style.display = (term && !ref.includes(term)) ? "none" : "";
+      // index rápido ref||coll
+      const priceIndex = Object.create(null);
+      obj.rows.forEach(r => {
+        const ref = safe(r[0]);
+        for(let i=1;i<obj.header.length;i++){
+          const coll = obj.header[i];
+          const v = r[i];
+          if(v != null && v !== "" && v !== "-") priceIndex[ref + "||" + coll] = v;
+        }
+      });
+
+      // aplica ordem salva
+      const stored = loadLocalOrder();
+      const order = applyOrderToMatrix(colls, stored);
+
+      matrizState = {
+        refs,
+        colls,
+        order,
+        priceIndex
+      };
+
+      renderMatrix(matrizState);
+
+      // filtro de REF em tempo real (sem precisar clicar em gerar)
+      const input = document.getElementById('matSearch');
+      input.oninput = () => {
+        const term = normalizeRef(input.value);
+        if(!matrizState) return;
+
+        const wrap = document.getElementById('matTabelaWrap');
+        const trs = wrap.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+          const ref = normalizeRef(tr.querySelector('td')?.textContent || "");
+          tr.style.display = term && !ref.includes(term) ? "none" : "";
         });
       };
     };
 
+    document.getElementById('btnResetOrdem').onclick = () => {
+      if(!matrizState) return;
+      if(!confirm("Resetar a ordem das colunas para o padrão (ordem do sistema)?")) return;
+
+      clearLocalOrder();
+      matrizState.order = matrizState.colls.slice(); // padrão do GS
+      renderMatrix(matrizState);
+    };
+
+    // init
     loadCollections();
   </script>
 </body>
