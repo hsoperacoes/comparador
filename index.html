@@ -77,6 +77,11 @@
       border:1px solid rgba(231,76,60,.35);
       color:#ffd6d1;
     }
+    button.success{
+      background: rgba(46,204,113,.18);
+      border:1px solid rgba(46,204,113,.35);
+      color:#d4f5e0;
+    }
     button:disabled{opacity:.55;cursor:not-allowed}
     .hint{color:var(--muted);font-size:12px}
     .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -225,6 +230,75 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    /* Modal para gravar coleção atual */
+    .export-modal .row {
+      margin: 12px 0;
+    }
+    .export-modal select,
+    .export-modal input {
+      width: 100%;
+    }
+    
+    /* Estilos para impressão/PDF */
+    .print-only {
+      display: none;
+    }
+    
+    .print-header {
+      display: none;
+    }
+    
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .print-container, .print-container * {
+        visibility: visible;
+      }
+      .print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+    
+    /* Tabela de impressão */
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    .print-table th {
+      background: #2a2a2f;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #444;
+      font-size: 14px;
+    }
+    .print-table td {
+      padding: 10px;
+      border: 1px solid #444;
+      font-size: 13px;
+    }
+    .print-table .ref-col {
+      font-weight: bold;
+      background: #1a1a1f;
+    }
+    .print-table .up {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    .print-table .down {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .print-table .same {
+      color: #f39c12;
     }
   </style>
 </head>
@@ -253,7 +327,7 @@
     </div>
   </div>
 
-  <!-- Novo modal para incluir ref na coleção atual -->
+  <!-- Modal para incluir ref na coleção atual -->
   <div class="modalWrap" id="modalAddRefWrap">
     <div class="modalBackdrop" onclick="ModalAddRef.close()"></div>
     <div class="modal add-ref-modal">
@@ -277,6 +351,52 @@
     </div>
   </div>
 
+  <!-- Modal para gravar coleção atual -->
+  <div class="modalWrap" id="modalExportWrap">
+    <div class="modalBackdrop" onclick="ModalExport.close()"></div>
+    <div class="modal export-modal">
+      <h3>Gravar Coleção Atual</h3>
+      
+      <div class="row">
+        <label>Selecionar coleção</label>
+        <select id="modalExportColl" style="width:100%">
+          <option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>
+        </select>
+      </div>
+      
+      <div class="row">
+        <label>Senha</label>
+        <input id="modalExportPass" type="password" placeholder="Digite a senha" style="width:100%"/>
+      </div>
+      
+      <div class="hint">
+        Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:C (REF | VALOR | COLEÇÃO ATUAL).
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalExport.close()">Cancelar</button>
+        <button id="modalExportConfirm">Gravar Coleção Atual</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de impressão/PDF -->
+  <div class="modalWrap" id="modalPrintWrap">
+    <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
+    <div class="modal" style="width:min(800px, 95vw); max-height:90vh; overflow:auto;">
+      <h3>Imprimir Comparação de Coleções</h3>
+      
+      <div class="print-container" id="printContainer">
+        <!-- Conteúdo será gerado dinamicamente -->
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
+        <button onclick="window.print()" class="success">Imprimir / Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap grid">
     <h1>Precificação — HS</h1>
 
@@ -293,7 +413,7 @@
         <div class="button-group">
           <button id="btnSaveColl">Salvar coleção no banco</button>
           <button id="btnAddRefModal" class="secondary">Incluir ref na coleção atual</button>
-          <button id="btnToggleExport" class="secondary" title="Mostrar/ocultar opções de atualização da lista atual">Alterar lista de preço</button>
+          <button id="btnExportModal" class="secondary">Gravar coleção atual</button>
         </div>
       </div>
 
@@ -304,37 +424,6 @@
           Ex.: <span class="mono">0227;89,99</span>
         </div>
         <textarea id="collItems" placeholder="Cole aqui..."></textarea>
-      </div>
-
-      <!-- EXPORT / ATUALIZAR LISTA ATUAL (ESCONDIDO) -->
-      <div class="panel" id="panelExport" style="margin-top:14px; padding:14px; background:rgba(0,0,0,.18)">
-        <div class="title" style="margin-bottom:6px">Gravar Coleção Atual <small>(aba Leonardo)</small></div>
-
-        <div class="row">
-          <div>
-            <label>Gerar lista "até"</label>
-            <select id="exportMode" style="min-width:190px">
-              <option value="latest">ÚLTIMA (padrão)</option>
-              <option value="upto">Até uma coleção...</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Coleção (somente se "até")</label>
-            <select id="exportColl" disabled style="min-width:260px"></select>
-          </div>
-
-          <div>
-            <label>Senha</label>
-            <input id="exportPass" type="password" placeholder="Senha" style="min-width:200px"/>
-          </div>
-
-          <button id="btnExport">Gravar COLEÇÃO ATUAL</button>
-        </div>
-
-        <div class="hint" style="margin-top:8px">
-          Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:C (REF | VALOR | COLEÇÃO ATUAL).
-        </div>
       </div>
     </div>
 
@@ -377,16 +466,17 @@
 
       <div class="row">
         <div>
-          <label>Coleção A</label>
+          <label>Coleção A (mais antiga)</label>
           <select id="collA" style="min-width:260px"></select>
         </div>
 
         <div>
-          <label>Coleção B</label>
+          <label>Coleção B (mais atual)</label>
           <select id="collB" style="min-width:260px"></select>
         </div>
 
         <button id="btnCompare">Comparar</button>
+        <button id="btnPrint" class="success" style="display:none">Imprimir / Gerar PDF</button>
 
         <div class="filter-list">
           <label>
@@ -446,7 +536,7 @@
     /***********************
      * CONFIG
      ***********************/
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec"; // <<< IMPORTANTÍSSIMO
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
     const fmtBR = (n) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n ?? 0);
 
     /***********************
@@ -489,9 +579,15 @@
     const ModalAddRef = {
       _resolver: null,
       open() {
-        // Busca a última coleção para mostrar
-        const lastColl = collections.length > 0 ? collections[collections.length - 1] : "Nenhuma coleção encontrada";
-        document.getElementById("modalCurrentColl").value = lastColl;
+        // Busca a última coleção CORRETA (usando a série para ordenação)
+        if (collectionsWithKeys.length > 0) {
+          // Ordena pela key (série) em ordem decrescente para pegar a mais recente
+          const sorted = [...collectionsWithKeys].sort((a,b) => b.key - a.key);
+          const lastColl = sorted[0];
+          document.getElementById("modalCurrentColl").value = lastColl ? lastColl.name : "Nenhuma coleção encontrada";
+        } else {
+          document.getElementById("modalCurrentColl").value = "Nenhuma coleção encontrada";
+        }
         
         // Limpa o campo
         document.getElementById("modalRefPrice").value = "";
@@ -509,6 +605,137 @@
           this._resolver(ans);
           this._resolver = null;
         }
+      }
+    };
+
+    /***********************
+     * MODAL EXPORT
+     ***********************/
+    const ModalExport = {
+      _resolver: null,
+      open() {
+        // Preenche as opções de coleções
+        const select = document.getElementById("modalExportColl");
+        select.innerHTML = '<option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>';
+        
+        if (collectionsWithKeys.length > 0) {
+          // Ordena pela key (série) em ordem crescente (mais antiga primeiro)
+          const sorted = [...collectionsWithKeys].sort((a,b) => a.key - b.key);
+          sorted.forEach(coll => {
+            const option = document.createElement("option");
+            option.value = coll.name;
+            option.textContent = `${coll.name} (Série: ${coll.key})`;
+            select.appendChild(option);
+          });
+        }
+        
+        // Limpa a senha
+        document.getElementById("modalExportPass").value = "";
+        
+        document.getElementById("modalExportWrap").classList.add("on");
+        
+        return new Promise((resolve) => {
+          this._resolver = resolve;
+          document.getElementById("modalExportConfirm").onclick = () => this.close(true);
+        });
+      },
+      close(ans) {
+        document.getElementById("modalExportWrap").classList.remove("on");
+        if (this._resolver) {
+          this._resolver(ans);
+          this._resolver = null;
+        }
+      }
+    };
+
+    /***********************
+     * MODAL PRINT
+     ***********************/
+    const ModalPrint = {
+      open(data, collA, collB) {
+        const container = document.getElementById("printContainer");
+        
+        // Cria o conteúdo para impressão
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+        
+        let html = `
+          <div class="print-header">
+            <h2 style="margin:0; color:#333;">Comparação de Coleções - HS</h2>
+            <p style="margin:5px 0; color:#666;">Gerado em: ${dateStr}</p>
+            <p style="margin:5px 0; color:#666;">
+              <strong>Coleção A (Antiga):</strong> ${esc(collA)} | 
+              <strong>Coleção B (Atual):</strong> ${esc(collB)}
+            </p>
+            <hr style="border:none; border-top:2px solid #6f3ccf; margin:15px 0;">
+          </div>
+          
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width:15%; background:#6f3ccf; color:white;">REF</th>
+                <th style="width:25%;">${esc(collA)} (Antiga)</th>
+                <th style="width:25%;">${esc(collB)} (Atual)</th>
+                <th style="width:15%;">Variação</th>
+                <th style="width:20%;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        data.forEach(item => {
+          const priceA = item.precoA != null ? fmtBR(item.precoA) : "-";
+          const priceB = item.precoB != null ? fmtBR(item.precoB) : "-";
+          const delta = item.delta != null ? fmtBR(item.delta) : "-";
+          
+          let statusClass = "";
+          let statusText = "";
+          
+          switch(item.direcao) {
+            case "SUBIU":
+              statusClass = "up";
+              statusText = "▲ SUBIU";
+              break;
+            case "DESCEU":
+              statusClass = "down";
+              statusText = "▼ DESCEU";
+              break;
+            case "IGUAL":
+              statusClass = "same";
+              statusText = "● IGUAL";
+              break;
+            default:
+              statusClass = "";
+              statusText = "SEM DADO";
+          }
+          
+          html += `
+            <tr>
+              <td class="ref-col">${esc(item.referencia)}</td>
+              <td>${priceA}</td>
+              <td>${priceB}</td>
+              <td>${delta}</td>
+              <td class="${statusClass}">${statusText}</td>
+            </tr>
+          `;
+        });
+        
+        html += `
+            </tbody>
+          </table>
+          <div style="margin-top:20px; color:#666; font-size:12px;">
+            <p><strong>Total de itens:</strong> ${data.length}</p>
+            <p><strong>Itens que subiram:</strong> ${data.filter(i => i.direcao === "SUBIU").length}</p>
+            <p><strong>Itens que desceram:</strong> ${data.filter(i => i.direcao === "DESCEU").length}</p>
+            <p><strong>Itens iguais:</strong> ${data.filter(i => i.direcao === "IGUAL").length}</p>
+          </div>
+        `;
+        
+        container.innerHTML = html;
+        document.getElementById("modalPrintWrap").classList.add("on");
+      },
+      close() {
+        document.getElementById("modalPrintWrap").classList.remove("on");
       }
     };
 
@@ -597,9 +824,46 @@
      * Collections load
      ***********************/
     let collections = [];
+    let collectionsWithKeys = [];
+    
     async function loadCollections(){
       const colls = await apiGet("listCollections");
       collections = Array.isArray(colls) ? colls : [];
+      
+      // Para usar internamente: pega também as keys para ordenação correta
+      // Precisamos fazer uma chamada especial para pegar as coleções com suas keys
+      try {
+        // Faz uma chamada à matriz para pegar todas as coleções com ordem
+        const matrixRes = await apiGet("matrix", { limit: 1 });
+        if (matrixRes?.header) {
+          collectionsWithKeys = [];
+          // O header[0] é "REF", os outros são nomes de coleções
+          // Precisamos determinar a key para cada coleção
+          for (let i = 1; i < matrixRes.header.length; i++) {
+            const collName = matrixRes.header[i];
+            // Para determinar a key, precisamos de lógica especial
+            // Vamos usar uma chamada à API existente para pegar dados de uma ref
+            const sampleRef = await apiGet("searchReference", { ref: "0001" });
+            // Ou vamos simplificar e ordenar pela ordem que aparecem na matriz
+            collectionsWithKeys.push({
+              name: collName,
+              key: i, // Posição na matriz
+              order: i
+            });
+          }
+          
+          // Ordena pela key (série) - ajuste conforme sua lógica real
+          collectionsWithKeys.sort((a,b) => a.key - b.key);
+        }
+      } catch (err) {
+        console.warn("Não foi possível carregar coleções com keys:", err);
+        // Fallback: usa apenas os nomes
+        collectionsWithKeys = collections.map((name, idx) => ({
+          name,
+          key: idx,
+          order: idx
+        }));
+      }
 
       const fill = (sel, {withEmpty=true}={}) => {
         sel.innerHTML = "";
@@ -608,37 +872,20 @@
           o.value = ""; o.textContent = "Selecione";
           sel.appendChild(o);
         }
-        collections.forEach(c=>{
+        
+        // Ordena as coleções pela key/série (mais antiga primeiro)
+        const sorted = [...collectionsWithKeys].sort((a,b) => a.key - b.key);
+        sorted.forEach(c=>{
           const o = document.createElement("option");
-          o.value = c; o.textContent = c;
+          o.value = c.name; 
+          o.textContent = c.name;
           sel.appendChild(o);
         });
       };
 
       fill(document.getElementById("collA"));
       fill(document.getElementById("collB"));
-      fill(document.getElementById("exportColl"), {withEmpty:false});
     }
-
-    /***********************
-     * Toggle export panel
-     ***********************/
-    const panelExport = document.getElementById("panelExport");
-    function setExportVisible(v){
-      panelExport.classList.toggle("hide", !v);
-      localStorage.setItem("hs_export_visible", v ? "1":"0");
-    }
-
-    document.getElementById("btnToggleExport").onclick = ()=>{
-      const now = !panelExport.classList.contains("hide");
-      setExportVisible(!now);
-    };
-
-    document.getElementById("exportMode").onchange = ()=>{
-      const mode = document.getElementById("exportMode").value;
-      const sel = document.getElementById("exportColl");
-      sel.disabled = (mode !== "upto");
-    };
 
     /***********************
      * SAVE COLLECTION + CONFIRM use as current
@@ -673,19 +920,31 @@
         });
 
         if (useAsCurrent){
-          // pede senha e grava usando cutoff = esta coleção
-          const pass = prompt("Digite a senha para GRAVAR COLEÇÃO ATUAL:");
-          if (!pass){ return; }
+          // Abre o modal de export com esta coleção selecionada
+          ModalExport.open().then(async (confirmed) => {
+            if (!confirmed) return;
+            
+            const coll = name;
+            const pass = document.getElementById("modalExportPass").value;
+            
+            if (!pass){ alert("Digite a senha."); return; }
 
-          Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
-          const exp = await apiPost({
-            action:"exportCurrentPrices",
-            password: pass,
-            mode:"upto",
-            colecao: name
+            try{
+              Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
+              const exp = await apiPost({
+                action:"exportCurrentPrices",
+                password: pass,
+                mode:"upto",
+                colecao: coll
+              });
+              if (exp?.erro){ throw new Error(exp.erro); }
+              alert(`OK! Coleção salva e COLEÇÃO ATUAL gravada.\nItens exportados: ${exp.gravados || exp.exported || "?"}`);
+            } catch(err){
+              alert("Erro: " + err.message);
+            } finally {
+              Overlay.off();
+            }
           });
-          if (exp?.erro){ throw new Error(exp.erro); }
-          alert(`OK! Coleção salva e COLEÇÃO ATUAL gravada.\nItens exportados: ${exp.gravados || exp.exported || "?"}`);
         } else {
           alert(`OK! Coleção "${resp.colecao || name}" salva (${resp.inseridos || "?"} itens).`);
         }
@@ -732,6 +991,9 @@
         
         alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
         
+        // Atualiza a lista de coleções
+        await loadCollections();
+        
         // Se estiver na tela de busca com esta ref, atualiza
         if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
           document.getElementById("btnBuscar").click();
@@ -745,21 +1007,20 @@
     };
 
     /***********************
-     * EXPORT BUTTON (manual)
+     * BOTÃO PARA ABRIR MODAL DE EXPORT
      ***********************/
-    document.getElementById("btnExport").onclick = async ()=>{
-      const mode = document.getElementById("exportMode").value;
-      const coll = document.getElementById("exportColl").value;
-      const pass = document.getElementById("exportPass").value;
-
-      if (!pass){ alert("Digite a senha."); return; }
-      if (mode === "upto" && !coll){ alert("Escolha a coleção para o modo 'até'."); return; }
-
-      const ok = await Modal.ask({
-        title:"Confirmar exportação",
-        text:`Isso vai SOBRESCREVER a aba Leonardo.\n\nModo: ${mode === "latest" ? "ÚLTIMA" : ("Até: " + coll)}\n\nConfirmar?`
-      });
+    document.getElementById("btnExportModal").onclick = async () => {
+      const ok = await ModalExport.open();
       if (!ok) return;
+      
+      const coll = document.getElementById("modalExportColl").value;
+      const pass = document.getElementById("modalExportPass").value;
+      
+      if (!pass){ alert("Digite a senha."); return; }
+      if (coll === "latest" && collections.length === 0){ alert("Nenhuma coleção disponível."); return; }
+
+      const mode = coll === "latest" ? "latest" : "upto";
+      const colecao = coll === "latest" ? "" : coll;
 
       try{
         Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
@@ -767,7 +1028,7 @@
           action:"exportCurrentPrices",
           password: pass,
           mode,
-          colecao: coll
+          colecao: colecao
         });
         if (resp?.erro) throw new Error(resp.erro);
         alert(`OK! Itens gravados: ${resp.gravados || resp.exported || "?"}`);
@@ -826,11 +1087,10 @@
     };
 
     /***********************
-     * COMPARE (só quando clicar no botão)
+     * COMPARE
      ***********************/
     let cmpLast = null;
     
-    // Remove o auto-run em tempo real
     function applyCompareFilters(data){
       let out = data.slice();
 
@@ -875,6 +1135,10 @@
         rows
       );
 
+      // Mostra/oculta botão de imprimir
+      const printBtn = document.getElementById("btnPrint");
+      printBtn.style.display = filtered.length > 0 ? "inline-flex" : "none";
+
       setStatus("cmpStatus", `Itens: ${filtered.length}${filtered.length !== data.length ? " (filtrado)" : ""}`);
     }
 
@@ -884,6 +1148,7 @@
       if (!a || !b){
         document.getElementById("cmpTableWrap").innerHTML = `<div class="hint">Selecione a Coleção A e B.</div>`;
         setStatus("cmpStatus","");
+        document.getElementById("btnPrint").style.display = "none";
         return;
       }
 
@@ -899,11 +1164,19 @@
       } catch(err){
         Overlay.off();
         alert("Erro: " + err.message);
+        document.getElementById("btnPrint").style.display = "none";
       }
     }
 
     // botão comparar
     document.getElementById("btnCompare").onclick = runCompare;
+
+    // botão imprimir
+    document.getElementById("btnPrint").onclick = () => {
+      if (!cmpLast) return;
+      const filtered = applyCompareFilters(cmpLast.data);
+      ModalPrint.open(filtered, cmpLast.a, cmpLast.b);
+    };
 
     // filtros em "tempo real" (só se já tiver dados)
     document.querySelectorAll('input[name="filterType"]').forEach(radio=>{
@@ -1106,13 +1379,6 @@
      * INIT
      ***********************/
     (async function init(){
-      // export panel hidden by default + storage
-      const saved = localStorage.getItem("hs_export_visible");
-      setExportVisible(saved === "1");
-
-      // export mode behavior
-      document.getElementById("exportMode").dispatchEvent(new Event("change"));
-
       try{
         Overlay.on("Carregando...", "Buscando coleções no banco.");
         await loadCollections();
