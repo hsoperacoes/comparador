@@ -17,6 +17,7 @@
       --ok:#2ecc71;
       --warn:#f39c12;
       --err:#e74c3c;
+      --chip:#22222a;
       --shadow: 0 10px 30px rgba(0,0,0,.45);
       --radius:14px;
     }
@@ -83,6 +84,14 @@
     }
     button:disabled{opacity:.55;cursor:not-allowed}
     .hint{color:var(--muted);font-size:12px}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .chip{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      padding:8px 10px;border-radius:12px;
+      font-size:13px;color:#f0f0f6;
+    }
+    .chip strong{font-weight:900}
     .split{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px}
     @media(max-width:980px){.split{grid-template-columns:1fr}}
 
@@ -156,7 +165,7 @@
     .loaderTitle{font-weight:900}
     .loaderMsg{color:var(--muted);font-size:13px;margin-top:8px}
 
-    /* modal */
+    /* modal confirm */
     .modalWrap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9998}
     .modalWrap.on{display:flex}
     .modalBackdrop{position:absolute;inset:0;background: rgba(0,0,0,.68);backdrop-filter: blur(6px)}
@@ -197,69 +206,152 @@
       white-space:nowrap;
     }
 
-    /* Modal add-ref/export */
-    .add-ref-modal .row,
+    /* Novo modal para incluir ref */
+    .add-ref-modal .row { margin: 12px 0; }
+    .add-ref-modal input { width: 100%; }
+    .add-ref-modal .hint { margin-top: 4px; }
+
+    /* Ajuste do campo coleção */
+    #collName { min-width: 200px; flex: 1; }
+
+    /* Botões inline */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Modal para gravar coleção atual */
     .export-modal .row { margin: 12px 0; }
-    .add-ref-modal input,
     .export-modal select,
     .export-modal input { width: 100%; }
 
-    #collName { min-width: 200px; flex: 1; }
-    .button-group { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    /* =========================================================
+       PRINT / MODAL PRINT (AJUSTADO)
+       ========================================================= */
 
-    /* ===== MODAL DE IMPRESSÃO (BRANCO, LEGÍVEL) ===== */
+    /* Conteúdo de impressão sempre claro dentro do modal */
+    .print-container{
+      background:#fff;
+      color:#000;
+      border:1px solid #e5e5e5;
+      border-radius:12px;
+      padding:14px;
+    }
+
+    /* Modal de impressão com cor diferente do site (branco) */
+    #modalPrintWrap .modalBackdrop{
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+    }
     #modalPrintWrap .modal{
-      width:min(920px, 96vw);
+      width:min(920px, 95vw);
       max-height:90vh;
       overflow:auto;
       background:#ffffff;
-      color:#111;
-      border:1px solid rgba(0,0,0,.12);
+      color:#000000;
+      border:1px solid #dadada;
     }
-    #modalPrintWrap .modal h3{ color:#111; }
-    #modalPrintWrap .modal .actions{
-      position: sticky;
-      bottom: 0;
-      background: #fff;
-      padding-top: 12px;
-      margin-top: 10px;
-      border-top: 1px solid #eee;
+    #modalPrintWrap h3{
+      color:#111;
+    }
+    #modalPrintWrap .actions .secondary{
+      background:#f2f2f2;
+      border:1px solid #d6d6d6;
+      color:#111;
+    }
+    #modalPrintWrap .actions .success{
+      background: linear-gradient(180deg, var(--pri), var(--pri2));
+      color:#fff;
+      border:none;
+      box-shadow: 0 8px 20px rgba(111,60,207,.25);
     }
 
-    .print-container{
-      background:#fff;
-      color:#111;
-      padding: 10px 6px;
-    }
-
-    .pdf-table{
-      width:100%;
-      border-collapse:collapse;
+    /* Tabela do PDF */
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
       margin: 10px 0;
       font-family: Arial, sans-serif;
       font-size: 12px;
     }
-    .pdf-table th{
-      background:#f5f5f5;
-      border:1px solid #ddd;
-      padding:8px 10px;
-      text-align:left;
-      font-weight:bold;
-      color:#333;
+    .pdf-table th {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: bold;
+      color: #333;
     }
-    .pdf-table td{
-      border:1px solid #ddd;
-      padding:8px 10px;
-      vertical-align:middle;
-      color:#111;
+    .pdf-table td {
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      vertical-align: middle;
     }
-    .pdf-table .ref-col{font-weight:bold;font-family:'Courier New', monospace;}
-    .pdf-table .price-col{text-align:right;font-family:'Courier New', monospace;}
-    .pdf-table .up{color:#1e7e34;font-weight:bold;}
-    .pdf-table .down{color:#bd2130;font-weight:bold;}
+    .pdf-table .ref-col {
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+    .pdf-table .price-col {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Status colorido no modal */
+    .pdf-table .up {
+      color: #1e7e34;
+      font-weight: bold;
+    }
+    .pdf-table .down {
+      color: #c82333;
+      font-weight: bold;
+    }
+
+    /* Forçar impressão com cor (quando o navegador permite) */
+    @media print {
+      html, body{
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background:#fff !important;
+        color:#000 !important;
+      }
+
+      /* imprime SOMENTE o relatório (#printContainer) */
+      body * { visibility: hidden !important; }
+      #printContainer, #printContainer * { visibility: visible !important; }
+
+      #printContainer{
+        position: absolute;
+        left: 0; top: 0;
+        width: 100%;
+        padding: 18px !important;
+        background: #fff !important;
+        color: #000 !important;
+        border: none !important;
+        border-radius: 0 !important;
+      }
+
+      /* NÃO imprimir botões/rodapé do modal */
+      #modalPrintWrap .actions{ display:none !important; }
+      #modalPrintWrap h3{ display:none !important; }
+
+      /* reforço de cores na tabela */
+      .pdf-table th{
+        background:#f5f5f5 !important;
+        color:#222 !important;
+      }
+      .pdf-table .up{
+        color:#1e7e34 !important;
+        font-weight:800 !important;
+      }
+      .pdf-table .down{
+        color:#c82333 !important;
+        font-weight:800 !important;
+      }
+    }
   </style>
 </head>
-
 <body>
   <div class="overlay" id="overlay">
     <div class="loaderBox">
@@ -299,7 +391,7 @@
 
       <div class="row">
         <label>Coleção atual detectada</label>
-        <input id="modalCurrentColl" readonly style="background:rgba(0,0,0,.04); color:#555"/>
+        <input id="modalCurrentColl" readonly style="background:rgba(255,255,255,.05); color:var(--muted)"/>
       </div>
 
       <div class="actions">
@@ -344,15 +436,13 @@
     <div class="modal">
       <h3>Imprimir Comparação de Coleções</h3>
 
-      <div class="print-container" id="printContainer"></div>
+      <div class="print-container" id="printContainer">
+        <!-- Conteúdo será gerado dinamicamente -->
+      </div>
 
       <div class="actions">
         <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
-        <button id="btnPrintNow" class="success">Imprimir / Gerar PDF</button>
-      </div>
-
-      <div class="hint" style="margin-top:10px;color:#666">
-        Dica: na impressora escolha “Salvar como PDF”.
+        <button onclick="window.print()" class="success">Imprimir / Gerar PDF</button>
       </div>
     </div>
   </div>
@@ -380,8 +470,8 @@
       <div style="margin-top:10px">
         <label>Cole os itens (1 por linha)</label>
         <div class="hint">
-          Formato recomendado: <span class="mono">REF PREÇO</span> (ex.: <span class="mono">0227 89,99</span>)<br/>
-          Também aceita: <span class="mono">REF;PREÇO</span>
+          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF,PREÇO</span> ou <span class="mono">REF PREÇO</span>.
+          Ex.: <span class="mono">0227;89,99</span>
         </div>
         <textarea id="collItems" placeholder="Cole aqui..."></textarea>
       </div>
@@ -398,6 +488,7 @@
         </div>
 
         <button id="btnBuscar">Buscar</button>
+
         <span class="hint" id="refStatus"></span>
       </div>
 
@@ -419,7 +510,7 @@
       <div id="refTableWrap"></div>
     </div>
 
-    <!-- COMPARAR -->
+    <!-- COMPARAR COLEÇÕES -->
     <div class="panel" id="panelCompare">
       <div class="title">Comparar coleções <small>(subiu / desceu)</small></div>
 
@@ -438,10 +529,22 @@
         <button id="btnPrint" class="success" style="display:none">Imprimir / Gerar PDF</button>
 
         <div class="filter-list">
-          <label><input type="radio" name="filterType" value="all" checked/><span>Todos</span></label>
-          <label><input type="radio" name="filterType" value="changed"/><span>Somente alterou</span></label>
-          <label><input type="radio" name="filterType" value="up"/><span>Somente subiu</span></label>
-          <label><input type="radio" name="filterType" value="down"/><span>Somente desceu</span></label>
+          <label>
+            <input type="radio" name="filterType" value="all" checked/>
+            <span>Todos</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="changed"/>
+            <span>Somente alterou</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="up"/>
+            <span>Somente subiu</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="down"/>
+            <span>Somente desceu</span>
+          </label>
         </div>
 
         <span class="hint right" id="cmpStatus"></span>
@@ -489,60 +592,10 @@
     /***********************
      * FUNÇÕES AUXILIARES
      ***********************/
-    function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
-
-    function parsePriceBR(str){
-      if (str == null) return null;
-      const s = String(str).trim().replace(/[R$\s]/g,"");
-      if (!s) return null;
-      let x = s;
-      if (x.includes(",")){
-        x = x.replace(/\./g,"").replace(",",".");
-      }
-      const n = Number(x);
-      return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
-    }
-
-    // ✅ CORRIGIDO: NÃO faz split por vírgula (pra não quebrar "99,00" e virar "0227 99")
-    function parseItemsFromTextarea(text){
-      const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-      const out = [];
-      for (const lineRaw of lines){
-        const line = lineRaw.replace(/\t+/g,' ').replace(/\s+/g,' ').trim();
-
-        // 1) REF;PREÇO
-        if (line.includes(";")){
-          const parts = line.split(";").map(x=>x.trim()).filter(Boolean);
-          const ref = (parts[0]||"").toUpperCase();
-          const price = parsePriceBR(parts.slice(1).join(" "));
-          if (ref && price != null) out.push({ ref, preco: price });
-          continue;
-        }
-
-        // 2) REF PREÇO (primeiro token é REF, resto é preço)
-        const m = line.match(/^(\S+)\s+(.+)$/);
-        if (m){
-          const ref = String(m[1]||"").trim().toUpperCase();
-          const price = parsePriceBR(String(m[2]||"").trim());
-          if (ref && price != null) out.push({ ref, preco: price });
-          continue;
-        }
-
-        // se não bater, ignora
-      }
-      return out;
-    }
-
-    // formato modal ref: "0227 179,99"
-    function parseRefPriceFormat(str) {
-      if (!str) return null;
-      const s = String(str).trim().replace(/\t+/g,' ').replace(/\s+/g,' ');
-      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
-      if (!match) return null;
-      const ref = match[1];
-      const price = parsePriceBR(match[2]);
-      if (!ref || price == null) return null;
-      return { ref, preco: price };
+    function getLatestCollection() {
+      if (collectionsWithKeys.length === 0) return null;
+      const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
+      return sorted[0];
     }
 
     /***********************
@@ -566,7 +619,6 @@
         document.getElementById("modalTitle").textContent = title;
         document.getElementById("modalText").textContent = text;
         document.getElementById("modalWrap").classList.add("on");
-
         return new Promise((resolve)=>{
           this._resolver = resolve;
           document.getElementById("modalYes").onclick = ()=> this.close(true);
@@ -580,88 +632,6 @@
     };
 
     /***********************
-     * API helpers
-     ***********************/
-    async function apiGet(action, params={}){
-      const url = new URL(API_URL);
-      url.search = new URLSearchParams({ action, ...params }).toString();
-      const r = await fetch(url, { method:"GET" });
-      return r.json();
-    }
-    async function apiPost(payload){
-      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
-      return r.json();
-    }
-
-    /***********************
-     * UI helpers
-     ***********************/
-    function renderTable(targetId, header, rows){
-      const wrap = document.getElementById(targetId);
-      wrap.innerHTML = "";
-      const scroll = document.createElement("div");
-      scroll.className = "scroll";
-      const table = document.createElement("table");
-      table.innerHTML =
-        `<thead><tr>${header.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
-         <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
-      scroll.appendChild(table);
-      wrap.appendChild(scroll);
-      return table;
-    }
-    function setStatus(id, msg){ document.getElementById(id).textContent = msg || ""; }
-
-    /***********************
-     * Collections load
-     ***********************/
-    let collections = [];
-    let collectionsWithKeys = [];
-
-    function getLatestCollection() {
-      if (collectionsWithKeys.length === 0) return null;
-      const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
-      return sorted[0];
-    }
-
-    async function loadCollections(){
-      try {
-        const res = await apiGet("listCollectionsWithKeys");
-        if (res?.collections && Array.isArray(res.collections)) {
-          collectionsWithKeys = res.collections;
-          collections = collectionsWithKeys.map(c => c.name);
-        } else {
-          const colls = await apiGet("listCollections");
-          collections = Array.isArray(colls) ? colls : [];
-          collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
-        }
-      } catch (err) {
-        const colls = await apiGet("listCollections");
-        collections = Array.isArray(colls) ? colls : [];
-        collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
-      }
-
-      const fill = (sel, { withEmpty = true } = {}) => {
-        sel.innerHTML = "";
-        if (withEmpty) {
-          const o = document.createElement("option");
-          o.value = "";
-          o.textContent = "Selecione";
-          sel.appendChild(o);
-        }
-        const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
-        sorted.forEach(c => {
-          const o = document.createElement("option");
-          o.value = c.name;
-          o.textContent = `${c.name} (${c.key})`;
-          sel.appendChild(o);
-        });
-      };
-
-      fill(document.getElementById("collA"));
-      fill(document.getElementById("collB"));
-    }
-
-    /***********************
      * MODAL ADD REF
      ***********************/
     const ModalAddRef = {
@@ -671,10 +641,8 @@
         document.getElementById("modalCurrentColl").value = lastColl ?
           `${lastColl.name} (Série: ${lastColl.key})` :
           "Nenhuma coleção encontrada";
-
         document.getElementById("modalRefPrice").value = "";
         document.getElementById("modalAddRefWrap").classList.add("on");
-
         return new Promise((resolve) => {
           this._resolver = resolve;
           document.getElementById("modalAddRefConfirm").onclick = () => this.close(true);
@@ -723,127 +691,81 @@
     };
 
     /***********************
-     * PRINT (SEM PDF EM BRANCO)
-     * -> abre janela limpa só com o relatório
+     * MODAL PRINT (SEM BOTÃO DUPLICADO)
      ***********************/
-    function formatDateBR(d){
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const yy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mi = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
-      return `${dd}/${mm}/${yy}, ${hh}:${mi}:${ss}`;
-    }
-
-    function buildPrintHTML(data, collA, collB){
-      const now = new Date();
-      const dateStr = formatDateBR(now);
-
-      const filteredData = data.filter(item =>
-        (item.direcao === "SUBIU" || item.direcao === "DESCEU") &&
-        item.precoA != null &&
-        item.precoB != null
-      );
-
-      let rowsHtml = "";
-      filteredData.forEach(item => {
-        const statusClass = item.direcao === "SUBIU" ? "up" : "down";
-        rowsHtml += `
-          <tr>
-            <td class="ref-col">${esc(item.referencia)}</td>
-            <td class="price-col">${fmtBR(item.precoA)}</td>
-            <td class="price-col">${fmtBR(item.precoB)}</td>
-            <td class="${statusClass}">${esc(item.direcao)}</td>
-          </tr>
-        `;
-      });
-
-      return `
-        <div class="header">
-          <div class="top">Precificação — HS</div>
-          <div class="date">${esc(dateStr)}</div>
-        </div>
-
-        <h1>REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}</h1>
-        <div class="meta">Gerado em ${esc(dateStr)}. Itens: ${filteredData.length}</div>
-
-        <table class="pdf-table">
-          <thead>
-            <tr>
-              <th>REF</th>
-              <th>PREÇO ANTERIOR</th>
-              <th>PREÇO ATUAL</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml || `<tr><td colspan="4" style="padding:12px;color:#555">Nenhum item para imprimir (subiu/desceu).</td></tr>`}
-          </tbody>
-        </table>
-
-        <div class="footer">
-          Sistema de Precificação HS | Relatório gerado automaticamente
-        </div>
-      `;
-    }
-
-    function openPrintWindow(html){
-      const w = window.open("", "_blank");
-      if (!w) { alert("Popup bloqueado. Libere popups para imprimir."); return; }
-
-      w.document.open();
-      w.document.write(`
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Relatório — Precificação HS</title>
-          <style>
-            body{ margin:0; padding:24px; font-family: Arial, sans-serif; color:#111; background:#fff; }
-            .header{ position:relative; }
-            .top{ position:absolute; left:0; top:0; font-size:10px; color:#666; }
-            .date{ text-align:left; font-size:10px; color:#666; margin-bottom:18px; }
-            h1{ margin:18px 0 6px; font-size:16px; }
-            .meta{ font-size:12px; color:#555; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #ddd; }
-            .pdf-table{ width:100%; border-collapse:collapse; font-size:12px; }
-            .pdf-table th{ background:#f5f5f5; border:1px solid #ddd; padding:8px 10px; text-align:left; color:#333; }
-            .pdf-table td{ border:1px solid #ddd; padding:8px 10px; color:#111; }
-            .ref-col{ font-weight:bold; font-family:'Courier New', monospace; }
-            .price-col{ text-align:right; font-family:'Courier New', monospace; }
-            .up{ color:#1e7e34; font-weight:bold; }
-            .down{ color:#bd2130; font-weight:bold; }
-            .footer{ margin-top:22px; padding-top:10px; border-top:1px solid #eee; font-size:10px; color:#777; text-align:center; }
-            @page { margin: 12mm; }
-          </style>
-        </head>
-        <body>
-          ${html}
-          <script>
-            window.onload = () => { window.focus(); window.print(); };
-          <\/script>
-        </body>
-        </html>
-      `);
-      w.document.close();
-    }
-
     const ModalPrint = {
-      _data: null,
-      _a: "",
-      _b: "",
       open(data, collA, collB) {
-        this._data = data || [];
-        this._a = collA || "";
-        this._b = collB || "";
-
         const container = document.getElementById("printContainer");
 
-        // prévia legível no modal
-        const html = buildPrintHTML(this._data, this._a, this._b);
-        container.innerHTML = html;
+        // Garante que vai imprimir só linhas SUBIU/DESCEU com valores
+        const filteredData = (data || []).filter(item =>
+          (item.direcao === "SUBIU" || item.direcao === "DESCEU") &&
+          item.precoA != null &&
+          item.precoB != null
+        );
 
+        const now = new Date();
+        const dateStr =
+          now.getDate().toString().padStart(2,'0') + '/' +
+          (now.getMonth()+1).toString().padStart(2,'0') + '/' +
+          now.getFullYear() + ', ' +
+          now.getHours().toString().padStart(2,'0') + ':' +
+          now.getMinutes().toString().padStart(2,'0') + ':' +
+          now.getSeconds().toString().padStart(2,'0');
+
+        let html = `
+          <div style="font-family: Arial, sans-serif; color:#000;">
+            <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+              <div style="font-size:12px;color:#555; display:flex; justify-content:space-between;">
+                <span>${dateStr}</span>
+                <span style="font-weight:bold;">Precificação — HS</span>
+              </div>
+              <h1 style="margin: 10px 0 4px 0; font-size: 16px; font-weight: 800; color:#000;">
+                REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
+              </h1>
+              <div style="font-size:12px;color:#555;">Itens: ${filteredData.length}</div>
+            </div>
+
+            <table class="pdf-table">
+              <thead>
+                <tr>
+                  <th>REF</th>
+                  <th>PREÇO ANTERIOR</th>
+                  <th>PREÇO ATUAL</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        filteredData.forEach(item => {
+          const statusClass = item.direcao === "SUBIU" ? "up" : "down";
+          const statusText  = item.direcao === "SUBIU" ? "SUBIU" : "DESCEU";
+          html += `
+            <tr>
+              <td class="ref-col">${esc(item.referencia)}</td>
+              <td class="price-col">${fmtBR(item.precoA)}</td>
+              <td class="price-col">${fmtBR(item.precoB)}</td>
+              <td class="${statusClass}">${statusText}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+              </tbody>
+            </table>
+
+            <div style="margin-top: 18px; font-size: 10px; color: #777; text-align: center; padding-top: 10px; border-top: 1px solid #eee;">
+              Sistema de Precificação HS | Relatório gerado automaticamente
+            </div>
+
+            <div style="margin-top: 10px; font-size: 11px; color:#555;">
+              Dica: na impressora escolha "Salvar como PDF". (Para manter cores, ative "Gráficos de plano de fundo" se houver.)
+            </div>
+          </div>
+        `;
+
+        container.innerHTML = html;
         document.getElementById("modalPrintWrap").classList.add("on");
       },
       close() {
@@ -851,12 +773,124 @@
       }
     };
 
-    document.getElementById("btnPrintNow").onclick = () => {
-      if (!cmpLast) return;
-      const filtered = applyCompareFilters(cmpLast.data);
-      const html = buildPrintHTML(filtered, cmpLast.a, cmpLast.b);
-      openPrintWindow(html);
-    };
+    /***********************
+     * API helpers
+     ***********************/
+    async function apiGet(action, params={}){
+      const url = new URL(API_URL);
+      url.search = new URLSearchParams({ action, ...params }).toString();
+      const r = await fetch(url, { method:"GET" });
+      return r.json();
+    }
+
+    async function apiPost(payload){
+      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
+      return r.json();
+    }
+
+    /***********************
+     * UI helpers
+     ***********************/
+    function renderTable(targetId, header, rows){
+      const wrap = document.getElementById(targetId);
+      wrap.innerHTML = "";
+      const scroll = document.createElement("div");
+      scroll.className = "scroll";
+      const table = document.createElement("table");
+      table.innerHTML =
+        `<thead><tr>${header.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+         <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+      return table;
+    }
+
+    function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+
+    function parsePriceBR(str){
+      if (str == null) return null;
+      const s = String(str).trim().replace(/[R$\s]/g,"");
+      if (!s) return null;
+      let x = s;
+      if (x.includes(",")){
+        x = x.replace(/\./g,"").replace(",",".");
+      }
+      const n = Number(x);
+      return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
+    }
+
+    function parseItemsFromTextarea(text){
+      const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const out = [];
+      for (const line of lines){
+        let parts = line.split(";").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(",").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+        const ref = (parts[0]||"").toUpperCase();
+        const price = parsePriceBR(parts[1]);
+        if (!ref || price == null) continue;
+        out.push({ ref, preco: price });
+      }
+      return out;
+    }
+
+    function parseRefPriceFormat(str) {
+      if (!str) return null;
+      const s = String(str).trim();
+      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
+      if (!match) return null;
+      const ref = match[1];
+      const price = parsePriceBR(match[2]);
+      if (!ref || price == null) return null;
+      return { ref, preco: price };
+    }
+
+    function setStatus(id, msg){ document.getElementById(id).textContent = msg || ""; }
+
+    /***********************
+     * Collections load
+     ***********************/
+    let collections = [];
+    let collectionsWithKeys = [];
+
+    async function loadCollections(){
+      try {
+        const res = await apiGet("listCollectionsWithKeys");
+
+        if (res?.collections && Array.isArray(res.collections)) {
+          collectionsWithKeys = res.collections;
+          collections = collectionsWithKeys.map(c => c.name);
+        } else {
+          const colls = await apiGet("listCollections");
+          collections = Array.isArray(colls) ? colls : [];
+          collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
+        }
+      } catch (err) {
+        const colls = await apiGet("listCollections");
+        collections = Array.isArray(colls) ? colls : [];
+        collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
+      }
+
+      const fill = (sel, { withEmpty = true } = {}) => {
+        sel.innerHTML = "";
+        if (withEmpty) {
+          const o = document.createElement("option");
+          o.value = "";
+          o.textContent = "Selecione";
+          sel.appendChild(o);
+        }
+        const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
+        sorted.forEach(c => {
+          const o = document.createElement("option");
+          o.value = c.name;
+          o.textContent = `${c.name} (${c.key})`;
+          sel.appendChild(o);
+        });
+      };
+
+      fill(document.getElementById("collA"));
+      fill(document.getElementById("collB"));
+    }
 
     /***********************
      * SAVE COLLECTION
@@ -924,7 +958,7 @@
     };
 
     /***********************
-     * BOTÃO MODAL ADD REF
+     * MODAL INCLUIR REF
      ***********************/
     document.getElementById("btnAddRefModal").onclick = async () => {
       const ok = await ModalAddRef.open();
@@ -939,24 +973,15 @@
       }
 
       const { ref, preco } = parsed;
-
       const pass = prompt("Digite a senha para incluir/atualizar a referência:");
       if (!pass) return;
 
       try {
         Overlay.on("Processando...", "Incluindo/atualizando referência na coleção atual.");
-
-        const resp = await apiPost({
-          action: "addRefToCurrent",
-          ref,
-          preco,
-          password: pass
-        });
-
+        const resp = await apiPost({ action: "addRefToCurrent", ref, preco, password: pass });
         if (resp?.erro) throw new Error(resp.erro);
 
         alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
-
         await loadCollections();
 
         if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
@@ -971,7 +996,7 @@
     };
 
     /***********************
-     * BOTÃO MODAL EXPORT
+     * MODAL EXPORT
      ***********************/
     document.getElementById("btnExportModal").onclick = async () => {
       const ok = await ModalExport.open();
@@ -988,12 +1013,7 @@
 
       try{
         Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
-        const resp = await apiPost({
-          action:"exportCurrentPrices",
-          password: pass,
-          mode,
-          colecao: colecao
-        });
+        const resp = await apiPost({ action:"exportCurrentPrices", password: pass, mode, colecao });
         if (resp?.erro) throw new Error(resp.erro);
         alert(`OK! Itens gravados: ${resp.gravados || resp.exported || "?"}`);
       } catch(err){
@@ -1106,6 +1126,7 @@
     async function runCompare(){
       const a = document.getElementById("collA").value;
       const b = document.getElementById("collB").value;
+
       if (!a || !b){
         document.getElementById("cmpTableWrap").innerHTML = `<div class="hint">Selecione a Coleção A e B.</div>`;
         setStatus("cmpStatus","");
@@ -1155,13 +1176,16 @@
         return Array.isArray(v) ? v : null;
       }catch{ return null; }
     }
-    function saveOrder(order){ localStorage.setItem(LS_COLORDER, JSON.stringify(order)); }
-    function clearOrder(){ localStorage.removeItem(LS_COLORDER); }
+    function saveOrder(order){
+      localStorage.setItem(LS_COLORDER, JSON.stringify(order));
+    }
+    function clearOrder(){
+      localStorage.removeItem(LS_COLORDER);
+    }
 
     function reorderMatrixTable(table){
       const saved = getSavedOrder();
       if (!saved) return;
-
       const ths = Array.from(table.querySelectorAll("thead th"));
       if (ths.length < 2) return;
 
@@ -1173,13 +1197,11 @@
     function applyColumnOrder(table, colOrder){
       const headRow = table.tHead.rows[0];
       const bodyRows = Array.from(table.tBodies[0].rows);
-
       const ths = Array.from(headRow.cells);
       const idxByName = new Map();
       for (let i=1;i<ths.length;i++){
         idxByName.set(ths[i].dataset.colname, i);
       }
-
       const newIdx = [0];
       colOrder.forEach(name=>{
         const i = idxByName.get(name);
@@ -1199,13 +1221,11 @@
     function enableHeaderDrag(table){
       const headRow = table.tHead.rows[0];
       const ths = Array.from(headRow.cells);
-
       for (let i=1;i<ths.length;i++){
         const th = ths[i];
         th.classList.add("thDrag");
         th.draggable = true;
       }
-
       let dragSrc = null;
 
       function cleanup(){
@@ -1274,7 +1294,10 @@
           return;
         }
 
-        const header = res.header.map((h, idx)=> idx===0 ? "REF" : esc(h));
+        const header = res.header.map((h, idx)=>{
+          if (idx===0) return "REF";
+          return esc(h);
+        });
 
         const rows = res.rows.map(r=>{
           return r.map((v, idx)=>{
