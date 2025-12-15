@@ -242,16 +242,13 @@
       width: 100%;
     }
     
-    /* Estilos para impressão/PDF - AJUSTADOS para ficar como a versão do GS */
+    /* Estilos para impressão/PDF - EXATAMENTE IGUAL À VERSÃO ORIGINAL */
     .print-only {
       display: none;
     }
     
     .print-header {
-      display: block;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #6f3ccf;
+      display: none;
     }
     
     @media print {
@@ -266,81 +263,31 @@
         left: 0;
         top: 0;
         width: 100%;
-        padding: 20px;
-        background: white;
-        color: black;
-      }
-      .print-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 15px 0;
-        font-family: Arial, sans-serif;
-      }
-      .print-table th {
-        background: #2a2a2f;
-        color: white;
-        padding: 12px 8px;
-        border: 1px solid #444;
-        font-size: 13px;
-        text-align: center;
-      }
-      .print-table td {
-        padding: 10px 8px;
-        border: 1px solid #ddd;
-        font-size: 12px;
-        text-align: center;
-      }
-      .print-table .ref-col {
-        font-weight: bold;
-        background: #f5f5f5;
-        text-align: center;
-      }
-      .print-table .up {
-        color: #2ecc71;
-        font-weight: bold;
-      }
-      .print-table .down {
-        color: #e74c3c;
-        font-weight: bold;
-      }
-      .print-table .same {
-        color: #f39c12;
-        font-weight: bold;
-      }
-      .print-table .na {
-        color: #7f8c8d;
-        font-style: italic;
-      }
-      .no-print {
-        display: none !important;
       }
     }
     
-    /* Tabela de impressão no modal */
+    /* Tabela de impressão - EXATAMENTE IGUAL À VERSÃO ORIGINAL */
     .print-table {
       width: 100%;
       border-collapse: collapse;
       margin: 10px 0;
-      font-family: Arial, sans-serif;
     }
     .print-table th {
       background: #2a2a2f;
       color: white;
-      padding: 12px 8px;
+      padding: 12px;
+      text-align: left;
       border: 1px solid #444;
-      font-size: 13px;
-      text-align: center;
+      font-size: 14px;
     }
     .print-table td {
-      padding: 10px 8px;
-      border: 1px solid #ddd;
-      font-size: 12px;
-      text-align: center;
+      padding: 10px;
+      border: 1px solid #444;
+      font-size: 13px;
     }
     .print-table .ref-col {
       font-weight: bold;
-      background: #f5f5f5;
-      text-align: center;
+      background: #1a1a1f;
     }
     .print-table .up {
       color: #2ecc71;
@@ -352,49 +299,6 @@
     }
     .print-table .same {
       color: #f39c12;
-      font-weight: bold;
-    }
-    .print-table .na {
-      color: #7f8c8d;
-      font-style: italic;
-    }
-    
-    /* Estilo dos totais (igual GS) */
-    .print-totals {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-family: Arial, sans-serif;
-    }
-    .print-totals h4 {
-      margin-top: 0;
-      color: #2a2a2f;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 8px;
-    }
-    .print-totals .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .print-totals .total-row:last-child {
-      border-bottom: none;
-      font-weight: bold;
-      background: #e9ecef;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 4px;
-    }
-    .print-totals .label {
-      font-weight: bold;
-      color: #555;
-    }
-    .print-totals .value {
-      font-weight: bold;
-      color: #2a2a2f;
     }
   </style>
 </head>
@@ -476,7 +380,7 @@
     </div>
   </div>
 
-  <!-- Modal de impressão/PDF - ATUALIZADO -->
+  <!-- Modal de impressão/PDF - EXATAMENTE IGUAL À VERSÃO ORIGINAL -->
   <div class="modalWrap" id="modalPrintWrap">
     <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
     <div class="modal" style="width:min(800px, 95vw); max-height:90vh; overflow:auto;">
@@ -762,22 +666,21 @@
     };
 
     /***********************
-     * MODAL PRINT - ATUALIZADO
+     * MODAL PRINT - EXATAMENTE IGUAL À VERSÃO ORIGINAL
      ***********************/
     const ModalPrint = {
       open(data, collA, collB) {
         const container = document.getElementById("printContainer");
         
-        // Cria o conteúdo para impressão no estilo do GS
+        // Cria o conteúdo para impressão - EXATAMENTE IGUAL À VERSÃO ORIGINAL
         const now = new Date();
         const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
         
-        // Estilo mais limpo, parecido com o GS
         let html = `
           <div class="print-header">
-            <h2 style="margin:0; color:#333; font-size:18px;">Comparação de Coleções - HS</h2>
-            <p style="margin:5px 0; color:#666; font-size:12px;">Gerado em: ${dateStr}</p>
-            <p style="margin:5px 0; color:#666; font-size:12px;">
+            <h2 style="margin:0; color:#333;">Comparação de Coleções - HS</h2>
+            <p style="margin:5px 0; color:#666;">Gerado em: ${dateStr}</p>
+            <p style="margin:5px 0; color:#666;">
               <strong>Coleção A (Antiga):</strong> ${esc(collA)} | 
               <strong>Coleção B (Atual):</strong> ${esc(collB)}
             </p>
@@ -787,21 +690,15 @@
           <table class="print-table">
             <thead>
               <tr>
-                <th style="width:15%;">REF</th>
-                <th style="width:25%;">${esc(collA)}</th>
-                <th style="width:25%;">${esc(collB)}</th>
+                <th style="width:15%; background:#6f3ccf; color:white;">REF</th>
+                <th style="width:25%;">${esc(collA)} (Antiga)</th>
+                <th style="width:25%;">${esc(collB)} (Atual)</th>
                 <th style="width:15%;">Variação</th>
                 <th style="width:20%;">Status</th>
               </tr>
             </thead>
             <tbody>
         `;
-        
-        // Contadores para totais
-        let totalSubiu = 0;
-        let totalDesceu = 0;
-        let totalIgual = 0;
-        let totalSemDado = 0;
         
         data.forEach(item => {
           const priceA = item.precoA != null ? fmtBR(item.precoA) : "-";
@@ -815,22 +712,18 @@
             case "SUBIU":
               statusClass = "up";
               statusText = "▲ SUBIU";
-              totalSubiu++;
               break;
             case "DESCEU":
               statusClass = "down";
               statusText = "▼ DESCEU";
-              totalDesceu++;
               break;
             case "IGUAL":
               statusClass = "same";
               statusText = "● IGUAL";
-              totalIgual++;
               break;
             default:
-              statusClass = "na";
-              statusText = "-";
-              totalSemDado++;
+              statusClass = "";
+              statusText = "SEM DADO";
           }
           
           html += `
@@ -847,33 +740,11 @@
         html += `
             </tbody>
           </table>
-          
-          <div class="print-totals">
-            <h4>Resumo da Comparação</h4>
-            <div class="total-row">
-              <span class="label">Total de itens:</span>
-              <span class="value">${data.length}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens que subiram:</span>
-              <span class="value" style="color:#2ecc71;">${totalSubiu}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens que desceram:</span>
-              <span class="value" style="color:#e74c3c;">${totalDesceu}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens iguais:</span>
-              <span class="value" style="color:#f39c12;">${totalIgual}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Sem dados:</span>
-              <span class="value" style="color:#7f8c8d;">${totalSemDado}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens que alteraram:</span>
-              <span class="value">${totalSubiu + totalDesceu}</span>
-            </div>
+          <div style="margin-top:20px; color:#666; font-size:12px;">
+            <p><strong>Total de itens:</strong> ${data.length}</p>
+            <p><strong>Itens que subiram:</strong> ${data.filter(i => i.direcao === "SUBIU").length}</p>
+            <p><strong>Itens que desceram:</strong> ${data.filter(i => i.direcao === "DESCEU").length}</p>
+            <p><strong>Itens iguais:</strong> ${data.filter(i => i.direcao === "IGUAL").length}</p>
           </div>
         `;
         
@@ -1332,7 +1203,7 @@
     });
 
     /***********************
-     * MATRIX + draggable columns (storage)
+     * MATRIZ + draggable columns (storage)
      ***********************/
     const LS_COLORDER = "hs_matrix_col_order_v1";
 
