@@ -1,409 +1,579 @@
-/*******************************************************
- * HS — Precificação / Comparador / Coleções
- * - Banco: uma linha por (REF, COLEÇÃO, PREÇO)
- * - Rotas GET: listCollections, searchReference, compareCollections, matrix
- * - Rotas POST: addCollection, exportCurrentPrices
- *******************************************************/
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Precificação - HS</title>
+  <style>
+    :root{
+      --bg:#000;
+      --panel:#1c1c1c;
+      --panel2:#151515;
+      --muted:#bdbdbd;
+      --pri:#673ab7;
+      --pri2:#5a31a6;
+      --ok:#28a745;
+      --warn:#f1c40f;
+      --err:#e53935;
+      --line:#2c2c2c;
+      --chip:#222;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:#fff}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    h1{margin:0 0 18px;font-size:22px}
+    .grid{display:grid;gap:16px}
+    .panel{background:var(--panel);padding:16px;border-radius:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:13px;color:#ddd}
+    input,select,button{
+      padding:10px 12px;border-radius:10px;border:1px solid #333;background:#121212;color:#fff
+    }
+    input::placeholder{color:#777}
+    button{background:var(--pri);border:0;cursor:pointer;font-weight:700}
+    button:hover{background:var(--pri2)}
+    button.secondary{background:#2f2f2f}
+    button.secondary:hover{background:#3a3a3a}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{background:var(--chip);padding:8px 10px;border-radius:10px}
+    .section-title{margin:0 0 10px;font-weight:800}
+    .right{margin-left:auto}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;background:#101010;border:1px solid #2b2b2b;padding:2px 6px;border-radius:8px;font-size:12px}
 
-const SPREADSHEET_ID = "1v9GBXW-gqfU9Jx1MRkJQLkX8y8jJVbdhtlRM3Mh7dXM";
-const SHEET_NAME     = "atualizada 11.04";
-
-// Export "Leonardo"
-const EXPORT_SHEET_ID  = "1T2_9rYF5DDfLuvS4H96UmEwxZeBgcWNaw3Hm9W2SEPE";
-const EXPORT_TAB_NAME  = "Leonardo";
-const EXPORT_PASSWORD  = "1234"; // <<<<< TROQUE AQUI
-
-// Ordem das estações (VOCÊ confirmou que é: VERÃO, ALTO VERÃO, OUTONO, INVERNO)
-const SEASON_ORDER = {
-  "VERAO": 1, "VERÃO": 1,
-  "ALTO VERAO": 2, "ALTO VERÃO": 2,
-  "OUTONO": 3,
-  "INVERNO": 4
-};
-
-// Cache (para ficar “instantâneo” no site)
-const CACHE_KEY = "HS_PRECOS_CACHE_V2";
-const CACHE_TTL = 60; // segundos (1 min já ajuda muito)
-
-function doGet(e) {
-  try {
-    const action = e?.parameter?.action || "";
-    const db = loadDb_(); // carrega + indexa + cache
-
-    if (action === "listCollections") {
-      return jsonOut_(db.collectionsSorted);
+    /* TABELA */
+    table{border-collapse:collapse;min-width:100%}
+    th,td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
+    th{background:var(--panel2);text-align:left}
+    .scroll{max-height:520px; overflow:auto; border:1px solid #333; border-radius:12px; margin-top:12px}
+    .scroll table th{
+      position:sticky; top:0; z-index:3;
+    }
+    .scroll table td:first-child,
+    .scroll table th:first-child{
+      position:sticky; left:0; z-index:4;
+      background:var(--panel);
+      border-right:1px solid #2b2b2b;
     }
 
-    if (action === "searchReference") {
-      const ref = normRef_(e.parameter.ref);
-      const items = db.rowsByRef.get(ref) || [];
-      const valid = items.filter(x => x.preco != null && x.preco > 0);
+    /* BADGES */
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .b-ok{background:rgba(40,167,69,.18);color:#6fe18b}
+    .b-warn{background:rgba(241,196,15,.18);color:#ffd86b}
+    .b-err{background:rgba(229,57,53,.18);color:#ff9a9a}
+    .b-gray{background:rgba(160,160,160,.16);color:#ddd}
 
-      if (!valid.length) return jsonOut_({ items: [] });
+    /* chips */
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .chip{background:#141414;border:1px solid #2b2b2b;padding:8px 10px;border-radius:999px;font-size:13px}
+    .chip strong{font-weight:900}
+    .divider{height:1px;background:#2b2b2b;margin:12px 0}
 
-      // maior preço histórico
-      let max = -Infinity;
-      valid.forEach(v => { if (v.preco > max) max = v.preco; });
-      const maxCols = valid.filter(v => v.preco === max).map(v => v.colecao);
-
-      // "atual" = última coleção (pela ordenação)
-      const lastItem = valid.slice().sort((a,b)=> a.key - b.key).pop();
-      const atual = lastItem ? { colecao: lastItem.colecao, preco: lastItem.preco } : null;
-
-      // lista por coleção (ordenada)
-      const out = valid.slice().sort((a,b)=> a.key - b.key).map(v => ({ coll: v.colecao, price: v.preco }));
-
-      return jsonOut_({
-        items: out,
-        max,
-        maxCollections: sortCollections_(maxCols),
-        atual
-      });
+    /* loading overlay */
+    .overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.6);
+      display:none; align-items:center; justify-content:center; z-index:9999;
+      backdrop-filter: blur(2px);
     }
-
-    if (action === "compareCollections") {
-      const a = (e.parameter.a || "").trim();
-      const b = (e.parameter.b || "").trim();
-      if (!a || !b) return jsonOut_([]);
-
-      const keyA = collectionKey_(a);
-      const keyB = collectionKey_(b);
-
-      // mapa ref -> preço na coleção A/B (rápido)
-      const mapA = db.priceByRefColl.get(a) || new Map();
-      const mapB = db.priceByRefColl.get(b) || new Map();
-
-      const refs = db.allRefs;
-      const list = refs.map(ref => {
-        const va = mapA.has(ref) ? mapA.get(ref) : null;
-        const vb = mapB.has(ref) ? mapB.get(ref) : null;
-
-        const delta = (va!=null && vb!=null) ? round2_(vb - va) : null;
-        const alterou = (delta != null && delta !== 0);
-
-        let direcao = "SEM DADO";
-        if (va!=null && vb!=null) {
-          if (vb > va) direcao = "SUBIU";
-          else if (vb < va) direcao = "DESCEU";
-          else direcao = "IGUAL";
-        }
-
-        return {
-          referencia: ref,
-          precoA: va,
-          precoB: vb,
-          delta,
-          alterou,
-          direcao,
-          keyA,
-          keyB
-        };
-      });
-
-      return jsonOut_(list);
+    .overlay .box{
+      background:#111;border:1px solid #2b2b2b;border-radius:14px;
+      padding:18px 16px; min-width:280px; text-align:center;
+      box-shadow:0 10px 40px rgba(0,0,0,.6);
     }
+    .spin{
+      width:30px;height:30px;border-radius:50%;
+      border:3px solid #2b2b2b;border-top-color:#fff;margin:0 auto 10px;
+      animation:rot 1s linear infinite;
+    }
+    @keyframes rot {to{transform:rotate(360deg)}}
 
-    if (action === "matrix") {
-      const limit = Math.max(1, parseInt(e.parameter.limit || db.allRefs.length, 10) || db.allRefs.length);
+    /* filtros rápidos */
+    .toggle{
+      display:flex;align-items:center;gap:8px;font-size:13px;color:#ddd
+    }
+    .toggle input{transform:scale(1.1)}
+  </style>
+</head>
+<body>
 
-      const refs = db.allRefs.slice(0, limit);
-      const colls = db.collectionsSorted;
+<div class="overlay" id="overlay">
+  <div class="box">
+    <div class="spin"></div>
+    <div id="overlayText" style="font-weight:800">Carregando…</div>
+    <div class="muted" style="margin-top:6px">Aguarde só um instante.</div>
+  </div>
+</div>
 
-      // monta rows com lookup O(1)
-      const rows = refs.map(ref => {
-        const line = [ref];
-        colls.forEach(c => {
-          const m = db.priceByRefColl.get(c);
-          const v = m ? m.get(ref) : null;
-          line.push(v == null ? null : v);
+<div class="wrap grid">
+  <h1>Precificação — HS</h1>
+
+  <!-- 1) BUSCA POR REFERÊNCIA -->
+  <div class="panel">
+    <div class="section-title">Buscar referência</div>
+
+    <div class="row">
+      <label>Referência</label>
+      <input id="refInput" placeholder="Ex.: 0227" style="min-width:200px" />
+      <button id="btnBuscarRef">Buscar</button>
+
+      <button id="btnIncluir" class="secondary">Incluir na lista</button>
+      <button id="btnFinalizar" class="secondary">Finalizar lista</button>
+
+      <span id="refStatus" class="muted right"></span>
+    </div>
+
+    <div class="chips" id="refResumo" style="display:none">
+      <div class="chip">Maior preço (histórico): <strong id="refMax">-</strong></div>
+      <div class="chip">Coleção(ões) do maior preço: <strong id="refMaxCols">-</strong></div>
+      <div class="chip">Preço atual (última coleção): <strong id="refAtualPreco">-</strong></div>
+      <div class="chip">Coleção atual: <strong id="refAtualCol">-</strong></div>
+    </div>
+
+    <div id="refTabelaWrap"></div>
+  </div>
+
+  <!-- 2) COMPARAR COLEÇÕES -->
+  <div class="panel">
+    <div class="section-title">Comparar coleções</div>
+
+    <div class="row">
+      <label>Coleção A</label>
+      <select id="collA" style="min-width:260px"></select>
+
+      <label>Coleção B</label>
+      <select id="collB" style="min-width:260px"></select>
+
+      <button id="btnComparar">Comparar</button>
+
+      <label class="toggle">
+        <input type="checkbox" id="cmpOnlyChanged">
+        Somente alterações
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" id="cmpOnlyUp">
+        Somente subiu
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" id="cmpOnlyDown">
+        Somente desceu
+      </label>
+
+      <span id="cmpStatus" class="muted right"></span>
+    </div>
+
+    <div id="cmpTabelaWrap"></div>
+  </div>
+
+  <!-- 3) ADICIONAR NOVA COLEÇÃO (UPLOAD) -->
+  <div class="panel">
+    <div class="section-title">Incluir nova coleção (gravar no banco)</div>
+
+    <div class="row">
+      <label>Nome da coleção</label>
+      <input id="newCollName" placeholder="Ex.: INVERNO 2025 REM 2" style="min-width:260px"/>
+
+      <button id="btnAddColl">Salvar coleção</button>
+      <span id="addStatus" class="muted right"></span>
+    </div>
+
+    <div class="muted" style="margin-top:8px">
+      Cole uma lista no formato <span class="kbd">REF;PREÇO</span> (uma por linha). Ex:<br/>
+      <span class="kbd">0227;89,99</span>
+    </div>
+
+    <textarea id="newCollItems" style="width:100%;margin-top:10px;min-height:160px;border-radius:12px;border:1px solid #333;background:#101010;color:#fff;padding:12px" placeholder="Cole aqui…"></textarea>
+  </div>
+
+  <!-- 4) GRAVAR COLEÇÃO ATUAL (EXPORT LEONARDO) -->
+  <div class="panel">
+    <div class="section-title">Gravar coleção atual (exportar para planilha Leonardo)</div>
+
+    <div class="row">
+      <label>Gerar a partir de</label>
+      <select id="exportBase" style="min-width:260px"></select>
+
+      <label>Senha</label>
+      <input id="exportPass" type="password" placeholder="Senha" style="min-width:180px"/>
+
+      <button id="btnExport">Gravar coleção atual</button>
+
+      <span id="exportStatus" class="muted right"></span>
+    </div>
+
+    <div class="muted" style="margin-top:8px">
+      Isso sobrescreve a aba <strong>Leonardo</strong> (A:C) com: REF | VALOR | <strong>COLEÇÃO ATUAL</strong>.
+    </div>
+  </div>
+
+  <!-- 5) MAIOR PREÇO POR REFERÊNCIA -->
+  <div class="panel">
+    <div class="section-title">Maior preço por referência</div>
+
+    <div class="row">
+      <label>Filtrar coleção</label>
+      <select id="maxColl" style="min-width:260px"></select>
+      <button id="btnMax">Gerar/Atualizar</button>
+      <span id="maxStatus" class="muted right"></span>
+    </div>
+
+    <div id="maxTabelaWrap"></div>
+  </div>
+
+  <!-- 6) MATRIZ PREÇOS x COLEÇÕES -->
+  <div class="panel">
+    <div class="section-title">Tabela preços x coleções</div>
+
+    <div class="row">
+      <label>Limitar primeiras N referências</label>
+      <input id="matLimit" type="number" min="1" style="width:160px" placeholder="ex.: 200"/>
+
+      <label>Buscar referência</label>
+      <input id="matSearch" placeholder="Ex.: 0227" style="width:220px"/>
+
+      <button id="btnMatriz">Gerar tabela</button>
+
+      <span id="matStatus" class="muted right"></span>
+    </div>
+
+    <div class="muted" style="margin-top:8px">
+      Dica: a busca filtra em tempo real pela coluna REF.
+    </div>
+
+    <div id="matTabelaWrap"></div>
+  </div>
+
+</div>
+
+<script>
+  // ======================
+  // CONFIG
+  // ======================
+  const API_URL = "https://script.google.com/macros/s/SEU_DEPLOY_AQUI/exec";
+
+  // formatação correta (resolve “casas decimais demais”)
+  const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
+
+  // lista temporária (include/finalizar lista)
+  let listaTemp = [];
+
+  // ======================
+  // HELPERS UI
+  // ======================
+  function showOverlay(msg="Carregando…"){
+    document.getElementById("overlayText").textContent = msg;
+    document.getElementById("overlay").style.display = "flex";
+  }
+  function hideOverlay(){
+    document.getElementById("overlay").style.display = "none";
+  }
+
+  async function apiGet(action, params={}){
+    const url = new URL(API_URL);
+    url.search = new URLSearchParams({action, ...params}).toString();
+    const res = await fetch(url);
+    return res.json();
+  }
+  async function apiPost(payload){
+    const res = await fetch(API_URL, {method:"POST", body: JSON.stringify(payload)});
+    return res.json();
+  }
+
+  function renderTable(containerId, head, rows){
+    const wrap = document.getElementById(containerId);
+    wrap.innerHTML = '';
+
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+    `;
+
+    const scroll = document.createElement('div');
+    scroll.className = 'scroll';
+    scroll.appendChild(table);
+
+    wrap.appendChild(scroll);
+  }
+
+  function badgeDirecao(dir){
+    if (dir === "SUBIU") return `<span class="badge b-ok">SUBIU</span>`;
+    if (dir === "DESCEU") return `<span class="badge b-err">DESCEU</span>`;
+    if (dir === "IGUAL") return `<span class="badge b-warn">IGUAL</span>`;
+    return `<span class="badge b-gray">${dir || "SEM DADO"}</span>`;
+  }
+
+  // ======================
+  // LOAD COLLECTIONS
+  // ======================
+  async function loadCollections(){
+    showOverlay("Carregando coleções…");
+    try{
+      const colls = await apiGet("listCollections");
+      const fill = (sel, addAll=false) => {
+        sel.innerHTML = (addAll ? `<option value="">Todas</option>` : `<option value="">Selecione</option>`);
+        colls.forEach(c=>{
+          const o = document.createElement('option');
+          o.value = o.textContent = c;
+          sel.appendChild(o);
         });
-        return line;
-      });
-
-      return jsonOut_({ header: ["REF"].concat(colls), rows });
+      };
+      fill(document.getElementById('collA'));
+      fill(document.getElementById('collB'));
+      fill(document.getElementById('maxColl'), true);
+      fill(document.getElementById('exportBase'), true);
+    } finally {
+      hideOverlay();
     }
-
-    return jsonOut_({ erro: "Ação inválida: " + action });
-
-  } catch (err) {
-    return jsonOut_({ erro: err.message });
   }
-}
+  loadCollections();
 
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents || "{}");
-    const action = (payload.action || "").trim();
+  // ======================
+  // BUSCAR REFERÊNCIA
+  // ======================
+  document.getElementById('btnBuscarRef').onclick = async ()=>{
+    const ref = document.getElementById('refInput').value.trim().toUpperCase();
+    const status = document.getElementById('refStatus');
+    status.textContent = 'Buscando…';
+    showOverlay("Buscando referência…");
+    try{
+      const res = await apiGet("searchReference", {ref});
 
-    if (action === "addCollection") {
-      // payload: {action:"addCollection", name:"OUTONO 25 REM", items:[{ref,price}]}
-      const name = String(payload.name || "").trim();
-      const items = payload.items || [];
-      if (!name) throw new Error("Nome da coleção vazio.");
-      if (!Array.isArray(items) || !items.length) throw new Error("Lista de itens vazia.");
-
-      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-      const sh = ss.getSheetByName(SHEET_NAME);
-      if (!sh) throw new Error("Aba '" + SHEET_NAME + "' não encontrada.");
-
-      const data = sh.getDataRange().getValues();
-      const headers = (data[0] || []).map(h => String(h).trim().toUpperCase());
-
-      const idxRef = headers.indexOf("REF");
-      const idxPreco = headers.indexOf("PREÇO");
-      const idxCol = headers.indexOf("COLEÇÃO");
-      if (idxRef === -1 || idxPreco === -1 || idxCol === -1) {
-        throw new Error("Cabeçalhos obrigatórios não encontrados: REF, PREÇO, COLEÇÃO");
+      if(!res.items || !res.items.length){
+        document.getElementById('refResumo').style.display='none';
+        document.getElementById('refTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
+        status.textContent='';
+        return;
       }
 
-      const out = [];
-      items.forEach(it => {
-        const ref = normRef_(it.ref);
-        const preco = parsePrice_(it.price);
-        if (!ref) return;
-        if (preco == null) return;
-        out.push([ref, preco, name]);
-      });
+      document.getElementById('refMax').textContent = fmtBR(res.max);
+      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ') || '-';
 
-      if (!out.length) throw new Error("Nenhum item válido após validação.");
+      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
+      document.getElementById('refAtualCol').textContent   = res.atual ? res.atual.colecao : '-';
 
-      // append (não mexe em linhas antigas)
-      const startRow = sh.getLastRow() + 1;
-      sh.getRange(startRow, 1, out.length, 3).setValues(out);
+      document.getElementById('refResumo').style.display='flex';
 
-      // limpa cache para refletir instantâneo
-      CacheService.getScriptCache().remove(CACHE_KEY);
+      const rows = res.items.map(i=>[i.coll, fmtBR(i.price)]);
+      renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
 
-      return jsonOut_({ status: "ok", inserted: out.length, colecao: name });
+      status.textContent = '';
+    } finally {
+      hideOverlay();
     }
+  };
 
-    if (action === "exportCurrentPrices") {
-      // payload: {action:"exportCurrentPrices", password:"...", baseCollection:"OUTONO 25" (opcional)}
-      const pass = String(payload.password || "");
-      if (pass !== EXPORT_PASSWORD) {
-        return jsonOut_({ status:"erro", erro:"Senha inválida." });
+  // ======================
+  // INCLUIR / FINALIZAR LISTA (para mandar CSV por e-mail se você usa)
+  // ======================
+  document.getElementById('btnIncluir').onclick = async ()=>{
+    const ref = document.getElementById('refInput').value.trim().toUpperCase();
+    if(!ref) return;
+
+    showOverlay("Incluindo na lista…");
+    try{
+      const res = await apiGet("searchReference", {ref});
+      if(res.items && res.items.length){
+        res.items.forEach(i => listaTemp.push({ref, coll: i.coll, price: i.price}));
+        alert("Adicionado: " + ref);
+      } else {
+        alert("Sem dados para: " + ref);
+      }
+    } finally {
+      hideOverlay();
+    }
+  };
+
+  document.getElementById('btnFinalizar').onclick = async ()=>{
+    if(!listaTemp.length){ alert("Lista vazia."); return; }
+    showOverlay("Finalizando lista…");
+    try{
+      const resp = await apiPost({action:"sendList", items: listaTemp});
+      if(resp.status === "ok"){
+        alert("Enviado " + resp.enviados + " itens.");
+        listaTemp = [];
+      } else {
+        alert(resp.erro || "Falha ao enviar.");
+      }
+    } finally {
+      hideOverlay();
+    }
+  };
+
+  // ======================
+  // COMPARAR COLEÇÕES
+  // ======================
+  async function runCompare(){
+    const a = document.getElementById('collA').value;
+    const b = document.getElementById('collB').value;
+    const onlyChanged = document.getElementById('cmpOnlyChanged').checked;
+    const onlyUp = document.getElementById('cmpOnlyUp').checked;
+    const onlyDown = document.getElementById('cmpOnlyDown').checked;
+
+    if(!a || !b) return;
+
+    document.getElementById('cmpStatus').textContent = 'Comparando…';
+    showOverlay("Comparando coleções…");
+    try{
+      let rows = await apiGet("compareCollections",{a,b});
+      rows = rows || [];
+
+      // filtros
+      if(onlyChanged) rows = rows.filter(r => r.alterou);
+      if(onlyUp) rows = rows.filter(r => r.direcao === "SUBIU");
+      if(onlyDown) rows = rows.filter(r => r.direcao === "DESCEU");
+
+      const body = rows.map(r => ([
+        r.referencia,
+        r.precoA==null ? '-' : fmtBR(r.precoA),
+        r.precoB==null ? '-' : fmtBR(r.precoB),
+        r.delta==null ? '-' : fmtBR(r.delta),
+        badgeDirecao(r.direcao)
+      ]));
+
+      renderTable('cmpTabelaWrap', ["REF", `Preço (${a})`, `Preço (${b})`, "Δ", "Status"], body);
+
+      document.getElementById('cmpStatus').textContent = rows.length + " itens";
+    } finally {
+      hideOverlay();
+    }
+  }
+
+  document.getElementById('btnComparar').onclick = runCompare;
+  document.getElementById('cmpOnlyChanged').onchange = runCompare;
+  document.getElementById('cmpOnlyUp').onchange = runCompare;
+  document.getElementById('cmpOnlyDown').onchange = runCompare;
+
+  // ======================
+  // ADICIONAR COLEÇÃO (POST addCollection)
+  // ======================
+  document.getElementById('btnAddColl').onclick = async ()=>{
+    const name = document.getElementById('newCollName').value.trim();
+    const txt  = document.getElementById('newCollItems').value.trim();
+    const st   = document.getElementById('addStatus');
+
+    if(!name){ alert("Informe o nome da coleção."); return; }
+    if(!txt){ alert("Cole os itens no campo abaixo."); return; }
+
+    // parse "REF;PRECO"
+    const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    const items = [];
+    for(const line of lines){
+      const parts = line.split(";").map(x=>x.trim());
+      if(parts.length < 2) continue;
+      const ref = parts[0].toUpperCase();
+      const price = parts[1];
+      items.push({ref, price});
+    }
+    if(!items.length){ alert("Nenhuma linha válida no formato REF;PREÇO."); return; }
+
+    st.textContent = "Salvando…";
+    showOverlay("Salvando coleção…");
+    try{
+      const resp = await apiPost({action:"addCollection", name, items});
+      if(resp.status === "ok"){
+        st.textContent = `OK — ${resp.inserted} itens gravados em "${resp.colecao}"`;
+        // recarrega coleções para aparecer no site
+        await loadCollections();
+        alert("Coleção salva com sucesso!");
+      } else {
+        st.textContent = resp.erro || "Erro ao salvar.";
+        alert(resp.erro || "Erro ao salvar.");
+      }
+    } finally {
+      hideOverlay();
+    }
+  };
+
+  // ======================
+  // EXPORTAR “COLEÇÃO ATUAL” (POST exportCurrentPrices)
+  // ======================
+  document.getElementById('btnExport').onclick = async ()=>{
+    const baseCollection = document.getElementById('exportBase').value; // vazio = última
+    const password = document.getElementById('exportPass').value;
+    const st = document.getElementById('exportStatus');
+
+    if(!password){ alert("Digite a senha."); return; }
+
+    st.textContent = "Exportando…";
+    showOverlay("Exportando coleção atual…");
+    try{
+      const resp = await apiPost({action:"exportCurrentPrices", password, baseCollection});
+      if(resp.status === "ok"){
+        st.textContent = `OK — ${resp.exported} itens (base: ${resp.cutoff})`;
+        alert("Exportação concluída!");
+      } else {
+        st.textContent = resp.erro || "Senha inválida / erro.";
+        alert(resp.erro || "Erro.");
+      }
+    } finally {
+      hideOverlay();
+    }
+  };
+
+  // ======================
+  // MAX POR REFERÊNCIA (GET maxByReference)
+  // ======================
+  document.getElementById('btnMax').onclick = async ()=>{
+    const coll = document.getElementById('maxColl').value;
+    const st = document.getElementById('maxStatus');
+    st.textContent = "Gerando…";
+    showOverlay("Calculando maiores preços…");
+    try{
+      const list = await apiGet("maxByReference",{colecao: coll});
+      if(!list || !list.length){
+        document.getElementById('maxTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
+        st.textContent = "";
+        return;
+      }
+      const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
+      renderTable('maxTabelaWrap', ["Referência","MAX de valor"], rows);
+      st.textContent = list.length + " refs";
+    } finally {
+      hideOverlay();
+    }
+  };
+
+  // ======================
+  // MATRIZ (GET matrix) + filtro em tempo real
+  // ======================
+  document.getElementById('btnMatriz').onclick = async ()=>{
+    const limit = document.getElementById('matLimit').value;
+    const st = document.getElementById('matStatus');
+    st.textContent = "Gerando…";
+    showOverlay("Montando tabela (matriz)…");
+    try{
+      const obj = await apiGet("matrix",{limit});
+      if(!obj || !obj.rows || !obj.rows.length){
+        document.getElementById('matTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
+        st.textContent = "";
+        return;
       }
 
-      const baseCollection = String(payload.baseCollection || "").trim(); // se vazio, usa "última"
-      const db = loadDb_();
+      // formata
+      const rows = obj.rows.map(r=>r.map((v,i)=> i===0 ? v : (v==null ? '-' : fmtBR(v))));
 
-      // define "cutoff"
-      const cutoffKey = baseCollection ? collectionKey_(baseCollection) : (db.lastCollectionKey || 0);
+      // render
+      renderTable('matTabelaWrap', obj.header, rows);
+      st.textContent = `${obj.rows.length} linhas`;
 
-      // Para cada REF: pegar último preço conhecido ATÉ cutoffKey
-      const out = [];
-      db.allRefs.forEach(ref => {
-        const items = db.rowsByRef.get(ref) || [];
-        // pega o último <= cutoff
-        let best = null;
-        for (let i=0;i<items.length;i++){
-          const it = items[i];
-          if (it.preco == null) continue;
-          if (it.key <= cutoffKey) {
-            if (!best || it.key > best.key) best = it;
-          }
-        }
-        if (best) {
-          out.push([ref, best.preco, "COLEÇÃO ATUAL"]);
-        }
-      });
+      // filtro tempo real (sem clicar em gerar)
+      document.getElementById('matSearch').oninput = ()=>{
+        const term = document.getElementById('matSearch').value.trim().toLowerCase();
+        const tbody = document.querySelector('#matTabelaWrap tbody');
+        if(!tbody) return;
+        [...tbody.querySelectorAll('tr')].forEach(tr=>{
+          const ref = (tr.querySelector('td')?.textContent || "").toLowerCase();
+          tr.style.display = (!term || ref.includes(term)) ? "" : "none";
+        });
+      };
 
-      // grava na planilha Leonardo
-      const ss = SpreadsheetApp.openById(EXPORT_SHEET_ID);
-      const sh = ss.getSheetByName(EXPORT_TAB_NAME);
-      if (!sh) throw new Error("Aba '" + EXPORT_TAB_NAME + "' não encontrada na planilha de export.");
-
-      // sobrescreve A:C (conforme você decidiu que não precisa histórico)
-      sh.getRange("A:C").clearContent();
-      if (out.length) {
-        sh.getRange(1, 1, out.length, 3).setValues(out);
-      }
-
-      return jsonOut_({ status:"ok", exported: out.length, cutoff: baseCollection || "ÚLTIMA" });
+    } finally {
+      hideOverlay();
     }
-
-    return jsonOut_({ status:"erro", erro:"Ação POST inválida: " + action });
-
-  } catch (err) {
-    return jsonOut_({ status:"erro", erro: err.message });
-  }
-}
-
-/* =========================
-   DB / CACHE / INDEX
-========================= */
-function loadDb_(){
-  const cache = CacheService.getScriptCache();
-  const cached = cache.get(CACHE_KEY);
-  if (cached) {
-    return JSON.parse(cached);
-  }
-
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) throw new Error("Aba '" + SHEET_NAME + "' não encontrada.");
-
-  const values = sh.getDataRange().getValues();
-  if (!values || values.length < 2) {
-    const empty = { collectionsSorted:[], rowsByRef: new Map(), priceByRefColl: new Map(), allRefs:[], lastCollectionKey:0 };
-    cache.put(CACHE_KEY, JSON.stringify(serializeDb_(empty)), CACHE_TTL);
-    return deserializeDb_(JSON.parse(cache.get(CACHE_KEY)));
-  }
-
-  const headers = values[0].map(h => String(h).trim().toUpperCase());
-  const idxRef = headers.indexOf("REF");
-  const idxPreco = headers.indexOf("PREÇO");
-  const idxCol = headers.indexOf("COLEÇÃO");
-  if (idxRef === -1 || idxPreco === -1 || idxCol === -1) {
-    throw new Error("Cabeçalhos obrigatórios não encontrados: REF, PREÇO, COLEÇÃO");
-  }
-
-  const rowsByRef = new Map();
-  const priceByRefColl = new Map();
-  const collsSet = new Set();
-  const refsSet = new Set();
-
-  let lastCollectionKey = 0;
-
-  for (let i=1;i<values.length;i++){
-    const r = values[i];
-    const ref = normRef_(r[idxRef]);
-    const preco = parsePrice_(r[idxPreco]);
-    const colecao = String(r[idxCol] || "").trim();
-    if (!ref || !colecao) continue;
-
-    const key = collectionKey_(colecao);
-    if (key > lastCollectionKey) lastCollectionKey = key;
-
-    collsSet.add(colecao);
-    refsSet.add(ref);
-
-    const obj = { ref, preco, colecao, key };
-
-    if (!rowsByRef.has(ref)) rowsByRef.set(ref, []);
-    rowsByRef.get(ref).push(obj);
-
-    if (!priceByRefColl.has(colecao)) priceByRefColl.set(colecao, new Map());
-    // se repetiu a mesma ref na mesma coleção, mantém o último (ou o maior, se preferir)
-    priceByRefColl.get(colecao).set(ref, (preco == null ? null : round2_(preco)));
-  }
-
-  // ordena coleções
-  const collectionsSorted = sortCollections_(Array.from(collsSet));
-  // ordena itens por ref (para export ficar rápido)
-  rowsByRef.forEach(arr => arr.sort((a,b)=> a.key - b.key));
-
-  const db = {
-    collectionsSorted,
-    allRefs: Array.from(refsSet).sort(),
-    lastCollectionKey,
-    rowsByRef,
-    priceByRefColl
   };
+</script>
 
-  // cache precisa serializar Map
-  cache.put(CACHE_KEY, JSON.stringify(serializeDb_(db)), CACHE_TTL);
-  return deserializeDb_(JSON.parse(cache.get(CACHE_KEY)));
-}
-
-function serializeDb_(db){
-  return {
-    collectionsSorted: db.collectionsSorted,
-    allRefs: db.allRefs,
-    lastCollectionKey: db.lastCollectionKey,
-    rowsByRef: Array.from(db.rowsByRef.entries()),
-    priceByRefColl: Array.from(db.priceByRefColl.entries()).map(([coll, mp]) => [coll, Array.from(mp.entries())])
-  };
-}
-function deserializeDb_(raw){
-  const rowsByRef = new Map(raw.rowsByRef || []);
-  // rowsByRef vem como arrays de objetos ok
-  const priceByRefColl = new Map();
-  (raw.priceByRefColl || []).forEach(([coll, entries])=>{
-    priceByRefColl.set(coll, new Map(entries));
-  });
-  return {
-    collectionsSorted: raw.collectionsSorted || [],
-    allRefs: raw.allRefs || [],
-    lastCollectionKey: raw.lastCollectionKey || 0,
-    rowsByRef,
-    priceByRefColl
-  };
-}
-
-/* =========================
-   COLEÇÕES / PARSE
-========================= */
-function collectionKey_(name){
-  const info = parseCollName_(name);
-  // chave crescente: AAAA * 1000 + seasonOrder*100 + remIndex
-  return (info.ano * 1000) + (info.ordem * 100) + (info.remIndex || 0);
-}
-
-function parseCollName_(name){
-  const raw = String(name || "").trim();
-  const upper = raw
-    .toUpperCase()
-    .replace(/\s+/g," ")
-    .replace(/\s*-\s*/g," ");
-
-  // ano (pega 20xx ou último 2 dígitos)
-  let ano = 9999;
-  const m4 = upper.match(/20\d{2}/g);
-  if (m4 && m4.length) ano = parseInt(m4[m4.length-1], 10);
-  else {
-    const m2 = upper.match(/(\d{2})(?!.*\d)/);
-    if (m2) ano = 2000 + parseInt(m2[1], 10);
-  }
-
-  // estação
-  let season = "EXTRA";
-  if (upper.includes("INVERNO")) season = "INVERNO";
-  else if (upper.includes("OUTONO")) season = "OUTONO";
-  else if (upper.includes("ALTO") && (upper.includes("VERAO") || upper.includes("VERÃO"))) season = "ALTO VERÃO";
-  else if (upper.includes("VERAO") || upper.includes("VERÃO")) season = "VERÃO";
-
-  const ordem = SEASON_ORDER[season.toUpperCase().replace("Ã","A")] || 99;
-
-  // REM: pode ter várias “remarcações”
-  // exemplos aceitos: "REM", "REM 2", "REM2"
-  let remIndex = 0;
-  const rem = upper.match(/\bREM\s*([0-9]+)?\b/);
-  if (rem) remIndex = rem[1] ? parseInt(rem[1],10) : 1;
-
-  return { raw, ano, season, ordem, remIndex };
-}
-
-function sortCollections_(colls){
-  const uniq = Array.from(new Set((colls||[]).filter(Boolean)));
-  return uniq
-    .map(c => ({ c, key: collectionKey_(c) }))
-    .sort((a,b)=> a.key - b.key || a.c.localeCompare(b.c))
-    .map(x => x.c);
-}
-
-/* =========================
-   HELPERS
-========================= */
-function normRef_(v){
-  return String(v || "").trim().toUpperCase();
-}
-
-function parsePrice_(v){
-  if (v === "" || v == null) return null;
-  // aceita "89,99", "89.99", "R$ 89,99"
-  const s = String(v).replace(/[R$\s]/g,"").replace(/\./g,"").replace(",",".");
-  const n = parseFloat(s);
-  if (isNaN(n)) return null;
-  return round2_(n);
-}
-
-function round2_(n){
-  return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-}
-
-function jsonOut_(obj){
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+</body>
+</html>
