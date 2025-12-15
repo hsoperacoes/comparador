@@ -4,576 +4,525 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Precificação - HS</title>
+
   <style>
     :root{
       --bg:#000;
-      --panel:#1c1c1c;
-      --panel2:#151515;
+      --panel:#141414;
+      --panel2:#101010;
+      --line:#2a2a2a;
       --muted:#bdbdbd;
       --pri:#673ab7;
-      --pri2:#5a31a6;
+      --pri2:#7b4ef0;
       --ok:#28a745;
-      --warn:#f1c40f;
+      --warn:#e67e22;
       --err:#e53935;
-      --line:#2c2c2c;
-      --chip:#222;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:#fff}
-    .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    h1{margin:0 0 18px;font-size:22px}
-    .grid{display:grid;gap:16px}
-    .panel{background:var(--panel);padding:16px;border-radius:12px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{font-size:13px;color:#ddd}
-    input,select,button{
-      padding:10px 12px;border-radius:10px;border:1px solid #333;background:#121212;color:#fff
-    }
-    input::placeholder{color:#777}
-    button{background:var(--pri);border:0;cursor:pointer;font-weight:700}
-    button:hover{background:var(--pri2)}
-    button.secondary{background:#2f2f2f}
-    button.secondary:hover{background:#3a3a3a}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .muted{color:var(--muted);font-size:12px}
-    .pill{background:var(--chip);padding:8px 10px;border-radius:10px}
+    .wrap{max-width:1200px;margin:0 auto;padding:22px}
+    h1{margin:0 0 14px;font-size:20px;font-weight:800}
+    .grid{display:grid;gap:14px}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid #1f1f1f;padding:14px;border-radius:12px}
     .section-title{margin:0 0 10px;font-weight:800}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:12px;color:#ddd}
+    input,select,button,textarea{
+      padding:10px 12px;border-radius:10px;border:1px solid #333;background:#0e0e0e;color:#fff;outline:none
+    }
+    textarea{width:100%;min-height:140px;resize:vertical;line-height:1.35}
+    select{cursor:pointer}
+    button{background:var(--pri);border:0;cursor:pointer;font-weight:800;transition:.12s transform ease, .12s background ease}
+    button:hover{background:var(--pri2);transform:translateY(-1px)}
+    button.secondary{background:#2a2a2a}
+    button.secondary:hover{background:#363636}
+    button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .muted{color:var(--muted);font-size:12px}
     .right{margin-left:auto}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;background:#101010;border:1px solid #2b2b2b;padding:2px 6px;border-radius:8px;font-size:12px}
-
-    /* TABELA */
-    table{border-collapse:collapse;min-width:100%}
-    th,td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
-    th{background:var(--panel2);text-align:left}
-    .scroll{max-height:520px; overflow:auto; border:1px solid #333; border-radius:12px; margin-top:12px}
-    .scroll table th{
-      position:sticky; top:0; z-index:3;
-    }
-    .scroll table td:first-child,
-    .scroll table th:first-child{
-      position:sticky; left:0; z-index:4;
-      background:var(--panel);
-      border-right:1px solid #2b2b2b;
-    }
-
-    /* BADGES */
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
-    .b-ok{background:rgba(40,167,69,.18);color:#6fe18b}
-    .b-warn{background:rgba(241,196,15,.18);color:#ffd86b}
-    .b-err{background:rgba(229,57,53,.18);color:#ff9a9a}
-    .b-gray{background:rgba(160,160,160,.16);color:#ddd}
-
-    /* chips */
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .chip{background:#141414;border:1px solid #2b2b2b;padding:8px 10px;border-radius:999px;font-size:13px}
-    .chip strong{font-weight:900}
-    .divider{height:1px;background:#2b2b2b;margin:12px 0}
-
-    /* loading overlay */
-    .overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.6);
-      display:none; align-items:center; justify-content:center; z-index:9999;
-      backdrop-filter: blur(2px);
-    }
-    .overlay .box{
-      background:#111;border:1px solid #2b2b2b;border-radius:14px;
-      padding:18px 16px; min-width:280px; text-align:center;
-      box-shadow:0 10px 40px rgba(0,0,0,.6);
-    }
-    .spin{
-      width:30px;height:30px;border-radius:50%;
-      border:3px solid #2b2b2b;border-top-color:#fff;margin:0 auto 10px;
-      animation:rot 1s linear infinite;
-    }
-    @keyframes rot {to{transform:rotate(360deg)}}
-
-    /* filtros rápidos */
-    .toggle{
-      display:flex;align-items:center;gap:8px;font-size:13px;color:#ddd
-    }
-    .toggle input{transform:scale(1.1)}
+    .pill{background:#0e0e0e;border:1px solid #222;padding:8px 10px;border-radius:10px;display:inline-flex;gap:8px;align-items:center;font-size:12px}
+    .pill strong{font-size:13px}
+    .scroll{max-height:520px;overflow:auto;border:1px solid #242424;border-radius:12px;margin-top:10px}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px}
+    th,td{padding:10px 10px;border-bottom:1px solid #1f1f1f;font-size:13px;white-space:nowrap;vertical-align:middle}
+    th{background:#0f0f0f;position:sticky;top:0;z-index:5;text-align:left;border-bottom:1px solid #2b2b2b}
+    th:first-child, td:first-child{position:sticky;left:0;z-index:6;background:#121212;border-right:1px solid #222;font-weight:800}
+    th:first-child{z-index:10;background:#101010}
+    th.draggable{cursor:grab;user-select:none}
+    th.draggable:active{cursor:grabbing}
+    th.drag-over{outline:2px dashed rgba(123,78,240,.85);outline-offset:-4px}
+    th.dragging{opacity:.55}
   </style>
 </head>
+
 <body>
+  <div class="wrap grid">
+    <h1>Precificação — HS</h1>
 
-<div class="overlay" id="overlay">
-  <div class="box">
-    <div class="spin"></div>
-    <div id="overlayText" style="font-weight:800">Carregando…</div>
-    <div class="muted" style="margin-top:6px">Aguarde só um instante.</div>
-  </div>
-</div>
+    <!-- INCLUIR NOVA COLEÇÃO -->
+    <div class="panel">
+      <div class="section-title">Incluir nova coleção (lista de preço)</div>
 
-<div class="wrap grid">
-  <h1>Precificação — HS</h1>
+      <div class="row">
+        <label>Nome da coleção</label>
+        <input id="newCollName" placeholder="Ex.: OUTONO 25 REM 2" style="min-width:320px;text-transform:uppercase"/>
+        <button id="btnAddCollection">Salvar coleção no banco</button>
+        <span class="muted right" id="addStatus"></span>
+      </div>
 
-  <!-- 1) BUSCA POR REFERÊNCIA -->
-  <div class="panel">
-    <div class="section-title">Buscar referência</div>
-
-    <div class="row">
-      <label>Referência</label>
-      <input id="refInput" placeholder="Ex.: 0227" style="min-width:200px" />
-      <button id="btnBuscarRef">Buscar</button>
-
-      <button id="btnIncluir" class="secondary">Incluir na lista</button>
-      <button id="btnFinalizar" class="secondary">Finalizar lista</button>
-
-      <span id="refStatus" class="muted right"></span>
+      <div class="muted" style="margin-top:8px">
+        Cole aqui os itens, 1 por linha. Aceita: <b>REF;PREÇO</b> ou <b>REF,PREÇO</b> ou <b>REF PREÇO</b>.
+      </div>
+      <div style="margin-top:10px">
+        <textarea id="newCollItems" placeholder="Ex:
+0227;89,99
+2441406;159,00
+..."></textarea>
+      </div>
     </div>
 
-    <div class="chips" id="refResumo" style="display:none">
-      <div class="chip">Maior preço (histórico): <strong id="refMax">-</strong></div>
-      <div class="chip">Coleção(ões) do maior preço: <strong id="refMaxCols">-</strong></div>
-      <div class="chip">Preço atual (última coleção): <strong id="refAtualPreco">-</strong></div>
-      <div class="chip">Coleção atual: <strong id="refAtualCol">-</strong></div>
+    <!-- GRAVAR COLEÇÃO ATUAL (EXPORT) -->
+    <div class="panel">
+      <div class="section-title">Gravar Coleção Atual (aba Leonardo)</div>
+
+      <div class="row">
+        <label>Gerar lista “até”</label>
+        <select id="exportBase">
+          <option value="">ÚLTIMA (padrão)</option>
+        </select>
+
+        <label>Senha</label>
+        <input id="exportPass" type="password" placeholder="Senha" style="width:180px"/>
+
+        <button id="btnExport">Gravar COLEÇÃO ATUAL</button>
+        <span class="muted right" id="exportStatus"></span>
+      </div>
+
+      <div class="muted" style="margin-top:8px">
+        Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:B e coloca <b>COLEÇÃO ATUAL</b> na coluna C.
+      </div>
     </div>
 
-    <div id="refTabelaWrap"></div>
-  </div>
+    <!-- BUSCA POR REFERÊNCIA -->
+    <div class="panel">
+      <div class="section-title">Buscar referência</div>
+      <div class="row">
+        <label>Referência</label>
+        <input id="refInput" placeholder="Ex.: 0227" style="min-width:180px;text-transform:uppercase"/>
+        <button id="btnBuscarRef">Buscar</button>
+        <span id="refStatus" class="muted right"></span>
+      </div>
 
-  <!-- 2) COMPARAR COLEÇÕES -->
-  <div class="panel">
-    <div class="section-title">Comparar coleções</div>
+      <div class="row" id="refResumo" style="margin-top:10px;display:none;flex-wrap:wrap">
+        <span class="pill">Maior preço (histórico): <strong id="refMax"></strong></span>
+        <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
+        <span class="pill">Preço atual (última coleção): <strong id="refAtualPreco"></strong></span>
+        <span class="pill">Coleção atual: <strong id="refAtualCol"></strong></span>
+      </div>
 
-    <div class="row">
-      <label>Coleção A</label>
-      <select id="collA" style="min-width:260px"></select>
-
-      <label>Coleção B</label>
-      <select id="collB" style="min-width:260px"></select>
-
-      <button id="btnComparar">Comparar</button>
-
-      <label class="toggle">
-        <input type="checkbox" id="cmpOnlyChanged">
-        Somente alterações
-      </label>
-
-      <label class="toggle">
-        <input type="checkbox" id="cmpOnlyUp">
-        Somente subiu
-      </label>
-
-      <label class="toggle">
-        <input type="checkbox" id="cmpOnlyDown">
-        Somente desceu
-      </label>
-
-      <span id="cmpStatus" class="muted right"></span>
+      <div id="refTabelaWrap"></div>
     </div>
 
-    <div id="cmpTabelaWrap"></div>
-  </div>
+    <!-- COMPARAR COLEÇÕES -->
+    <div class="panel">
+      <div class="section-title">Comparar coleções</div>
+      <div class="row">
+        <label>Coleção A</label>
+        <select id="collA"></select>
+        <label>Coleção B</label>
+        <select id="collB"></select>
+        <button id="btnComparar">Comparar</button>
 
-  <!-- 3) ADICIONAR NOVA COLEÇÃO (UPLOAD) -->
-  <div class="panel">
-    <div class="section-title">Incluir nova coleção (gravar no banco)</div>
+        <button id="btnSomenteAlterou" class="secondary">Somente alterou</button>
+        <button id="btnSomenteSubiu" class="secondary">Somente subiu</button>
+        <button id="btnSomenteDesceu" class="secondary">Somente desceu</button>
 
-    <div class="row">
-      <label>Nome da coleção</label>
-      <input id="newCollName" placeholder="Ex.: INVERNO 2025 REM 2" style="min-width:260px"/>
-
-      <button id="btnAddColl">Salvar coleção</button>
-      <span id="addStatus" class="muted right"></span>
+        <span id="cmpStatus" class="muted right"></span>
+      </div>
+      <div id="cmpTabelaWrap"></div>
     </div>
 
-    <div class="muted" style="margin-top:8px">
-      Cole uma lista no formato <span class="kbd">REF;PREÇO</span> (uma por linha). Ex:<br/>
-      <span class="kbd">0227;89,99</span>
+    <!-- MATRIZ -->
+    <div class="panel">
+      <div class="section-title">Tabela preços x coleções (Matriz)</div>
+      <div class="row">
+        <label>Limitar primeiras N referências (opcional)</label>
+        <input id="matLimit" type="number" min="1" style="width:140px" placeholder="ex.: 200"/>
+        <label>Filtrar referência</label>
+        <input id="matSearch" placeholder="Ex.: 0227" style="width:200px;text-transform:uppercase"/>
+        <button id="btnMatriz">Gerar TABELA</button>
+        <button id="btnResetOrdem" class="secondary" disabled>Resetar ordem</button>
+        <span id="matStatus" class="muted right"></span>
+      </div>
+
+      <div class="muted" style="margin-top:8px">
+        Arraste o nome da coleção no cabeçalho para reorganizar. A coluna <b>REF</b> fica fixa. A ordem fica salva neste navegador.
+      </div>
+
+      <div id="matTabelaWrap"></div>
     </div>
 
-    <textarea id="newCollItems" style="width:100%;margin-top:10px;min-height:160px;border-radius:12px;border:1px solid #333;background:#101010;color:#fff;padding:12px" placeholder="Cole aqui…"></textarea>
-  </div>
-
-  <!-- 4) GRAVAR COLEÇÃO ATUAL (EXPORT LEONARDO) -->
-  <div class="panel">
-    <div class="section-title">Gravar coleção atual (exportar para planilha Leonardo)</div>
-
-    <div class="row">
-      <label>Gerar a partir de</label>
-      <select id="exportBase" style="min-width:260px"></select>
-
-      <label>Senha</label>
-      <input id="exportPass" type="password" placeholder="Senha" style="min-width:180px"/>
-
-      <button id="btnExport">Gravar coleção atual</button>
-
-      <span id="exportStatus" class="muted right"></span>
-    </div>
-
-    <div class="muted" style="margin-top:8px">
-      Isso sobrescreve a aba <strong>Leonardo</strong> (A:C) com: REF | VALOR | <strong>COLEÇÃO ATUAL</strong>.
-    </div>
   </div>
 
-  <!-- 5) MAIOR PREÇO POR REFERÊNCIA -->
-  <div class="panel">
-    <div class="section-title">Maior preço por referência</div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
 
-    <div class="row">
-      <label>Filtrar coleção</label>
-      <select id="maxColl" style="min-width:260px"></select>
-      <button id="btnMax">Gerar/Atualizar</button>
-      <span id="maxStatus" class="muted right"></span>
-    </div>
+    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
+    const safe = (s)=> String(s ?? "");
+    const LS_KEY_COL_ORDER = "HS_PRECO_COL_ORDER_v1";
 
-    <div id="maxTabelaWrap"></div>
-  </div>
+    let matrizState = null;
+    let cmpOnlyChanged=false, cmpOnlyUp=false, cmpOnlyDown=false;
 
-  <!-- 6) MATRIZ PREÇOS x COLEÇÕES -->
-  <div class="panel">
-    <div class="section-title">Tabela preços x coleções</div>
+    async function api(action, params={}) {
+      const url = new URL(API_URL);
+      url.search = new URLSearchParams({ action, ...params }).toString();
+      const res = await fetch(url);
+      return res.json();
+    }
 
-    <div class="row">
-      <label>Limitar primeiras N referências</label>
-      <input id="matLimit" type="number" min="1" style="width:160px" placeholder="ex.: 200"/>
+    async function post(payload){
+      const res = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) });
+      return res.json();
+    }
 
-      <label>Buscar referência</label>
-      <input id="matSearch" placeholder="Ex.: 0227" style="width:220px"/>
+    function renderTable(targetId, head, rows){
+      const wrap=document.getElementById(targetId);
+      wrap.innerHTML='';
+      const table=document.createElement('table');
+      table.innerHTML = `
+        <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      const scroll=document.createElement('div');
+      scroll.className='scroll';
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+    }
 
-      <button id="btnMatriz">Gerar tabela</button>
+    function normalizeRef(v){ return safe(v).trim().toUpperCase(); }
 
-      <span id="matStatus" class="muted right"></span>
-    </div>
+    function loadLocalOrder(){
+      try{
+        const raw = localStorage.getItem(LS_KEY_COL_ORDER);
+        if(!raw) return null;
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : null;
+      }catch(e){ return null; }
+    }
+    function saveLocalOrder(order){ localStorage.setItem(LS_KEY_COL_ORDER, JSON.stringify(order)); }
+    function clearLocalOrder(){ localStorage.removeItem(LS_KEY_COL_ORDER); }
 
-    <div class="muted" style="margin-top:8px">
-      Dica: a busca filtra em tempo real pela coluna REF.
-    </div>
+    function applyOrderToMatrix(originalColls, desiredOrder){
+      const set = new Set(originalColls);
+      const cleaned = (desiredOrder || []).filter(c => set.has(c));
+      const remaining = originalColls.filter(c => !cleaned.includes(c));
+      return cleaned.concat(remaining);
+    }
 
-    <div id="matTabelaWrap"></div>
-  </div>
+    function buildMatrixView(state){
+      const head = ["REF"].concat(state.order);
+      const rows = state.refs.map(ref => {
+        const line = [ref];
+        state.order.forEach(c => {
+          const v = state.priceIndex[ref + "||" + c];
+          line.push(v == null ? "-" : fmtBR(v));
+        });
+        return line;
+      });
+      return { head, rows };
+    }
 
-</div>
+    function renderMatrix(state){
+      const wrap = document.getElementById('matTabelaWrap');
+      wrap.innerHTML = '';
 
-<script>
-  // ======================
-  // CONFIG
-  // ======================
-  const API_URL = "https://script.google.com/macros/s/SEU_DEPLOY_AQUI/exec";
+      const view = buildMatrixView(state);
+      const table = document.createElement('table');
 
-  // formatação correta (resolve “casas decimais demais”)
-  const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n||0));
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
 
-  // lista temporária (include/finalizar lista)
-  let listaTemp = [];
+      view.head.forEach((h, idx) => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        if(idx > 0){
+          th.classList.add('draggable');
+          th.setAttribute('draggable','true');
+          th.dataset.col = h;
+        }
+        trh.appendChild(th);
+      });
 
-  // ======================
-  // HELPERS UI
-  // ======================
-  function showOverlay(msg="Carregando…"){
-    document.getElementById("overlayText").textContent = msg;
-    document.getElementById("overlay").style.display = "flex";
-  }
-  function hideOverlay(){
-    document.getElementById("overlay").style.display = "none";
-  }
+      thead.appendChild(trh);
+      table.appendChild(thead);
 
-  async function apiGet(action, params={}){
-    const url = new URL(API_URL);
-    url.search = new URLSearchParams({action, ...params}).toString();
-    const res = await fetch(url);
-    return res.json();
-  }
-  async function apiPost(payload){
-    const res = await fetch(API_URL, {method:"POST", body: JSON.stringify(payload)});
-    return res.json();
-  }
+      const tbody = document.createElement('tbody');
+      view.rows.forEach(r=>{
+        const tr=document.createElement('tr');
+        r.forEach(cell=>{
+          const td=document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
 
-  function renderTable(containerId, head, rows){
-    const wrap = document.getElementById(containerId);
-    wrap.innerHTML = '';
+      const scroll = document.createElement('div');
+      scroll.className = 'scroll';
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
 
-    const table = document.createElement('table');
-    table.innerHTML = `
-      <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-      <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-    `;
+      enableMatrixDrag(table, state);
+      document.getElementById('btnResetOrdem').disabled = false;
+    }
 
-    const scroll = document.createElement('div');
-    scroll.className = 'scroll';
-    scroll.appendChild(table);
+    function enableMatrixDrag(table, state){
+      let dragCol = null;
+      const ths = table.querySelectorAll('thead th.draggable');
 
-    wrap.appendChild(scroll);
-  }
+      ths.forEach(th=>{
+        th.addEventListener('dragstart', (ev)=>{
+          dragCol = th.dataset.col;
+          th.classList.add('dragging');
+          ev.dataTransfer.effectAllowed = "move";
+        });
+        th.addEventListener('dragend', ()=>{
+          th.classList.remove('dragging');
+          ths.forEach(x=>x.classList.remove('drag-over'));
+          dragCol=null;
+        });
+        th.addEventListener('dragover', (ev)=>{
+          ev.preventDefault();
+          th.classList.add('drag-over');
+        });
+        th.addEventListener('dragleave', ()=> th.classList.remove('drag-over'));
+        th.addEventListener('drop', (ev)=>{
+          ev.preventDefault();
+          th.classList.remove('drag-over');
 
-  function badgeDirecao(dir){
-    if (dir === "SUBIU") return `<span class="badge b-ok">SUBIU</span>`;
-    if (dir === "DESCEU") return `<span class="badge b-err">DESCEU</span>`;
-    if (dir === "IGUAL") return `<span class="badge b-warn">IGUAL</span>`;
-    return `<span class="badge b-gray">${dir || "SEM DADO"}</span>`;
-  }
+          const dropCol = th.dataset.col;
+          if(!dragCol || !dropCol || dragCol===dropCol) return;
 
-  // ======================
-  // LOAD COLLECTIONS
-  // ======================
-  async function loadCollections(){
-    showOverlay("Carregando coleções…");
-    try{
-      const colls = await apiGet("listCollections");
-      const fill = (sel, addAll=false) => {
-        sel.innerHTML = (addAll ? `<option value="">Todas</option>` : `<option value="">Selecione</option>`);
+          const order = state.order.slice();
+          const from = order.indexOf(dragCol);
+          const to   = order.indexOf(dropCol);
+          if(from===-1 || to===-1) return;
+
+          order.splice(from,1);
+          order.splice(to,0,dragCol);
+
+          state.order = order;
+          saveLocalOrder(order);
+          renderMatrix(state);
+        });
+      });
+    }
+
+    async function loadCollections(){
+      const colls = await api("listCollections");
+
+      const fill=(sel)=>{
+        sel.innerHTML = '<option value="">Selecione</option>';
         colls.forEach(c=>{
-          const o = document.createElement('option');
-          o.value = o.textContent = c;
+          const o=document.createElement('option');
+          o.value=o.textContent=c;
           sel.appendChild(o);
         });
       };
+
       fill(document.getElementById('collA'));
       fill(document.getElementById('collB'));
-      fill(document.getElementById('maxColl'), true);
-      fill(document.getElementById('exportBase'), true);
-    } finally {
-      hideOverlay();
-    }
-  }
-  loadCollections();
 
-  // ======================
-  // BUSCAR REFERÊNCIA
-  // ======================
-  document.getElementById('btnBuscarRef').onclick = async ()=>{
-    const ref = document.getElementById('refInput').value.trim().toUpperCase();
-    const status = document.getElementById('refStatus');
-    status.textContent = 'Buscando…';
-    showOverlay("Buscando referência…");
-    try{
-      const res = await apiGet("searchReference", {ref});
+      // export base
+      const baseSel = document.getElementById('exportBase');
+      baseSel.innerHTML = '<option value="">ÚLTIMA (padrão)</option>';
+      colls.forEach(c=>{
+        const o=document.createElement('option');
+        o.value=o.textContent=c;
+        baseSel.appendChild(o);
+      });
+    }
+
+    // ========= INCLUIR COLEÇÃO =========
+    function parseItemsText(text){
+      const lines = safe(text).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const items = [];
+      lines.forEach(line=>{
+        // separadores: ; , espaço
+        let parts = line.split(";");
+        if(parts.length < 2) parts = line.split(",");
+        if(parts.length < 2) parts = line.split(/\s+/);
+
+        const ref = normalizeRef(parts[0] || "");
+        const price = safe(parts[1] || "").trim();
+        if(ref && price) items.push({ ref, price });
+      });
+      return items;
+    }
+
+    document.getElementById('btnAddCollection').onclick = async ()=>{
+      const name = normalizeRef(document.getElementById('newCollName').value);
+      const items = parseItemsText(document.getElementById('newCollItems').value);
+      const st = document.getElementById('addStatus');
+
+      if(!name){ alert("Digite o nome da coleção."); return; }
+      if(!items.length){ alert("Cole os itens e preços."); return; }
+
+      st.textContent = "Salvando...";
+      const resp = await post({ action:"addCollection", name, items });
+      st.textContent = "";
+
+      if(resp.status==="ok"){
+        alert("Coleção salva: " + resp.colecao + " (" + resp.inserted + " itens)");
+        document.getElementById('newCollItems').value = "";
+        await loadCollections(); // atualiza combos
+      }else{
+        alert("Erro: " + (resp.erro || "desconhecido"));
+      }
+    };
+
+    // ========= EXPORT COLEÇÃO ATUAL =========
+    document.getElementById('btnExport').onclick = async ()=>{
+      const base = document.getElementById('exportBase').value;
+      const pass = document.getElementById('exportPass').value;
+      const st = document.getElementById('exportStatus');
+
+      if(!pass){ alert("Digite a senha."); return; }
+
+      st.textContent = "Gravando...";
+      const resp = await post({ action:"exportCurrentPrices", password: pass, baseCollection: base });
+      st.textContent = "";
+
+      if(resp.status==="ok"){
+        alert("OK! Exportado: " + resp.exported + " refs (cutoff: " + resp.cutoff + ")");
+        document.getElementById('exportPass').value = "";
+      }else{
+        alert("Erro: " + (resp.erro || "desconhecido"));
+      }
+    };
+
+    // ========= BUSCAR REF =========
+    document.getElementById('btnBuscarRef').onclick = async ()=>{
+      const ref = normalizeRef(document.getElementById('refInput').value);
+      const status = document.getElementById('refStatus');
+      status.textContent = "Buscando...";
+
+      const res = await api("searchReference",{ ref });
+      status.textContent = "";
+
+      const wrap = document.getElementById('refTabelaWrap');
+      wrap.innerHTML = "";
 
       if(!res.items || !res.items.length){
-        document.getElementById('refResumo').style.display='none';
-        document.getElementById('refTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
-        status.textContent='';
+        document.getElementById('refResumo').style.display = "none";
+        wrap.innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
         return;
       }
 
       document.getElementById('refMax').textContent = fmtBR(res.max);
-      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ') || '-';
+      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(", ");
+      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : "-";
+      document.getElementById('refAtualCol').textContent = res.atual ? safe(res.atual.colecao) : "-";
+      document.getElementById('refResumo').style.display = "flex";
 
-      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
-      document.getElementById('refAtualCol').textContent   = res.atual ? res.atual.colecao : '-';
+      const rows = res.items.map(i=> [safe(i.coll), fmtBR(i.price)]);
+      renderTable("refTabelaWrap", ["Coleção","Preço"], rows);
+    };
 
-      document.getElementById('refResumo').style.display='flex';
-
-      const rows = res.items.map(i=>[i.coll, fmtBR(i.price)]);
-      renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
-
-      status.textContent = '';
-    } finally {
-      hideOverlay();
+    // ========= COMPARAR =========
+    function applyCompareFilters(list){
+      let data = list || [];
+      if(cmpOnlyChanged) data = data.filter(r=> r.alterou);
+      if(cmpOnlyUp) data = data.filter(r=> r.direcao==="SUBIU");
+      if(cmpOnlyDown) data = data.filter(r=> r.direcao==="DESCEU");
+      return data;
     }
-  };
 
-  // ======================
-  // INCLUIR / FINALIZAR LISTA (para mandar CSV por e-mail se você usa)
-  // ======================
-  document.getElementById('btnIncluir').onclick = async ()=>{
-    const ref = document.getElementById('refInput').value.trim().toUpperCase();
-    if(!ref) return;
+    async function doCompare(){
+      const a = document.getElementById('collA').value;
+      const b = document.getElementById('collB').value;
+      if(!a || !b){ alert("Selecione Coleção A e B"); return; }
 
-    showOverlay("Incluindo na lista…");
-    try{
-      const res = await apiGet("searchReference", {ref});
-      if(res.items && res.items.length){
-        res.items.forEach(i => listaTemp.push({ref, coll: i.coll, price: i.price}));
-        alert("Adicionado: " + ref);
-      } else {
-        alert("Sem dados para: " + ref);
-      }
-    } finally {
-      hideOverlay();
+      document.getElementById('cmpStatus').textContent = "Comparando...";
+      const list = await api("compareCollections",{ a, b });
+      document.getElementById('cmpStatus').textContent = "";
+
+      const data = applyCompareFilters(list);
+
+      const body = data.map(r=>[
+        safe(r.referencia),
+        r.precoA==null ? "-" : fmtBR(r.precoA),
+        r.precoB==null ? "-" : fmtBR(r.precoB),
+        r.delta==null ? "-" : fmtBR(r.delta),
+        safe(r.direcao)
+      ]);
+
+      renderTable("cmpTabelaWrap", ["REF",`Preço (${a})`,`Preço (${b})`,"Δ","Status"], body);
     }
-  };
 
-  document.getElementById('btnFinalizar').onclick = async ()=>{
-    if(!listaTemp.length){ alert("Lista vazia."); return; }
-    showOverlay("Finalizando lista…");
-    try{
-      const resp = await apiPost({action:"sendList", items: listaTemp});
-      if(resp.status === "ok"){
-        alert("Enviado " + resp.enviados + " itens.");
-        listaTemp = [];
-      } else {
-        alert(resp.erro || "Falha ao enviar.");
-      }
-    } finally {
-      hideOverlay();
-    }
-  };
+    document.getElementById('btnComparar').onclick = doCompare;
+    document.getElementById('btnSomenteAlterou').onclick = ()=>{ cmpOnlyChanged=!cmpOnlyChanged; cmpOnlyUp=false; cmpOnlyDown=false; doCompare(); };
+    document.getElementById('btnSomenteSubiu').onclick   = ()=>{ cmpOnlyUp=!cmpOnlyUp; cmpOnlyChanged=false; cmpOnlyDown=false; doCompare(); };
+    document.getElementById('btnSomenteDesceu').onclick  = ()=>{ cmpOnlyDown=!cmpOnlyDown; cmpOnlyChanged=false; cmpOnlyUp=false; doCompare(); };
 
-  // ======================
-  // COMPARAR COLEÇÕES
-  // ======================
-  async function runCompare(){
-    const a = document.getElementById('collA').value;
-    const b = document.getElementById('collB').value;
-    const onlyChanged = document.getElementById('cmpOnlyChanged').checked;
-    const onlyUp = document.getElementById('cmpOnlyUp').checked;
-    const onlyDown = document.getElementById('cmpOnlyDown').checked;
+    // ========= MATRIZ =========
+    document.getElementById('btnMatriz').onclick = async ()=>{
+      const limit = document.getElementById('matLimit').value;
+      document.getElementById('matStatus').textContent = "Gerando...";
 
-    if(!a || !b) return;
+      const obj = await api("matrix",{ limit });
+      document.getElementById('matStatus').textContent = "";
 
-    document.getElementById('cmpStatus').textContent = 'Comparando…';
-    showOverlay("Comparando coleções…");
-    try{
-      let rows = await apiGet("compareCollections",{a,b});
-      rows = rows || [];
-
-      // filtros
-      if(onlyChanged) rows = rows.filter(r => r.alterou);
-      if(onlyUp) rows = rows.filter(r => r.direcao === "SUBIU");
-      if(onlyDown) rows = rows.filter(r => r.direcao === "DESCEU");
-
-      const body = rows.map(r => ([
-        r.referencia,
-        r.precoA==null ? '-' : fmtBR(r.precoA),
-        r.precoB==null ? '-' : fmtBR(r.precoB),
-        r.delta==null ? '-' : fmtBR(r.delta),
-        badgeDirecao(r.direcao)
-      ]));
-
-      renderTable('cmpTabelaWrap', ["REF", `Preço (${a})`, `Preço (${b})`, "Δ", "Status"], body);
-
-      document.getElementById('cmpStatus').textContent = rows.length + " itens";
-    } finally {
-      hideOverlay();
-    }
-  }
-
-  document.getElementById('btnComparar').onclick = runCompare;
-  document.getElementById('cmpOnlyChanged').onchange = runCompare;
-  document.getElementById('cmpOnlyUp').onchange = runCompare;
-  document.getElementById('cmpOnlyDown').onchange = runCompare;
-
-  // ======================
-  // ADICIONAR COLEÇÃO (POST addCollection)
-  // ======================
-  document.getElementById('btnAddColl').onclick = async ()=>{
-    const name = document.getElementById('newCollName').value.trim();
-    const txt  = document.getElementById('newCollItems').value.trim();
-    const st   = document.getElementById('addStatus');
-
-    if(!name){ alert("Informe o nome da coleção."); return; }
-    if(!txt){ alert("Cole os itens no campo abaixo."); return; }
-
-    // parse "REF;PRECO"
-    const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    const items = [];
-    for(const line of lines){
-      const parts = line.split(";").map(x=>x.trim());
-      if(parts.length < 2) continue;
-      const ref = parts[0].toUpperCase();
-      const price = parts[1];
-      items.push({ref, price});
-    }
-    if(!items.length){ alert("Nenhuma linha válida no formato REF;PREÇO."); return; }
-
-    st.textContent = "Salvando…";
-    showOverlay("Salvando coleção…");
-    try{
-      const resp = await apiPost({action:"addCollection", name, items});
-      if(resp.status === "ok"){
-        st.textContent = `OK — ${resp.inserted} itens gravados em "${resp.colecao}"`;
-        // recarrega coleções para aparecer no site
-        await loadCollections();
-        alert("Coleção salva com sucesso!");
-      } else {
-        st.textContent = resp.erro || "Erro ao salvar.";
-        alert(resp.erro || "Erro ao salvar.");
-      }
-    } finally {
-      hideOverlay();
-    }
-  };
-
-  // ======================
-  // EXPORTAR “COLEÇÃO ATUAL” (POST exportCurrentPrices)
-  // ======================
-  document.getElementById('btnExport').onclick = async ()=>{
-    const baseCollection = document.getElementById('exportBase').value; // vazio = última
-    const password = document.getElementById('exportPass').value;
-    const st = document.getElementById('exportStatus');
-
-    if(!password){ alert("Digite a senha."); return; }
-
-    st.textContent = "Exportando…";
-    showOverlay("Exportando coleção atual…");
-    try{
-      const resp = await apiPost({action:"exportCurrentPrices", password, baseCollection});
-      if(resp.status === "ok"){
-        st.textContent = `OK — ${resp.exported} itens (base: ${resp.cutoff})`;
-        alert("Exportação concluída!");
-      } else {
-        st.textContent = resp.erro || "Senha inválida / erro.";
-        alert(resp.erro || "Erro.");
-      }
-    } finally {
-      hideOverlay();
-    }
-  };
-
-  // ======================
-  // MAX POR REFERÊNCIA (GET maxByReference)
-  // ======================
-  document.getElementById('btnMax').onclick = async ()=>{
-    const coll = document.getElementById('maxColl').value;
-    const st = document.getElementById('maxStatus');
-    st.textContent = "Gerando…";
-    showOverlay("Calculando maiores preços…");
-    try{
-      const list = await apiGet("maxByReference",{colecao: coll});
-      if(!list || !list.length){
-        document.getElementById('maxTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
-        st.textContent = "";
-        return;
-      }
-      const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
-      renderTable('maxTabelaWrap', ["Referência","MAX de valor"], rows);
-      st.textContent = list.length + " refs";
-    } finally {
-      hideOverlay();
-    }
-  };
-
-  // ======================
-  // MATRIZ (GET matrix) + filtro em tempo real
-  // ======================
-  document.getElementById('btnMatriz').onclick = async ()=>{
-    const limit = document.getElementById('matLimit').value;
-    const st = document.getElementById('matStatus');
-    st.textContent = "Gerando…";
-    showOverlay("Montando tabela (matriz)…");
-    try{
-      const obj = await apiGet("matrix",{limit});
       if(!obj || !obj.rows || !obj.rows.length){
         document.getElementById('matTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
-        st.textContent = "";
+        document.getElementById('btnResetOrdem').disabled = true;
+        matrizState = null;
         return;
       }
 
-      // formata
-      const rows = obj.rows.map(r=>r.map((v,i)=> i===0 ? v : (v==null ? '-' : fmtBR(v))));
+      const colls = obj.header.slice(1);
+      const refs  = obj.rows.map(r=>r[0]);
 
-      // render
-      renderTable('matTabelaWrap', obj.header, rows);
-      st.textContent = `${obj.rows.length} linhas`;
+      const priceIndex = Object.create(null);
+      obj.rows.forEach(r=>{
+        const ref = safe(r[0]);
+        for(let i=1;i<obj.header.length;i++){
+          const coll = obj.header[i];
+          const v = r[i];
+          if(v != null && v !== "") priceIndex[ref + "||" + coll] = v;
+        }
+      });
 
-      // filtro tempo real (sem clicar em gerar)
-      document.getElementById('matSearch').oninput = ()=>{
-        const term = document.getElementById('matSearch').value.trim().toLowerCase();
-        const tbody = document.querySelector('#matTabelaWrap tbody');
-        if(!tbody) return;
-        [...tbody.querySelectorAll('tr')].forEach(tr=>{
-          const ref = (tr.querySelector('td')?.textContent || "").toLowerCase();
-          tr.style.display = (!term || ref.includes(term)) ? "" : "none";
+      const stored = loadLocalOrder();
+      const order = applyOrderToMatrix(colls, stored);
+
+      matrizState = { refs, colls, order, priceIndex };
+      renderMatrix(matrizState);
+
+      // filtro em tempo real
+      const input = document.getElementById('matSearch');
+      input.oninput = ()=>{
+        const term = normalizeRef(input.value);
+        if(!matrizState) return;
+        const wrap = document.getElementById('matTabelaWrap');
+        const trs = wrap.querySelectorAll('tbody tr');
+        trs.forEach(tr=>{
+          const ref = normalizeRef(tr.querySelector('td')?.textContent || "");
+          tr.style.display = term && !ref.includes(term) ? "none" : "";
         });
       };
+    };
 
-    } finally {
-      hideOverlay();
-    }
-  };
-</script>
+    document.getElementById('btnResetOrdem').onclick = ()=>{
+      if(!matrizState) return;
+      if(!confirm("Resetar ordem das colunas para o padrão?")) return;
+      clearLocalOrder();
+      matrizState.order = matrizState.colls.slice();
+      renderMatrix(matrizState);
+    };
 
+    // init
+    loadCollections();
+  </script>
 </body>
 </html>
