@@ -3,548 +3,1541 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Precificação - HS</title>
+  <title>Precificação — HS</title>
   <style>
-    :root { --panel:#1c1c1c; --muted:#bdbdbd; --pri:#673ab7; --ok:#28a745; --warn:#e67e22; --err:#e53935; }
-    *{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#000;color:#fff}
-    .wrap{max-width:1150px;margin:0 auto;padding:24px}
-    h1{margin:0 0 18px;font-size:22px}
+    :root{
+      --bg:#0b0b0c;
+      --panel:#151517;
+      --panel2:#111114;
+      --line:#2a2a2f;
+      --muted:#b9b9c2;
+      --txt:#ffffff;
+      --pri:#6f3ccf;
+      --pri2:#532aa0;
+      --ok:#2ecc71;
+      --warn:#f39c12;
+      --err:#e74c3c;
+      --chip:#22222a;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(111,60,207,.25), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(46,204,113,.12), transparent 55%),
+                  var(--bg);
+      color:var(--txt);
+      min-height:100vh;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:26px 18px 60px}
+    h1{margin:0 0 18px;font-size:22px;font-weight:800;letter-spacing:.2px}
     .grid{display:grid;gap:16px}
-    .panel{background:var(--panel);padding:16px;border-radius:10px}
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 80%), var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      padding:16px;
+    }
+    .panel .title{
+      display:flex;align-items:center;gap:10px;
+      font-weight:800;
+      margin:0 0 10px;
+    }
+    .title small{font-weight:600;color:var(--muted);opacity:.9}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{font-size:13px;color:#ddd}
-    input,select,button,textarea{padding:10px 12px;border-radius:8px;border:1px solid #333;background:#121212;color:#fff}
-    textarea{width:100%;min-height:110px;font-family:Consolas,monospace}
-    button{background:var(--pri);border:0;cursor:pointer;font-weight:600}
-    button.secondary{background:#2f2f2f}
-    button.danger{background:#a01f1f}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    table{border-collapse:collapse;min-width:100%}
-    th,td{padding:8px 10px;border-bottom:1px solid #2c2c2c;font-size:14px;white-space:nowrap}
-    th{background:#151515;text-align:left}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
-    .ok{background:rgba(40,167,69,.15);color:#6fe18b}
-    .warn{background:rgba(230,126,34,.15);color:#f8b37a}
-    .err{background:rgba(229,57,53,.15);color:#ff9a9a}
-    .muted{color:var(--muted);font-size:12px}
-    .pill{background:#222;padding:6px 10px;border-radius:8px}
-    .section-title{margin:4px 0 10px;font-weight:700}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea,button{
+      border-radius:12px;border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      color:var(--txt);
+      padding:10px 12px;
+      outline:none;
+    }
+    input::placeholder, textarea::placeholder{color:#8e8ea0}
+    textarea{width:100%;min-height:140px;resize:vertical;line-height:1.35}
+    button{
+      background: linear-gradient(180deg, var(--pri), var(--pri2));
+      border:none;
+      font-weight:800;
+      cursor:pointer;
+      padding:10px 14px;
+      transition:.15s transform, .15s opacity;
+    }
+    button:active{transform:scale(.98)}
+    button.secondary{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:700;
+    }
+    button.danger{
+      background: rgba(231,76,60,.18);
+      border:1px solid rgba(231,76,60,.35);
+      color:#ffd6d1;
+    }
+    button.success{
+      background: rgba(46,204,113,.18);
+      border:1px solid rgba(46,204,113,.35);
+      color:#d4f5e0;
+    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .hint{color:var(--muted);font-size:12px}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .chip{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      padding:8px 10px;border-radius:12px;
+      font-size:13px;color:#f0f0f6;
+    }
+    .chip strong{font-weight:900}
+    .split{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px}
+    @media(max-width:980px){.split{grid-template-columns:1fr}}
+
+    /* table */
+    .scroll{max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px; background: rgba(0,0,0,.18)}
+    table{border-collapse:collapse; min-width:100%}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;white-space:nowrap}
+    th{
+      position:sticky; top:0; z-index:2;
+      background: rgba(15,15,18,.95);
+      text-align:left;
+      font-size:12px;
+      letter-spacing:.3px;
+      color:#e9e9f4;
+      user-select:none;
+    }
+    td:first-child, th:first-child{
+      position:sticky; left:0; z-index:3;
+      background: rgba(18,18,22,.98);
+    }
+    tr:hover td{background: rgba(255,255,255,.03)}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .b-ok{background: rgba(46,204,113,.14); color:#bff5d3; border-color: rgba(46,204,113,.25)}
+    .b-warn{background: rgba(243,156,18,.16); color:#ffe2b2; border-color: rgba(243,156,18,.28)}
+    .b-err{background: rgba(231,76,60,.14); color:#ffd0cb; border-color: rgba(231,76,60,.28)}
     .right{margin-left:auto}
-    .scroll {max-height:520px; overflow:auto; border:1px solid #333; margin-top:10px;border-radius:10px;}
-    .scroll table th { position: sticky; top: 0; background: #151515; z-index: 2; }
-    .scroll table td:first-child, .scroll table th:first-child { position: sticky; left: 0; background: #1c1c1c; z-index: 3; }
-    .divider{height:1px;background:#2c2c2c;margin:12px 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .kpi .box{
+      flex:1;min-width:220px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:10px;
+    }
+    .kpi .box .t{font-size:12px;color:var(--muted)}
+    .kpi .box .v{font-size:16px;font-weight:900;margin-top:6px}
+
+    /* loading overlay */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:9999;
+      backdrop-filter: blur(6px);
+    }
+    .overlay.on{display:flex}
+    .loaderBox{
+      width:min(520px, 92vw);
+      background: rgba(20,20,24,.92);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .spinner{
+      width:42px;height:42px;border-radius:50%;
+      border:4px solid rgba(255,255,255,.12);
+      border-top-color: rgba(255,255,255,.85);
+      animation:spin 1s linear infinite;
+      margin-right:12px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loaderRow{display:flex;align-items:center;gap:10px}
+    .loaderTitle{font-weight:900}
+    .loaderMsg{color:var(--muted);font-size:13px;margin-top:8px}
+
+    /* modal confirm */
+    .modalWrap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9998}
+    .modalWrap.on{display:flex}
+    .modalBackdrop{position:absolute;inset:0;background: rgba(0,0,0,.68);backdrop-filter: blur(6px)}
+    .modal{
+      position:relative;
+      width:min(560px, 92vw);
+      background: rgba(18,18,22,.96);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+    .modal h3{margin:0 0 8px;font-size:16px}
+    .modal p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.35}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .hide{display:none !important}
+
+    /* draggable headers hint */
+    .dragHint{
+      display:inline-flex;align-items:center;gap:8px;
+      color:var(--muted);font-size:12px;margin-top:8px
+    }
+    .thDrag{
+      cursor:grab;
+    }
+    .thDrag:active{cursor:grabbing}
+    .thGhost{opacity:.35}
+    .thDrop{outline:2px dashed rgba(111,60,207,.65); outline-offset:-4px}
+
+    /* Filter list */
+    .filter-list{
+      display:flex;
+      gap:8px;
+      margin-left:10px;
+    }
+    .filter-list label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    
+    /* Novo modal para incluir ref */
+    .add-ref-modal .row {
+      margin: 12px 0;
+    }
+    .add-ref-modal input {
+      width: 100%;
+    }
+    .add-ref-modal .hint {
+      margin-top: 4px;
+    }
+    
+    /* Ajuste do campo coleção */
+    #collName {
+      min-width: 200px;
+      flex: 1;
+    }
+    
+    /* Botões inline */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    /* Modal para gravar coleção atual */
+    .export-modal .row {
+      margin: 12px 0;
+    }
+    .export-modal select,
+    .export-modal input {
+      width: 100%;
+    }
+    
+    /* Estilos para impressão/PDF - AJUSTADOS para ficar como a versão do GS */
+    .print-only {
+      display: none;
+    }
+    
+    .print-header {
+      display: block;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #6f3ccf;
+    }
+    
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .print-container, .print-container * {
+        visibility: visible;
+      }
+      .print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+        background: white;
+        color: black;
+      }
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        font-family: Arial, sans-serif;
+      }
+      .print-table th {
+        background: #2a2a2f;
+        color: white;
+        padding: 12px 8px;
+        border: 1px solid #444;
+        font-size: 13px;
+        text-align: center;
+      }
+      .print-table td {
+        padding: 10px 8px;
+        border: 1px solid #ddd;
+        font-size: 12px;
+        text-align: center;
+      }
+      .print-table .ref-col {
+        font-weight: bold;
+        background: #f5f5f5;
+        text-align: center;
+      }
+      .print-table .up {
+        color: #2ecc71;
+        font-weight: bold;
+      }
+      .print-table .down {
+        color: #e74c3c;
+        font-weight: bold;
+      }
+      .print-table .same {
+        color: #f39c12;
+        font-weight: bold;
+      }
+      .print-table .na {
+        color: #7f8c8d;
+        font-style: italic;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    
+    /* Tabela de impressão no modal */
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-family: Arial, sans-serif;
+    }
+    .print-table th {
+      background: #2a2a2f;
+      color: white;
+      padding: 12px 8px;
+      border: 1px solid #444;
+      font-size: 13px;
+      text-align: center;
+    }
+    .print-table td {
+      padding: 10px 8px;
+      border: 1px solid #ddd;
+      font-size: 12px;
+      text-align: center;
+    }
+    .print-table .ref-col {
+      font-weight: bold;
+      background: #f5f5f5;
+      text-align: center;
+    }
+    .print-table .up {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    .print-table .down {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .print-table .same {
+      color: #f39c12;
+      font-weight: bold;
+    }
+    .print-table .na {
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    /* Estilo dos totais (igual GS) */
+    .print-totals {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-family: Arial, sans-serif;
+    }
+    .print-totals h4 {
+      margin-top: 0;
+      color: #2a2a2f;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+    .print-totals .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .print-totals .total-row:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      background: #e9ecef;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+    }
+    .print-totals .label {
+      font-weight: bold;
+      color: #555;
+    }
+    .print-totals .value {
+      font-weight: bold;
+      color: #2a2a2f;
+    }
   </style>
 </head>
 <body>
+  <div class="overlay" id="overlay">
+    <div class="loaderBox">
+      <div class="loaderRow">
+        <div class="spinner"></div>
+        <div>
+          <div class="loaderTitle" id="overlayTitle">Processando...</div>
+          <div class="loaderMsg" id="overlayMsg">Aguarde.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalWrap" id="modalWrap">
+    <div class="modalBackdrop" onclick="Modal.close(false)"></div>
+    <div class="modal">
+      <h3 id="modalTitle">Confirmar</h3>
+      <p id="modalText">...</p>
+      <div class="actions">
+        <button class="secondary" id="modalNo">Não</button>
+        <button id="modalYes">Sim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para incluir ref na coleção atual -->
+  <div class="modalWrap" id="modalAddRefWrap">
+    <div class="modalBackdrop" onclick="ModalAddRef.close()"></div>
+    <div class="modal add-ref-modal">
+      <h3>Incluir/Atualizar Referência na Coleção Atual</h3>
+      
+      <div class="row">
+        <label>Referência e Preço</label>
+        <input id="modalRefPrice" placeholder="Ex.: 0227 179,99" style="width:100%"/>
+        <div class="hint">Formato: <span class="mono">REF PREÇO</span> (4 dígitos + espaço + valor). Ex: 0227 179,99</div>
+      </div>
+      
+      <div class="row">
+        <label>Coleção atual detectada</label>
+        <input id="modalCurrentColl" readonly style="background:rgba(255,255,255,.05); color:var(--muted)"/>
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalAddRef.close()">Cancelar</button>
+        <button id="modalAddRefConfirm">Incluir/Atualizar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para gravar coleção atual -->
+  <div class="modalWrap" id="modalExportWrap">
+    <div class="modalBackdrop" onclick="ModalExport.close()"></div>
+    <div class="modal export-modal">
+      <h3>Gravar Coleção Atual</h3>
+      
+      <div class="row">
+        <label>Selecionar coleção</label>
+        <select id="modalExportColl" style="width:100%">
+          <option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>
+        </select>
+      </div>
+      
+      <div class="row">
+        <label>Senha</label>
+        <input id="modalExportPass" type="password" placeholder="Digite a senha" style="width:100%"/>
+      </div>
+      
+      <div class="hint">
+        Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:C (REF | VALOR | COLEÇÃO ATUAL).
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalExport.close()">Cancelar</button>
+        <button id="modalExportConfirm">Gravar Coleção Atual</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de impressão/PDF - ATUALIZADO -->
+  <div class="modalWrap" id="modalPrintWrap">
+    <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
+    <div class="modal" style="width:min(800px, 95vw); max-height:90vh; overflow:auto;">
+      <h3>Imprimir Comparação de Coleções</h3>
+      
+      <div class="print-container" id="printContainer">
+        <!-- Conteúdo será gerado dinamicamente -->
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
+        <button onclick="window.print()" class="success">Imprimir / Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap grid">
     <h1>Precificação — HS</h1>
 
-    <!-- NOVA COLEÇÃO -->
-    <div class="panel">
-      <div class="section-title">Nova coleção (REM automático)</div>
+    <!-- INCLUIR NOVA COLEÇÃO -->
+    <div class="panel" id="panelAdd">
+      <div class="title">Incluir nova coleção <small>(lista de preço)</small></div>
+
       <div class="row">
-        <label>Nome da coleção</label>
-        <input id="newCollName" placeholder="Ex.: ALTO VERÃO 2025 REM" style="min-width:260px"/>
-        <button id="btnSalvarColecao">Salvar coleção</button>
-        <span id="newStatus" class="muted"></span>
+        <div style="min-width:200px;flex:1">
+          <label>Nome da coleção</label>
+          <input id="collName" placeholder="Ex.: OUTONO 2025 / OUTONO 2025 REM / OUTONO 2025 REM 2" style="width:100%"/>
+        </div>
+
+        <div class="button-group">
+          <button id="btnSaveColl">Salvar coleção no banco</button>
+          <button id="btnAddRefModal" class="secondary">Incluir ref na coleção atual</button>
+          <button id="btnExportModal" class="secondary">Gravar coleção atual</button>
+        </div>
       </div>
-      <div class="muted" style="margin-top:8px">
-        Cole os itens em <b>REF;PREÇO</b> ou <b>REF[TAB]PREÇO</b>.
+
+      <div style="margin-top:10px">
+        <label>Cole os itens (1 por linha)</label>
+        <div class="hint">
+          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF,PREÇO</span> ou <span class="mono">REF PREÇO</span>.
+          Ex.: <span class="mono">0227;89,99</span>
+        </div>
+        <textarea id="collItems" placeholder="Cole aqui..."></textarea>
       </div>
-      <textarea id="newItems" placeholder="ABC123;199,90&#10;XYZ999\t159,90"></textarea>
     </div>
 
-    <!-- LISTA DE PREÇO (ATUAL OU ATÉ COLEÇÃO) + EXPORTAR -->
-    <div class="panel">
-      <div class="section-title">Lista de preço (gerar / exportar)</div>
+    <!-- BUSCAR + INCLUIR REF NA COLEÇÃO ATUAL -->
+    <div class="panel" id="panelSearch">
+      <div class="title">Buscar referência <small>(histórico por coleção)</small></div>
+
       <div class="row">
-        <label>Modo</label>
-        <select id="plistMode">
-          <option value="latest">Última lista (mais atual)</option>
-          <option value="upto">Até coleção selecionada</option>
-        </select>
+        <div style="min-width:220px">
+          <label>Referência</label>
+          <input id="refInput" placeholder="Ex.: 0227" style="min-width:220px"/>
+        </div>
 
-        <label>Escolher coleção</label>
-        <select id="plistColecao" disabled></select>
+        <button id="btnBuscar">Buscar</button>
 
-        <button id="btnGerarLista">Gerar lista</button>
-
-        <label class="right">Buscar ref</label>
-        <input id="plistSearch" placeholder="Ex.: 0227" style="width:200px"/>
-
-        <span id="plistStatus" class="muted"></span>
+        <span class="hint" id="refStatus"></span>
       </div>
 
-      <div class="row" style="margin-top:10px">
-        <button id="btnExportarAtual" class="danger">Gravar Coleção Atual</button>
-        <span class="muted">
-          Grava na planilha destino (aba Leonardo) com coluna C = "COLEÇÃO ATUAL" — requer senha.
-        </span>
-        <span id="exportStatus" class="muted right"></span>
+      <div class="kpi" id="refKpis" style="display:none">
+        <div class="box">
+          <div class="t">Preço atual (última coleção)</div>
+          <div class="v" id="kpiAtual">—</div>
+        </div>
+        <div class="box">
+          <div class="t">Coleção atual</div>
+          <div class="v" id="kpiAtualColl">—</div>
+        </div>
+        <div class="box">
+          <div class="t">Maior preço (histórico)</div>
+          <div class="v" id="kpiMax">—</div>
+        </div>
       </div>
 
-      <div id="plistTabelaWrap"></div>
-    </div>
-
-    <!-- BUSCA POR REFERÊNCIA -->
-    <div class="panel">
-      <div class="section-title">Buscar referência</div>
-      <div class="row">
-        <label>Referência</label>
-        <input id="refInput" placeholder="Ex.: 2441406" style="min-width:200px"/>
-        <button id="btnBuscarRef">Buscar</button>
-        <button id="btnIncluir" class="secondary">Incluir na lista</button>
-        <button id="btnFinalizar" class="secondary">Finalizar lista</button>
-        <span id="refStatus" class="muted"></span>
-      </div>
-      <div id="refResumo" class="row" style="margin-top:10px;display:none">
-        <span class="pill">Maior preço (histórico): <strong id="refMax"></strong></span>
-        <span class="pill">Coleção(ões) do maior preço: <strong id="refMaxCols"></strong></span>
-        <span class="pill">Preço atual (última coleção): <strong id="refAtual"></strong></span>
-        <span class="pill">Coleção atual: <strong id="refAtualColl"></strong></span>
-      </div>
-      <div id="refTabelaWrap"></div>
+      <div id="refTableWrap"></div>
     </div>
 
     <!-- COMPARAR COLEÇÕES -->
-    <div class="panel">
-      <div class="section-title">Comparar coleções</div>
+    <div class="panel" id="panelCompare">
+      <div class="title">Comparar coleções <small>(subiu / desceu)</small></div>
+
       <div class="row">
-        <label>Coleção A (anterior)</label>
-        <select id="collA"></select>
+        <div>
+          <label>Coleção A (mais antiga)</label>
+          <select id="collA" style="min-width:260px"></select>
+        </div>
 
-        <label>Coleção B (atual)</label>
-        <select id="collB"></select>
+        <div>
+          <label>Coleção B (mais atual)</label>
+          <select id="collB" style="min-width:260px"></select>
+        </div>
 
-        <label>Mostrar</label>
-        <select id="cmpOnly">
-          <option value="0">Tudo</option>
-          <option value="1">Só Alterou</option>
-        </select>
+        <button id="btnCompare">Comparar</button>
+        <button id="btnPrint" class="success" style="display:none">Imprimir / Gerar PDF</button>
 
-        <label>Direção</label>
-        <select id="cmpDir">
-          <option value="ALL">Todas</option>
-          <option value="SUBIU">Subiu</option>
-          <option value="DESCEU">Desceu</option>
-          <option value="IGUAL">Igual</option>
-          <option value="SEM_DADO">Sem dado</option>
-        </select>
+        <div class="filter-list">
+          <label>
+            <input type="radio" name="filterType" value="all" checked/>
+            <span>Todos</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="changed"/>
+            <span>Somente alterou</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="up"/>
+            <span>Somente subiu</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="down"/>
+            <span>Somente desceu</span>
+          </label>
+        </div>
 
-        <button id="btnComparar">Gerar comparação</button>
-        <button id="btnPrintRem" class="secondary" disabled>Imprimir remarcação</button>
-
-        <span id="cmpStatus" class="muted right"></span>
+        <span class="hint right" id="cmpStatus"></span>
       </div>
 
-      <div id="cmpTabelaWrap"></div>
-    </div>
-
-    <!-- MAX POR REFERÊNCIA -->
-    <div class="panel">
-      <div class="section-title">Maior preço por referência</div>
-      <div class="row">
-        <label>Filtrar coleção</label>
-        <select id="maxColl"></select>
-        <button id="btnMax">Gerar/Atualizar</button>
-        <span class="muted">Lista as referências com maior preço (todas ou só da coleção escolhida).</span>
-      </div>
-      <div id="maxTabelaWrap"></div>
+      <div id="cmpTableWrap"></div>
     </div>
 
     <!-- MATRIZ -->
-    <div class="panel">
-      <div class="section-title">Tabela preços x coleções</div>
-      <div class="row">
-        <label>Limitar primeiras N referências (opcional)</label>
-        <input id="matLimit" type="number" min="1" style="width:120px" placeholder="ex.: 200"/>
-        <label>Filtrar referência</label>
-        <input id="matSearch" placeholder="Ex.: 2441406" style="width:200px"/>
-        <button id="btnMatriz">Gerar TABELA</button>
-        <span id="matStatus" class="muted right"></span>
-      </div>
-      <div id="matTabelaWrap"></div>
-    </div>
+    <div class="panel" id="panelMatrix">
+      <div class="title">Tabela preços x coleções <small>(reordenar colunas)</small></div>
 
+      <div class="row">
+        <div>
+          <label>Limitar referências (opcional)</label>
+          <input id="matLimit" type="number" min="1" placeholder="Ex.: 400" style="width:150px"/>
+        </div>
+
+        <div>
+          <label>Buscar ref na matriz</label>
+          <input id="matSearch" placeholder="Ex.: 0227" style="min-width:220px"/>
+        </div>
+
+        <button id="btnMatrix">Gerar tabela</button>
+        <button id="btnResetCols" class="secondary" title="Remove ordem salva e volta pro padrão">Reset colunas</button>
+
+        <span class="hint right" id="matStatus"></span>
+      </div>
+
+      <div class="dragHint">
+        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> (cabeçalho) para reorganizar. A ordem fica salva no navegador (storage).
+      </div>
+
+      <div id="matTableWrap"></div>
+    </div>
   </div>
 
   <script>
+    /***********************
+     * CONFIG
+     ***********************/
     const API_URL = "https://script.google.com/macros/s/AKfycbyFVqDrgXkYThp03XT3xB3Bi0fK3hW-956TIkOmZyb4guFElY4kZYzksy2v2jB3mzWB/exec";
-    const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+    const fmtBR = (n) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n ?? 0);
 
-    let listaTemp = [];
+    /***********************
+     * FUNÇÕES AUXILIARES
+     ***********************/
+    
+    // Nova função para pegar a última coleção (com maior key)
+    function getLatestCollection() {
+      if (collectionsWithKeys.length === 0) return null;
+      
+      // Ordena pela key (série) em ordem DECRESCENTE para pegar a mais recente
+      const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
+      
+      // Retorna a primeira (com maior key)
+      return sorted[0];
+    }
 
-    // comparação cache
-    let cmpCache = [];
-    let cmpHeaderA = "";
-    let cmpHeaderB = "";
+    /***********************
+     * LOADING
+     ***********************/
+    const Overlay = {
+      on(title="Processando...", msg="Aguarde."){
+        document.getElementById("overlayTitle").textContent = title;
+        document.getElementById("overlayMsg").textContent = msg;
+        document.getElementById("overlay").classList.add("on");
+      },
+      off(){ document.getElementById("overlay").classList.remove("on"); }
+    };
 
-    // lista preço cache
-    let priceListCache = [];
+    /***********************
+     * MODAL CONFIRM
+     ***********************/
+    const Modal = {
+      _resolver:null,
+      ask({title="Confirmar", text="Tem certeza?"}){
+        document.getElementById("modalTitle").textContent = title;
+        document.getElementById("modalText").textContent = text;
+        document.getElementById("modalWrap").classList.add("on");
 
-    async function api(path, params={}) {
+        return new Promise((resolve)=>{
+          this._resolver = resolve;
+          document.getElementById("modalYes").onclick = ()=> this.close(true);
+          document.getElementById("modalNo").onclick  = ()=> this.close(false);
+        });
+      },
+      close(ans){
+        document.getElementById("modalWrap").classList.remove("on");
+        if (this._resolver){ this._resolver(!!ans); this._resolver=null; }
+      }
+    };
+
+    /***********************
+     * MODAL ADD REF
+     ***********************/
+    const ModalAddRef = {
+      _resolver: null,
+      open() {
+        // Usa a nova função para pegar a última coleção
+        const lastColl = getLatestCollection();
+        document.getElementById("modalCurrentColl").value = lastColl ? 
+          `${lastColl.name} (Série: ${lastColl.key})` : 
+          "Nenhuma coleção encontrada";
+        
+        // Limpa o campo
+        document.getElementById("modalRefPrice").value = "";
+        
+        document.getElementById("modalAddRefWrap").classList.add("on");
+        
+        return new Promise((resolve) => {
+          this._resolver = resolve;
+          document.getElementById("modalAddRefConfirm").onclick = () => this.close(true);
+        });
+      },
+      close(ans) {
+        document.getElementById("modalAddRefWrap").classList.remove("on");
+        if (this._resolver) {
+          this._resolver(ans);
+          this._resolver = null;
+        }
+      }
+    };
+
+    /***********************
+     * MODAL EXPORT
+     ***********************/
+    const ModalExport = {
+      _resolver: null,
+      open() {
+        const select = document.getElementById("modalExportColl");
+        select.innerHTML = '<option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>';
+        
+        if (collectionsWithKeys.length > 0) {
+          // Ordena pela key (série) em ordem CRESCENTE (mais antiga primeiro)
+          const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
+          
+          sorted.forEach(coll => {
+            const option = document.createElement("option");
+            option.value = coll.name;
+            option.textContent = `${coll.name} (Série: ${coll.key})`;
+            select.appendChild(option);
+          });
+          
+          // Seleciona automaticamente a última coleção como padrão
+          const latest = getLatestCollection();
+          if (latest) {
+            select.value = latest.name;
+          }
+        }
+        
+        // Limpa a senha
+        document.getElementById("modalExportPass").value = "";
+        
+        document.getElementById("modalExportWrap").classList.add("on");
+        
+        return new Promise((resolve) => {
+          this._resolver = resolve;
+          document.getElementById("modalExportConfirm").onclick = () => this.close(true);
+        });
+      },
+      close(ans) {
+        document.getElementById("modalExportWrap").classList.remove("on");
+        if (this._resolver) {
+          this._resolver(ans);
+          this._resolver = null;
+        }
+      }
+    };
+
+    /***********************
+     * MODAL PRINT - ATUALIZADO
+     ***********************/
+    const ModalPrint = {
+      open(data, collA, collB) {
+        const container = document.getElementById("printContainer");
+        
+        // Cria o conteúdo para impressão no estilo do GS
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+        
+        // Estilo mais limpo, parecido com o GS
+        let html = `
+          <div class="print-header">
+            <h2 style="margin:0; color:#333; font-size:18px;">Comparação de Coleções - HS</h2>
+            <p style="margin:5px 0; color:#666; font-size:12px;">Gerado em: ${dateStr}</p>
+            <p style="margin:5px 0; color:#666; font-size:12px;">
+              <strong>Coleção A (Antiga):</strong> ${esc(collA)} | 
+              <strong>Coleção B (Atual):</strong> ${esc(collB)}
+            </p>
+            <hr style="border:none; border-top:2px solid #6f3ccf; margin:15px 0;">
+          </div>
+          
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width:15%;">REF</th>
+                <th style="width:25%;">${esc(collA)}</th>
+                <th style="width:25%;">${esc(collB)}</th>
+                <th style="width:15%;">Variação</th>
+                <th style="width:20%;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        // Contadores para totais
+        let totalSubiu = 0;
+        let totalDesceu = 0;
+        let totalIgual = 0;
+        let totalSemDado = 0;
+        
+        data.forEach(item => {
+          const priceA = item.precoA != null ? fmtBR(item.precoA) : "-";
+          const priceB = item.precoB != null ? fmtBR(item.precoB) : "-";
+          const delta = item.delta != null ? fmtBR(item.delta) : "-";
+          
+          let statusClass = "";
+          let statusText = "";
+          
+          switch(item.direcao) {
+            case "SUBIU":
+              statusClass = "up";
+              statusText = "▲ SUBIU";
+              totalSubiu++;
+              break;
+            case "DESCEU":
+              statusClass = "down";
+              statusText = "▼ DESCEU";
+              totalDesceu++;
+              break;
+            case "IGUAL":
+              statusClass = "same";
+              statusText = "● IGUAL";
+              totalIgual++;
+              break;
+            default:
+              statusClass = "na";
+              statusText = "-";
+              totalSemDado++;
+          }
+          
+          html += `
+            <tr>
+              <td class="ref-col">${esc(item.referencia)}</td>
+              <td>${priceA}</td>
+              <td>${priceB}</td>
+              <td>${delta}</td>
+              <td class="${statusClass}">${statusText}</td>
+            </tr>
+          `;
+        });
+        
+        html += `
+            </tbody>
+          </table>
+          
+          <div class="print-totals">
+            <h4>Resumo da Comparação</h4>
+            <div class="total-row">
+              <span class="label">Total de itens:</span>
+              <span class="value">${data.length}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Itens que subiram:</span>
+              <span class="value" style="color:#2ecc71;">${totalSubiu}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Itens que desceram:</span>
+              <span class="value" style="color:#e74c3c;">${totalDesceu}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Itens iguais:</span>
+              <span class="value" style="color:#f39c12;">${totalIgual}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Sem dados:</span>
+              <span class="value" style="color:#7f8c8d;">${totalSemDado}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Itens que alteraram:</span>
+              <span class="value">${totalSubiu + totalDesceu}</span>
+            </div>
+          </div>
+        `;
+        
+        container.innerHTML = html;
+        document.getElementById("modalPrintWrap").classList.add("on");
+      },
+      close() {
+        document.getElementById("modalPrintWrap").classList.remove("on");
+      }
+    };
+
+    /***********************
+     * API helpers
+     ***********************/
+    async function apiGet(action, params={}){
       const url = new URL(API_URL);
-      url.search = new URLSearchParams({action:path, ...params}).toString();
-      const res = await fetch(url);
-      return res.json();
-    }
-    async function postData(payload){
-      const res = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload) });
-      return res.json();
+      url.search = new URLSearchParams({ action, ...params }).toString();
+      const r = await fetch(url, { method:"GET" });
+      return r.json();
     }
 
-    function renderTable(containerId, head, rows){
-      const wrap = document.getElementById(containerId);
-      wrap.innerHTML = '';
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-      `;
-      const scroll = document.createElement('div');
-      scroll.className = 'scroll';
+    async function apiPost(payload){
+      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
+      return r.json();
+    }
+
+    /***********************
+     * UI helpers
+     ***********************/
+    function renderTable(targetId, header, rows){
+      const wrap = document.getElementById(targetId);
+      wrap.innerHTML = "";
+      const scroll = document.createElement("div");
+      scroll.className = "scroll";
+      const table = document.createElement("table");
+      table.innerHTML =
+        `<thead><tr>${header.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+         <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
       scroll.appendChild(table);
       wrap.appendChild(scroll);
+      return table;
     }
 
-    async function loadCollections(){
-      const colls = await api("listCollections");
+    function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
-      const fill=(sel, withAll=true)=>{
-        sel.innerHTML = withAll ? '<option value="">Todas</option>' : '';
-        colls.forEach(c=>{
-          const o = document.createElement('option');
-          o.value = o.textContent = c;
+    function parsePriceBR(str){
+      if (str == null) return null;
+      const s = String(str).trim().replace(/[R$\s]/g,"");
+      if (!s) return null;
+      // 1.234,56 => 1234.56 ; 89,99 => 89.99 ; 89.99 => 89.99
+      let x = s;
+      if (x.includes(",")){
+        x = x.replace(/\./g,"").replace(",",".");
+      }
+      const n = Number(x);
+      return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
+    }
+
+    function parseItemsFromTextarea(text){
+      const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const out = [];
+      for (const line of lines){
+        // tenta separadores ; , espaço
+        let parts = line.split(";").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(",").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+
+        const ref = (parts[0]||"").toUpperCase();
+        const price = parsePriceBR(parts[1]);
+        if (!ref || price == null) continue;
+        out.push({ ref, preco: price });
+      }
+      return out;
+    }
+
+    // Nova função para parse específico do formato "0227 179,99"
+    function parseRefPriceFormat(str) {
+      if (!str) return null;
+      const s = String(str).trim();
+      // Formato: 4 dígitos + espaço + valor
+      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
+      if (!match) return null;
+      
+      const ref = match[1];
+      const price = parsePriceBR(match[2]);
+      
+      if (!ref || price == null) return null;
+      return { ref, preco: price };
+    }
+
+    function setStatus(id, msg){ document.getElementById(id).textContent = msg || ""; }
+
+    /***********************
+     * Collections load
+     ***********************/
+    let collections = [];
+    let collectionsWithKeys = [];
+    
+    async function loadCollections(){
+      try {
+        // Primeiro tenta obter com keys
+        const res = await apiGet("listCollectionsWithKeys");
+        
+        if (res?.collections && Array.isArray(res.collections)) {
+          // Salva as coleções com keys
+          collectionsWithKeys = res.collections;
+          // Extrai apenas os nomes para o array simples
+          collections = collectionsWithKeys.map(c => c.name);
+          
+          console.log("Coleções carregadas com keys:", collectionsWithKeys);
+        } else {
+          // Fallback: carrega apenas os nomes
+          const colls = await apiGet("listCollections");
+          collections = Array.isArray(colls) ? colls : [];
+          
+          // Cria array básico com keys sequenciais
+          collectionsWithKeys = collections.map((name, idx) => ({
+            name,
+            key: idx,
+            order: idx
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao carregar coleções:", err);
+        // Fallback mais básico
+        const colls = await apiGet("listCollections");
+        collections = Array.isArray(colls) ? colls : [];
+        collectionsWithKeys = collections.map((name, idx) => ({
+          name,
+          key: idx,
+          order: idx
+        }));
+      }
+
+      const fill = (sel, { withEmpty = true } = {}) => {
+        sel.innerHTML = "";
+        if (withEmpty) {
+          const o = document.createElement("option");
+          o.value = "";
+          o.textContent = "Selecione";
+          sel.appendChild(o);
+        }
+        
+        // Ordena as coleções pela key/série (mais antiga primeiro)
+        const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
+        sorted.forEach(c => {
+          const o = document.createElement("option");
+          o.value = c.name;
+          // Mostra também a key para referência
+          o.textContent = `${c.name} (${c.key})`;
           sel.appendChild(o);
         });
       };
 
-      fill(document.getElementById('collA'), false);
-      fill(document.getElementById('collB'), false);
-      fill(document.getElementById('maxColl'), true);
-
-      // painel lista preço: select de cutoff
-      const plistSel = document.getElementById('plistColecao');
-      plistSel.innerHTML = '';
-      colls.forEach(c=>{
-        const o = document.createElement('option');
-        o.value = o.textContent = c;
-        plistSel.appendChild(o);
-      });
-
-      // padrão: A = penúltima, B = última
-      if (colls.length >= 2) {
-        document.getElementById('collA').value = colls[colls.length-2];
-        document.getElementById('collB').value = colls[colls.length-1];
-        plistSel.value = colls[colls.length-1];
-      }
+      fill(document.getElementById("collA"));
+      fill(document.getElementById("collB"));
     }
 
-    /* ===================== NOVA COLEÇÃO ===================== */
-    document.getElementById('btnSalvarColecao').onclick = async ()=>{
-      const name = document.getElementById('newCollName').value.trim();
-      const txt  = document.getElementById('newItems').value.trim();
-      const st   = document.getElementById('newStatus');
+    /***********************
+     * SAVE COLLECTION + CONFIRM use as current
+     ***********************/
+    document.getElementById("btnSaveColl").onclick = async ()=>{
+      const name = document.getElementById("collName").value.trim();
+      const itemsTxt = document.getElementById("collItems").value;
+      const items = parseItemsFromTextarea(itemsTxt);
 
-      if(!name || !txt){ alert("Informe o nome da coleção e os itens."); return; }
+      if (!name){ alert("Informe o nome da coleção."); return; }
+      if (!items.length){ alert("Cole os itens (REF e PREÇO)."); return; }
 
-      const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-      const items = lines.map(l=>{
-        let ref, preco;
-        if (l.includes(";")) [ref, preco] = l.split(";");
-        else [ref, preco] = l.split("\t");
-        return { ref:(ref||"").trim(), preco:(preco||"").trim() };
-      }).filter(i=>i.ref && i.preco);
+      const ok = await Modal.ask({
+        title:"Salvar coleção",
+        text:`Vou salvar a coleção "${name}" com ${items.length} itens no banco. Confirmar?`
+      });
+      if (!ok) return;
 
-      st.textContent = "Salvando...";
-      const res = await postData({ action:"addCollection", colecaoNome:name, items });
+      try{
+        Overlay.on("Salvando coleção...", "Gravando no banco de dados.");
+        const resp = await apiPost({ action:"addCollection", colecaoNome:name, items });
+        if (resp?.erro){ throw new Error(resp.erro); }
 
-      if(res.status==="ok"){
-        st.textContent = `OK — gravada como "${res.colecao}" (${res.inseridos} itens)`;
-        document.getElementById('newItems').value = "";
+        // Atualiza listas
         await loadCollections();
-      } else {
-        st.textContent = "Erro: " + (res.erro || "desconhecido");
+
+        // Confirma se quer usar como lista atual
+        Overlay.off();
+        const useAsCurrent = await Modal.ask({
+          title:"Usar como lista atual?",
+          text:`Deseja gravar a lista atual (aba Leonardo) usando esta coleção recém-salva?\n\nSe SIM, vai pedir a senha.`
+        });
+
+        if (useAsCurrent){
+          // Abre o modal de export com esta coleção selecionada
+          ModalExport.open().then(async (confirmed) => {
+            if (!confirmed) return;
+            
+            const coll = name;
+            const pass = document.getElementById("modalExportPass").value;
+            
+            if (!pass){ alert("Digite a senha."); return; }
+
+            try{
+              Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
+              const exp = await apiPost({
+                action:"exportCurrentPrices",
+                password: pass,
+                mode:"upto",
+                colecao: coll
+              });
+              if (exp?.erro){ throw new Error(exp.erro); }
+              alert(`OK! Coleção salva e COLEÇÃO ATUAL gravada.\nItens exportados: ${exp.gravados || exp.exported || "?"}`);
+            } catch(err){
+              alert("Erro: " + err.message);
+            } finally {
+              Overlay.off();
+            }
+          });
+        } else {
+          alert(`OK! Coleção "${resp.colecao || name}" salva (${resp.inseridos || "?"} itens).`);
+        }
+
+      } catch(err){
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
       }
     };
 
-    /* ===================== LISTA DE PREÇO ===================== */
-    const plistMode = document.getElementById('plistMode');
-    const plistColecao = document.getElementById('plistColecao');
-
-    plistMode.onchange = ()=>{
-      plistColecao.disabled = (plistMode.value !== "upto");
-    };
-
-    document.getElementById('btnGerarLista').onclick = async ()=>{
-      const mode = plistMode.value;
-      const colecao = plistColecao.value;
-
-      document.getElementById('plistStatus').textContent = "Gerando...";
-      const res = await api("priceList", mode === "upto" ? { mode, colecao } : { mode });
-
-      if (res.erro) {
-        document.getElementById('plistStatus').textContent = "Erro: " + res.erro;
+    /***********************
+     * BOTÃO PARA ABRIR MODAL DE INCLUIR REF
+     ***********************/
+    document.getElementById("btnAddRefModal").onclick = async () => {
+      const ok = await ModalAddRef.open();
+      if (!ok) return;
+      
+      const input = document.getElementById("modalRefPrice").value.trim();
+      const parsed = parseRefPriceFormat(input);
+      
+      if (!parsed) {
+        alert("Formato inválido! Use: REF (4 dígitos) + espaço + PREÇO. Ex: 0227 179,99");
         return;
       }
+      
+      const { ref, preco } = parsed;
+      
+      // Pede senha para atualizar
+      const pass = prompt("Digite a senha para incluir/atualizar a referência:");
+      if (!pass) return;
 
-      priceListCache = res.items || [];
-      document.getElementById('plistStatus').textContent =
-        `${res.count} itens — base: ${res.cutoffColecao || "ATUAL"}`;
-
-      renderPriceList();
+      try {
+        Overlay.on("Processando...", "Incluindo/atualizando referência na coleção atual.");
+        
+        const resp = await apiPost({
+          action: "addRefToCurrent",
+          ref,
+          preco,
+          password: pass
+        });
+        
+        if (resp?.erro) throw new Error(resp.erro);
+        
+        alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
+        
+        // Atualiza a lista de coleções
+        await loadCollections();
+        
+        // Se estiver na tela de busca com esta ref, atualiza
+        if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
+          document.getElementById("btnBuscar").click();
+        }
+        
+      } catch(err) {
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
+      }
     };
 
-    function renderPriceList(){
-      const term = document.getElementById('plistSearch').value.trim().toUpperCase();
-      let data = priceListCache || [];
-      if (term) data = data.filter(x => String(x.ref||"").includes(term));
+    /***********************
+     * BOTÃO PARA ABRIR MODAL DE EXPORT
+     ***********************/
+    document.getElementById("btnExportModal").onclick = async () => {
+      const ok = await ModalExport.open();
+      if (!ok) return;
+      
+      const coll = document.getElementById("modalExportColl").value;
+      const pass = document.getElementById("modalExportPass").value;
+      
+      if (!pass){ alert("Digite a senha."); return; }
+      if (coll === "latest" && collections.length === 0){ alert("Nenhuma coleção disponível."); return; }
 
-      const rows = data.map(x=>[x.ref, fmtBR(x.preco), "COLEÇÃO ATUAL"]);
-      renderTable("plistTabelaWrap", ["REF","PREÇO","COLEÇÃO"], rows);
+      const mode = coll === "latest" ? "latest" : "upto";
+      const colecao = coll === "latest" ? "" : coll;
+
+      try{
+        Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
+        const resp = await apiPost({
+          action:"exportCurrentPrices",
+          password: pass,
+          mode,
+          colecao: colecao
+        });
+        if (resp?.erro) throw new Error(resp.erro);
+        alert(`OK! Itens gravados: ${resp.gravados || resp.exported || "?"}`);
+      } catch(err){
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
+      }
+    };
+
+    /***********************
+     * SEARCH REFERENCE
+     ***********************/
+    document.getElementById("btnBuscar").onclick = async ()=>{
+      const ref = document.getElementById("refInput").value.trim().toUpperCase();
+      if (!ref) return;
+
+      setStatus("refStatus", "Buscando...");
+      try{
+        Overlay.on("Buscando referência...", "Consultando o banco.");
+        const res = await apiGet("searchReference", { ref });
+        Overlay.off();
+
+        if (!res?.items?.length){
+          document.getElementById("refKpis").style.display = "none";
+          document.getElementById("refTableWrap").innerHTML = `<div class="hint">Nenhum dado encontrado para <b>${esc(ref)}</b>.</div>`;
+          setStatus("refStatus", "");
+          return;
+        }
+
+        // KPIs
+        document.getElementById("refKpis").style.display = "flex";
+        document.getElementById("kpiAtual").textContent = fmtBR(res.atual?.preco);
+        document.getElementById("kpiAtualColl").textContent = res.atual?.colecao || "—";
+        document.getElementById("kpiMax").textContent = fmtBR(res.max);
+
+        const rows = res.items.map(i=>{
+          const badge = (res.atual?.colecao === i.coll)
+            ? `<span class="badge b-ok">ATUAL</span>`
+            : ``;
+          return [
+            esc(i.coll),
+            `<span class="mono">${fmtBR(i.price)}</span>`,
+            badge
+          ];
+        });
+
+        renderTable("refTableWrap", ["Coleção", "Preço", ""], rows);
+        setStatus("refStatus","");
+
+      } catch(err){
+        Overlay.off();
+        setStatus("refStatus","");
+        alert("Erro: " + err.message);
+      }
+    };
+
+    /***********************
+     * COMPARE
+     ***********************/
+    let cmpLast = null;
+    
+    function applyCompareFilters(data){
+      let out = data.slice();
+
+      const filterType = document.querySelector('input[name="filterType"]:checked').value;
+
+      if (filterType === "changed"){
+        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
+      }
+      if (filterType === "up"){
+        out = out.filter(r => r.direcao === "SUBIU");
+      }
+      if (filterType === "down"){
+        out = out.filter(r => r.direcao === "DESCEU");
+      }
+      return out;
     }
 
-    document.getElementById('plistSearch').oninput = renderPriceList;
+    function renderCompare(data, a, b){
+      const filtered = applyCompareFilters(data);
 
-    // ✅ EXPORTAR (senha fica só no GS)
-    document.getElementById('btnExportarAtual').onclick = async ()=>{
-      const pass = prompt("Digite a senha para gravar a COLEÇÃO ATUAL:");
-      if (pass == null) return;
-
-      document.getElementById('exportStatus').textContent = "Gravando...";
-      const resp = await postData({ action:"exportCurrentPrices", password: pass, mode:"latest" });
-
-      if (resp.status === "ok") {
-        document.getElementById('exportStatus').textContent = `OK — gravados ${resp.gravados} itens.`;
-        alert("Coleção atual gravada com sucesso!");
-      } else {
-        document.getElementById('exportStatus').textContent = "Erro: " + (resp.erro || "desconhecido");
-        alert("Erro: " + (resp.erro || "desconhecido"));
-      }
-    };
-
-    /* ===================== BUSCAR REF ===================== */
-    document.getElementById('btnBuscarRef').onclick = async ()=>{
-      const ref = document.getElementById('refInput').value.trim().toUpperCase();
-      const status = document.getElementById('refStatus'); status.textContent='Buscando...';
-
-      const res = await api("searchReference", { ref });
-      status.textContent='';
-
-      if(!res.items || !res.items.length){
-        document.getElementById('refTabelaWrap').innerHTML='<div class="muted">Nenhum dado encontrado.</div>';
-        document.getElementById('refResumo').style.display='none';
-        return;
-      }
-
-      document.getElementById('refMax').textContent = fmtBR(res.max);
-      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ');
-      document.getElementById('refAtual').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
-      document.getElementById('refAtualColl').textContent = res.atual ? res.atual.colecao : '-';
-
-      document.getElementById('refResumo').style.display='flex';
-
-      const rows = res.items.map(i=>[i.coll, fmtBR(i.price)]);
-      renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
-    };
-
-    // legado incluir/finalizar
-    document.getElementById('btnIncluir').onclick = async ()=>{
-      const ref = document.getElementById('refInput').value.trim().toUpperCase();
-      if(!ref) return;
-
-      const res = await api("searchReference", { ref });
-      if(res.items && res.items.length){
-        res.items.forEach(i => listaTemp.push({ ref: ref, coll: i.coll, price: i.price }));
-        alert("Adicionado: " + ref);
-      }
-    };
-    document.getElementById('btnFinalizar').onclick = async ()=>{
-      if(!listaTemp.length){ alert("Lista vazia."); return; }
-      const resp = await postData({ items: listaTemp });
-      if(resp.status==="ok"){ alert("Enviado " + resp.enviados + " itens."); listaTemp = []; }
-      else { alert("Erro: " + (resp.erro || "")); }
-    };
-
-    /* ===================== COMPARAÇÃO ===================== */
-    document.getElementById('btnComparar').onclick = async ()=>{
-      const a = document.getElementById('collA').value;
-      const b = document.getElementById('collB').value;
-      if(!a || !b){ alert("Selecione Coleção A e B."); return; }
-
-      document.getElementById('cmpStatus').textContent = "Carregando...";
-      cmpHeaderA = a;
-      cmpHeaderB = b;
-
-      cmpCache = await api("compareCollections", { a, b });
-
-      document.getElementById('btnPrintRem').disabled = false;
-      aplicarFiltrosComparacao();
-    };
-
-    function countResumo_(arr){
-      let subiu=0, desceu=0, igual=0, sem=0;
-      arr.forEach(r=>{
-        if (r.direcao==="SUBIU") subiu++;
-        else if (r.direcao==="DESCEU") desceu++;
-        else if (r.direcao==="IGUAL") igual++;
-        else sem++;
-      });
-      return {subiu, desceu, igual, sem};
-    }
-
-    function aplicarFiltrosComparacao(){
-      if(!cmpCache || !cmpCache.length){
-        document.getElementById('cmpTabelaWrap').innerHTML = '<div class="muted">Gere a comparação primeiro.</div>';
-        document.getElementById('cmpStatus').textContent = '';
-        return;
-      }
-
-      const onlyChanged = document.getElementById('cmpOnly').value === "1";
-      const direction   = document.getElementById('cmpDir').value;
-
-      let data = cmpCache;
-      if (onlyChanged) data = data.filter(r => r.alterou);
-      if (direction !== "ALL") data = data.filter(r => r.direcao === direction);
-
-      const body = data.map(r=>{
+      const rows = filtered.map(r=>{
+        const s = r.direcao;
         const badge =
-          r.direcao==="SUBIU"    ? '<span class="badge ok">SUBIU</span>' :
-          r.direcao==="DESCEU"   ? '<span class="badge err">DESCEU</span>' :
-          r.direcao==="IGUAL"    ? '<span class="badge warn">IGUAL</span>' :
-                                   '<span class="badge warn">SEM DADO</span>';
+          s === "SUBIU"  ? `<span class="badge b-ok">SUBIU</span>` :
+          s === "DESCEU" ? `<span class="badge b-err">DESCEU</span>` :
+          s === "IGUAL"  ? `<span class="badge b-warn">IGUAL</span>` :
+                           `<span class="badge">SEM DADO</span>`;
 
-        const pa = (r.precoA==null) ? '-' : fmtBR(r.precoA);
-        const pb = (r.precoB==null) ? '-' : fmtBR(r.precoB);
-        const dl = (r.delta==null)  ? '-' : fmtBR(r.delta);
+        const deltaTxt = (r.delta == null) ? "-" : fmtBR(r.delta);
 
-        return [ r.referencia, pa, pb, dl, badge ];
+        return [
+          `<span class="mono">${esc(r.referencia)}</span>`,
+          r.precoA == null ? "-" : `<span class="mono">${fmtBR(r.precoA)}</span>`,
+          r.precoB == null ? "-" : `<span class="mono">${fmtBR(r.precoB)}</span>`,
+          `<span class="mono">${deltaTxt}</span>`,
+          badge
+        ];
       });
 
-      renderTable('cmpTabelaWrap',
-        ["REF", `PREÇO (${cmpHeaderA})`, `PREÇO (${cmpHeaderB})`, "Δ", "STATUS"],
-        body
+      renderTable("cmpTableWrap",
+        ["REF", `Preço (${esc(a)})`, `Preço (${esc(b)})`, "Δ", "Status"],
+        rows
       );
 
-      const total = countResumo_(cmpCache);
-      const shown = countResumo_(data);
+      // Mostra/oculta botão de imprimir
+      const printBtn = document.getElementById("btnPrint");
+      printBtn.style.display = filtered.length > 0 ? "inline-flex" : "none";
 
-      document.getElementById('cmpStatus').textContent =
-        `${data.length}/${cmpCache.length} — Exibidos: ↑${shown.subiu} ↓${shown.desceu} =${shown.igual} ?${shown.sem} — ` +
-        `Total: ↑${total.subiu} ↓${total.desceu} =${total.igual} ?${total.sem}`;
+      setStatus("cmpStatus", `Itens: ${filtered.length}${filtered.length !== data.length ? " (filtrado)" : ""}`);
     }
 
-    document.getElementById('cmpOnly').onchange = aplicarFiltrosComparacao;
-    document.getElementById('cmpDir').onchange  = aplicarFiltrosComparacao;
-
-    // ✅ IMPRIMIR REMARCAÇÃO (bonito)
-    document.getElementById('btnPrintRem').onclick = ()=>{
-      if (!cmpCache || !cmpCache.length) { alert("Gere a comparação primeiro."); return; }
-
-      // só subiu/desceu e com dados completos
-      const items = cmpCache.filter(r => (r.direcao==="SUBIU" || r.direcao==="DESCEU") && r.precoA!=null && r.precoB!=null);
-
-      if (!items.length) { alert("Nenhuma remarcação (subiu/desceu) encontrada."); return; }
-
-      const html = `
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Remarcação</title>
-<style>
-  body{font-family:Arial,sans-serif;margin:24px;color:#111}
-  h1{margin:0 0 6px;font-size:18px}
-  .sub{margin:0 0 14px;color:#555;font-size:12px}
-  table{border-collapse:collapse;width:100%}
-  th,td{border:1px solid #ddd;padding:8px 10px;font-size:12px;white-space:nowrap}
-  th{background:#f3f3f3;text-align:left}
-  .up{color:#0a7a2a;font-weight:700}
-  .down{color:#b00020;font-weight:700}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#eee}
-</style>
-</head>
-<body>
-  <h1>REMARCAÇÃO — ${escapeHtml(cmpHeaderA)} → ${escapeHtml(cmpHeaderB)}</h1>
-  <p class="sub">Gerado em ${new Date().toLocaleString("pt-BR")}. Itens: ${items.length}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>REF</th>
-        <th>PREÇO ANTERIOR</th>
-        <th>PREÇO ATUAL</th>
-        <th>STATUS</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${items.map(r=>{
-        const cls = r.direcao==="SUBIU" ? "up" : "down";
-        const st  = r.direcao==="SUBIU" ? "SUBIU" : "DESCEU";
-        return `<tr>
-          <td>${escapeHtml(r.referencia)}</td>
-          <td>${fmtBR(r.precoA)}</td>
-          <td>${fmtBR(r.precoB)}</td>
-          <td class="${cls}"><span class="pill">${st}</span></td>
-        </tr>`;
-      }).join("")}
-    </tbody>
-  </table>
-<script>
-  setTimeout(()=>window.print(), 300);
-<\/script>
-</body>
-</html>`;
-
-      const w = window.open("", "_blank");
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
-    };
-
-    function escapeHtml(s){
-      return String(s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
-
-    /* ===================== MAX ===================== */
-    document.getElementById('btnMax').onclick = async ()=>{
-      const coll = document.getElementById('maxColl').value;
-      const list = await api("maxByReference", { colecao: coll });
-
-      if(!list.length){
-        document.getElementById('maxTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';
+    async function runCompare(){
+      const a = document.getElementById("collA").value;
+      const b = document.getElementById("collB").value;
+      if (!a || !b){
+        document.getElementById("cmpTableWrap").innerHTML = `<div class="hint">Selecione a Coleção A e B.</div>`;
+        setStatus("cmpStatus","");
+        document.getElementById("btnPrint").style.display = "none";
         return;
       }
 
-      const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
-      renderTable('maxTabelaWrap', ["REF","MAX"], rows);
+      try{
+        Overlay.on("Comparando...", "Carregando e comparando as duas coleções.");
+        const res = await apiGet("compareCollections", { a, b });
+        Overlay.off();
+
+        if (!Array.isArray(res)){ throw new Error("Resposta inválida do servidor."); }
+        cmpLast = { data: res, a, b };
+        renderCompare(res, a, b);
+
+      } catch(err){
+        Overlay.off();
+        alert("Erro: " + err.message);
+        document.getElementById("btnPrint").style.display = "none";
+      }
+    }
+
+    // botão comparar
+    document.getElementById("btnCompare").onclick = runCompare;
+
+    // botão imprimir
+    document.getElementById("btnPrint").onclick = () => {
+      if (!cmpLast) return;
+      const filtered = applyCompareFilters(cmpLast.data);
+      ModalPrint.open(filtered, cmpLast.a, cmpLast.b);
     };
 
-    /* ===================== MATRIZ ===================== */
-    document.getElementById('btnMatriz').onclick = async ()=>{
-      const limit = document.getElementById('matLimit').value;
-      const obj = await api("matrix", { limit });
-
-      if(!obj.rows || !obj.rows.length){
-        document.getElementById('matTabelaWrap').innerHTML='<div class="muted">Sem dados.</div>';
-        return;
-      }
-
-      const rows = obj.rows.map(r => r.map((v,i)=> i===0 ? v : (v==null?'-':fmtBR(v))));
-      renderTable('matTabelaWrap', obj.header, rows);
-
-      document.getElementById('matSearch').oninput = ()=>{
-        const term = document.getElementById('matSearch').value.trim().toLowerCase();
-        const trs = document.querySelectorAll('#matTabelaWrap tbody tr');
-        trs.forEach(tr=>{
-          const ref = tr.querySelector('td')?.textContent.toLowerCase() || "";
-          tr.style.display = (term && !ref.includes(term)) ? "none" : "";
-        });
+    // filtros em "tempo real" (só se já tiver dados)
+    document.querySelectorAll('input[name="filterType"]').forEach(radio=>{
+      radio.onchange = ()=>{
+        if (!cmpLast) return;
+        renderCompare(cmpLast.data, cmpLast.a, cmpLast.b);
       };
+    });
+
+    /***********************
+     * MATRIX + draggable columns (storage)
+     ***********************/
+    const LS_COLORDER = "hs_matrix_col_order_v1";
+
+    function getSavedOrder(){
+      try{
+        const v = JSON.parse(localStorage.getItem(LS_COLORDER) || "null");
+        return Array.isArray(v) ? v : null;
+      }catch{ return null; }
+    }
+    function saveOrder(order){
+      localStorage.setItem(LS_COLORDER, JSON.stringify(order));
+    }
+    function clearOrder(){
+      localStorage.removeItem(LS_COLORDER);
+    }
+
+    function reorderMatrixTable(table){
+      const saved = getSavedOrder();
+      if (!saved) return;
+
+      const ths = Array.from(table.querySelectorAll("thead th"));
+      if (ths.length < 2) return;
+
+      // header[0] é REF fixo
+      const headerNames = ths.slice(1).map(th=>th.dataset.colname);
+      // cria ordem final: REF + (saved intersect) + (resto)
+      const final = saved.filter(c=>headerNames.includes(c)).concat(headerNames.filter(c=>!saved.includes(c)));
+
+      applyColumnOrder(table, final);
+    }
+
+    function applyColumnOrder(table, colOrder){
+      const headRow = table.tHead.rows[0];
+      const bodyRows = Array.from(table.tBodies[0].rows);
+
+      // mapeia colName -> index atual
+      const ths = Array.from(headRow.cells);
+      const idxByName = new Map();
+      for (let i=1;i<ths.length;i++){
+        idxByName.set(ths[i].dataset.colname, i);
+      }
+
+      // monta nova ordem de índices (0 = REF)
+      const newIdx = [0];
+      colOrder.forEach(name=>{
+        const i = idxByName.get(name);
+        if (i != null) newIdx.push(i);
+      });
+
+      // aplica no THEAD
+      const newThs = newIdx.map(i=>ths[i]);
+      newThs.forEach(th=>headRow.appendChild(th));
+
+      // aplica em cada TR do TBODY
+      bodyRows.forEach(tr=>{
+        const tds = Array.from(tr.cells);
+        const newTds = newIdx.map(i=>tds[i]);
+        newTds.forEach(td=>tr.appendChild(td));
+      });
+    }
+
+    function enableHeaderDrag(table){
+      const headRow = table.tHead.rows[0];
+      const ths = Array.from(headRow.cells);
+
+      // REF não arrasta (0)
+      for (let i=1;i<ths.length;i++){
+        const th = ths[i];
+        th.classList.add("thDrag");
+        th.draggable = true;
+      }
+
+      let dragSrc = null;
+
+      function cleanup(){
+        Array.from(headRow.cells).forEach(th=>{
+          th.classList.remove("thGhost");
+          th.classList.remove("thDrop");
+        });
+      }
+
+      headRow.addEventListener("dragstart", (e)=>{
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0) return;
+        dragSrc = th;
+        th.classList.add("thGhost");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      headRow.addEventListener("dragover", (e)=>{
+        e.preventDefault();
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0 || !dragSrc) return;
+        cleanup();
+        th.classList.add("thDrop");
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      headRow.addEventListener("drop", (e)=>{
+        e.preventDefault();
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0 || !dragSrc) return;
+
+        const from = dragSrc.cellIndex;
+        const to = th.cellIndex;
+        if (from === to) return;
+
+        // pega ordem atual (exceto REF)
+        const cur = Array.from(headRow.cells).slice(1).map(x=>x.dataset.colname);
+        // move item
+        const moved = cur.splice(from-1, 1)[0];
+        cur.splice(to-1, 0, moved);
+
+        applyColumnOrder(table, cur);
+        saveOrder(cur);
+        cleanup();
+        dragSrc = null;
+      });
+
+      headRow.addEventListener("dragend", ()=>{
+        cleanup();
+        dragSrc = null;
+      });
+    }
+
+    document.getElementById("btnResetCols").onclick = ()=>{
+      clearOrder();
+      alert("Ordem de colunas resetada. Gere a tabela novamente.");
     };
 
-    loadCollections();
+    document.getElementById("btnMatrix").onclick = async ()=>{
+      const limit = document.getElementById("matLimit").value.trim();
+      try{
+        Overlay.on("Gerando tabela...", "Montando matriz de preços.");
+        const res = await apiGet("matrix", { limit });
+        Overlay.off();
+
+        if (!res?.header?.length || !res?.rows?.length){
+          document.getElementById("matTableWrap").innerHTML = `<div class="hint">Sem dados.</div>`;
+          return;
+        }
+
+        // render
+        const header = res.header.map((h, idx)=>{
+          if (idx===0) return "REF";
+          // usamos dataset colname para reorder
+          return esc(h);
+        });
+
+        // prepara rows (format)
+        const rows = res.rows.map(r=>{
+          return r.map((v, idx)=>{
+            if (idx===0) return `<span class="mono">${esc(v)}</span>`;
+            return (v==null || v==="") ? "-" : `<span class="mono">${fmtBR(v)}</span>`;
+          });
+        });
+
+        const table = renderTable("matTableWrap", header, rows);
+
+        // seta dataset colname nos ths (exceto 0)
+        const ths = Array.from(table.tHead.rows[0].cells);
+        for (let i=1;i<ths.length;i++){
+          ths[i].dataset.colname = res.header[i];
+        }
+
+        reorderMatrixTable(table);
+        enableHeaderDrag(table);
+
+        // busca em tempo real
+        const input = document.getElementById("matSearch");
+        input.oninput = ()=>{
+          const term = input.value.trim().toLowerCase();
+          const trs = table.tBodies[0].rows;
+          for (const tr of trs){
+            const ref = tr.cells[0]?.textContent?.toLowerCase() || "";
+            tr.style.display = (term && !ref.includes(term)) ? "none" : "";
+          }
+        };
+
+        setStatus("matStatus", `Refs: ${res.rows.length} | Colunas: ${res.header.length-1}`);
+
+      } catch(err){
+        Overlay.off();
+        alert("Erro: " + err.message);
+      }
+    };
+
+    /***********************
+     * INIT
+     ***********************/
+    (async function init(){
+      try{
+        Overlay.on("Carregando...", "Buscando coleções no banco.");
+        await loadCollections();
+      } catch(err){
+        alert("Não consegui carregar as coleções.\n\n1) Confere se API_URL está correto.\n2) Confere se o Apps Script está publicado e acessível.\n\nErro: " + err.message);
+      } finally{
+        Overlay.off();
+      }
+
+      // hint: se API_URL não foi trocado
+      if (API_URL.includes("COLE_AQUI")){
+        alert("ATENÇÃO: você precisa colar a URL do Apps Script em API_URL (no topo do HTML).");
+      }
+    })();
   </script>
 </body>
 </html>
