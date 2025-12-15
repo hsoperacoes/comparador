@@ -177,6 +177,7 @@
       border-radius:16px;
       padding:16px;
       box-shadow:var(--shadow);
+      color: var(--txt);
     }
     .modal h3{margin:0 0 8px;font-size:16px}
     .modal p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.35}
@@ -207,24 +208,15 @@
       gap:6px;
       white-space:nowrap;
     }
-    
+
     /* Novo modal para incluir ref */
-    .add-ref-modal .row {
-      margin: 12px 0;
-    }
-    .add-ref-modal input {
-      width: 100%;
-    }
-    .add-ref-modal .hint {
-      margin-top: 4px;
-    }
-    
+    .add-ref-modal .row { margin: 12px 0; }
+    .add-ref-modal input { width: 100%; }
+    .add-ref-modal .hint { margin-top: 4px; }
+
     /* Ajuste do campo coleção */
-    #collName {
-      min-width: 200px;
-      flex: 1;
-    }
-    
+    #collName { min-width: 200px; flex: 1; }
+
     /* Botões inline */
     .button-group {
       display: flex;
@@ -232,59 +224,39 @@
       align-items: center;
       flex-wrap: wrap;
     }
-    
+
     /* Modal para gravar coleção atual */
-    .export-modal .row {
-      margin: 12px 0;
-    }
+    .export-modal .row { margin: 12px 0; }
     .export-modal select,
-    .export-modal input {
-      width: 100%;
+    .export-modal input { width: 100%; }
+
+    /* --------- IMPRESSÃO / PDF --------- */
+    /* Container que vai pra impressão (fica dentro do modal) */
+    .print-container{
+      background:#fff;
+      color:#000;
+      padding: 12px;
+      border-radius: 10px;
     }
-    
-    /* Estilos para impressão/PDF - ATUALIZADOS PARA FICAR COMO O PDF */
-    .print-only {
-      display: none;
+
+    /* Modal de impressão CLARO (preview legível) */
+    #modalPrintWrap .modal{
+      background:#ffffff !important;
+      color:#000000 !important;
+      box-shadow: none;
+      border: 1px solid #ddd;
     }
-    
-    .print-header {
-      display: block;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #ccc;
+    #modalPrintWrap h3{ color:#000 !important; }
+    #modalPrintWrap .actions{
+      border-top:1px solid #ddd;
+      margin-top:10px;
+      padding-top:10px;
     }
-    
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      .print-container, .print-container * {
-        visibility: visible;
-      }
-      .print-container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 20px;
-        background: white;
-        color: black;
-        font-family: Arial, sans-serif;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .print-btn {
-        display: none !important;
-      }
+    #modalPrintWrap .modalBackdrop{
+      background: rgba(0,0,0,.55);
     }
-    
-    /* Botão de imprimir no modal - SEMPRE VISÍVEL */
-    #modalPrintWrap .success {
-      display: inline-block !important;
-    }
-    
-    /* Estilos para tabela de impressão (formato PDF) */
+
+    /* TABELA do PDF */
     .pdf-table {
       width: 100%;
       border-collapse: collapse;
@@ -304,6 +276,7 @@
       border: 1px solid #ddd;
       padding: 8px 10px;
       vertical-align: middle;
+      color:#000;
     }
     .pdf-table .ref-col {
       font-weight: bold;
@@ -321,22 +294,32 @@
       color: #dc3545;
       font-weight: bold;
     }
-    
-    /* Botão de impressão dentro do conteúdo */
-    .print-btn {
-      background: #6f3ccf;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 20px;
-      display: inline-block;
-    }
-    .print-btn:hover {
-      background: #532aa0;
+
+    /* Print: imprime SOMENTE o .print-container (resolve páginas em branco) */
+    @media print {
+      body { background: #fff !important; color:#000 !important; }
+
+      /* esconde tudo por padrão */
+      body * { display: none !important; }
+
+      /* mostra apenas o container de impressão */
+      .print-container,
+      .print-container *{
+        display: block !important;
+        visibility: visible !important;
+      }
+
+      .print-container{
+        position: static !important;
+        width: 100% !important;
+        padding: 20px !important;
+        border-radius: 0 !important;
+      }
+
+      table{ page-break-inside: auto; }
+      tr{ page-break-inside: avoid; page-break-after: auto; }
+      thead{ display: table-header-group; }
+      tfoot{ display: table-footer-group; }
     }
   </style>
 </head>
@@ -370,18 +353,18 @@
     <div class="modalBackdrop" onclick="ModalAddRef.close()"></div>
     <div class="modal add-ref-modal">
       <h3>Incluir/Atualizar Referência na Coleção Atual</h3>
-      
+
       <div class="row">
         <label>Referência e Preço</label>
         <input id="modalRefPrice" placeholder="Ex.: 0227 179,99" style="width:100%"/>
         <div class="hint">Formato: <span class="mono">REF PREÇO</span> (4 dígitos + espaço + valor). Ex: 0227 179,99</div>
       </div>
-      
+
       <div class="row">
         <label>Coleção atual detectada</label>
         <input id="modalCurrentColl" readonly style="background:rgba(255,255,255,.05); color:var(--muted)"/>
       </div>
-      
+
       <div class="actions">
         <button class="secondary" onclick="ModalAddRef.close()">Cancelar</button>
         <button id="modalAddRefConfirm">Incluir/Atualizar</button>
@@ -394,23 +377,23 @@
     <div class="modalBackdrop" onclick="ModalExport.close()"></div>
     <div class="modal export-modal">
       <h3>Gravar Coleção Atual</h3>
-      
+
       <div class="row">
         <label>Selecionar coleção</label>
         <select id="modalExportColl" style="width:100%">
           <option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>
         </select>
       </div>
-      
+
       <div class="row">
         <label>Senha</label>
         <input id="modalExportPass" type="password" placeholder="Digite a senha" style="width:100%"/>
       </div>
-      
+
       <div class="hint">
         Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:C (REF | VALOR | COLEÇÃO ATUAL).
       </div>
-      
+
       <div class="actions">
         <button class="secondary" onclick="ModalExport.close()">Cancelar</button>
         <button id="modalExportConfirm">Gravar Coleção Atual</button>
@@ -418,18 +401,19 @@
     </div>
   </div>
 
-  <!-- Modal de impressão/PDF - ATUALIZADO PARA FORMATO PDF -->
+  <!-- Modal de impressão/PDF -->
   <div class="modalWrap" id="modalPrintWrap">
     <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
-    <div class="modal" style="width:min(800px, 95vw); max-height:90vh; overflow:auto;">
+    <div class="modal" style="width:min(900px, 95vw); max-height:90vh; overflow:auto;">
       <h3>Imprimir Comparação de Coleções</h3>
-      
+
       <div class="print-container" id="printContainer">
-        <!-- Conteúdo será gerado dinamicamente -->
+        <!-- Conteúdo gerado dinamicamente -->
       </div>
-      
+
       <div class="actions">
         <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
+        <!-- ÚNICO botão de imprimir (sem duplicidade) -->
         <button onclick="window.print()" class="success">Imprimir / Gerar PDF</button>
       </div>
     </div>
@@ -465,7 +449,7 @@
       </div>
     </div>
 
-    <!-- BUSCAR + INCLUIR REF NA COLEÇÃO ATUAL -->
+    <!-- BUSCAR -->
     <div class="panel" id="panelSearch">
       <div class="title">Buscar referência <small>(histórico por coleção)</small></div>
 
@@ -580,15 +564,9 @@
     /***********************
      * FUNÇÕES AUXILIARES
      ***********************/
-    
-    // Nova função para pegar a última coleção (com maior key)
     function getLatestCollection() {
       if (collectionsWithKeys.length === 0) return null;
-      
-      // Ordena pela key (série) em ordem DECRESCENTE para pegar a mais recente
       const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
-      
-      // Retorna a primeira (com maior key)
       return sorted[0];
     }
 
@@ -632,17 +610,14 @@
     const ModalAddRef = {
       _resolver: null,
       open() {
-        // Usa a nova função para pegar a última coleção
         const lastColl = getLatestCollection();
-        document.getElementById("modalCurrentColl").value = lastColl ? 
-          `${lastColl.name} (Série: ${lastColl.key})` : 
+        document.getElementById("modalCurrentColl").value = lastColl ?
+          `${lastColl.name} (Série: ${lastColl.key})` :
           "Nenhuma coleção encontrada";
-        
-        // Limpa o campo
+
         document.getElementById("modalRefPrice").value = "";
-        
         document.getElementById("modalAddRefWrap").classList.add("on");
-        
+
         return new Promise((resolve) => {
           this._resolver = resolve;
           document.getElementById("modalAddRefConfirm").onclick = () => this.close(true);
@@ -665,30 +640,24 @@
       open() {
         const select = document.getElementById("modalExportColl");
         select.innerHTML = '<option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>';
-        
+
         if (collectionsWithKeys.length > 0) {
-          // Ordena pela key (série) em ordem CRESCENTE (mais antiga primeiro)
           const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
-          
+
           sorted.forEach(coll => {
             const option = document.createElement("option");
             option.value = coll.name;
             option.textContent = `${coll.name} (Série: ${coll.key})`;
             select.appendChild(option);
           });
-          
-          // Seleciona automaticamente a última coleção como padrão
+
           const latest = getLatestCollection();
-          if (latest) {
-            select.value = latest.name;
-          }
+          if (latest) select.value = latest.name;
         }
-        
-        // Limpa a senha
+
         document.getElementById("modalExportPass").value = "";
-        
         document.getElementById("modalExportWrap").classList.add("on");
-        
+
         return new Promise((resolve) => {
           this._resolver = resolve;
           document.getElementById("modalExportConfirm").onclick = () => this.close(true);
@@ -704,33 +673,31 @@
     };
 
     /***********************
-     * MODAL PRINT - ATUALIZADO PARA FORMATO PDF SIMPLES
+     * MODAL PRINT (PDF)
      ***********************/
     const ModalPrint = {
       open(data, collA, collB) {
         const container = document.getElementById("printContainer");
-        
-        // Filtra apenas subiu/desceu (igual ao PDF)
-        const filteredData = data.filter(item => 
-          (item.direcao === "SUBIU" || item.direcao === "DESCEU") && 
-          item.precoA != null && 
+
+        // Filtra só SUBIU/DESCEU e com preço nas duas coleções
+        const filteredData = (data || []).filter(item =>
+          (item.direcao === "SUBIU" || item.direcao === "DESCEU") &&
+          item.precoA != null &&
           item.precoB != null
         );
-        
-        // Formata a data EXATAMENTE como no PDF: "15/12/2025, 15:11:32"
+
         const now = new Date();
-        const dateStr = now.getDate().toString().padStart(2, '0') + '/' +
-                       (now.getMonth() + 1).toString().padStart(2, '0') + '/' +
-                       now.getFullYear() + ', ' +
-                       now.getHours().toString().padStart(2, '0') + ':' +
-                       now.getMinutes().toString().padStart(2, '0') + ':' +
-                       now.getSeconds().toString().padStart(2, '0');
-        
-        // Cria o conteúdo para impressão NO FORMATO EXATO DO PDF
+        const dateStr =
+          now.getDate().toString().padStart(2, '0') + '/' +
+          (now.getMonth() + 1).toString().padStart(2, '0') + '/' +
+          now.getFullYear() + ', ' +
+          now.getHours().toString().padStart(2, '0') + ':' +
+          now.getMinutes().toString().padStart(2, '0') + ':' +
+          now.getSeconds().toString().padStart(2, '0');
+
         let html = `
           <div style="font-family: Arial, sans-serif; color: #000; margin: 0; padding: 0;">
-            <!-- CABEÇALHO IGUAL AO PDF -->
-            <div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+            <div style="margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
               <h1 style="margin: 0 0 5px 0; font-size: 18px; font-weight: bold; color: #000;">
                 REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
               </h1>
@@ -738,8 +705,7 @@
                 Gerado em ${dateStr}. Itens: ${filteredData.length}
               </p>
             </div>
-            
-            <!-- TABELA IGUAL AO PDF -->
+
             <table class="pdf-table">
               <thead>
                 <tr>
@@ -751,12 +717,11 @@
               </thead>
               <tbody>
         `;
-        
-        // Adiciona as linhas da tabela (SÓ SUBIU/DESCEU, igual ao PDF)
+
         filteredData.forEach(item => {
           const statusClass = item.direcao === "SUBIU" ? "up" : "down";
           const statusText = item.direcao === "SUBIU" ? "SUBIU" : "DESCEU";
-          
+
           html += `
                 <tr>
                   <td class="ref-col">${esc(item.referencia)}</td>
@@ -766,28 +731,17 @@
                 </tr>
           `;
         });
-        
+
         html += `
               </tbody>
             </table>
-            
-            <!-- RODAPÉ SIMPLES -->
-            <div style="margin-top: 30px; font-size: 10px; color: #777; text-align: center; padding-top: 10px; border-top: 1px solid #eee;">
+
+            <div style="margin-top: 18px; font-size: 10px; color: #777; text-align: center; padding-top: 10px; border-top: 1px solid #eee;">
               Sistema de Precificação HS | Relatório gerado automaticamente
-            </div>
-            
-            <!-- BOTÃO DE IMPRESSÃO (visível apenas na tela) -->
-            <div class="no-print" style="margin-top: 20px; text-align: center;">
-              <button onclick="window.print()" class="print-btn">
-                🖨️ Imprimir / Gerar PDF
-              </button>
-              <p style="font-size: 11px; color: #666; margin-top: 10px;">
-                Dica: Para salvar como PDF, clique no botão acima e escolha "Salvar como PDF" na impressora.
-              </p>
             </div>
           </div>
         `;
-        
+
         container.innerHTML = html;
         document.getElementById("modalPrintWrap").classList.add("on");
       },
@@ -834,7 +788,6 @@
       if (str == null) return null;
       const s = String(str).trim().replace(/[R$\s]/g,"");
       if (!s) return null;
-      // 1.234,56 => 1234.56 ; 89,99 => 89.99 ; 89.99 => 89.99
       let x = s;
       if (x.includes(",")){
         x = x.replace(/\./g,"").replace(",",".");
@@ -847,7 +800,6 @@
       const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
       const out = [];
       for (const line of lines){
-        // tenta separadores ; , espaço
         let parts = line.split(";").map(x=>x.trim()).filter(Boolean);
         if (parts.length < 2) parts = line.split(",").map(x=>x.trim()).filter(Boolean);
         if (parts.length < 2) parts = line.split(/\s+/).map(x=>x.trim()).filter(Boolean);
@@ -860,17 +812,15 @@
       return out;
     }
 
-    // Nova função para parse específico do formato "0227 179,99"
     function parseRefPriceFormat(str) {
       if (!str) return null;
       const s = String(str).trim();
-      // Formato: 4 dígitos + espaço + valor
       const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
       if (!match) return null;
-      
+
       const ref = match[1];
       const price = parsePriceBR(match[2]);
-      
+
       if (!ref || price == null) return null;
       return { ref, preco: price };
     }
@@ -882,41 +832,25 @@
      ***********************/
     let collections = [];
     let collectionsWithKeys = [];
-    
+
     async function loadCollections(){
       try {
-        // Primeiro tenta obter com keys
         const res = await apiGet("listCollectionsWithKeys");
-        
+
         if (res?.collections && Array.isArray(res.collections)) {
-          // Salva as coleções com keys
           collectionsWithKeys = res.collections;
-          // Extrai apenas os nomes para o array simples
           collections = collectionsWithKeys.map(c => c.name);
-          
           console.log("Coleções carregadas com keys:", collectionsWithKeys);
         } else {
-          // Fallback: carrega apenas os nomes
           const colls = await apiGet("listCollections");
           collections = Array.isArray(colls) ? colls : [];
-          
-          // Cria array básico com keys sequenciais
-          collectionsWithKeys = collections.map((name, idx) => ({
-            name,
-            key: idx,
-            order: idx
-          }));
+          collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
         }
       } catch (err) {
         console.error("Erro ao carregar coleções:", err);
-        // Fallback mais básico
         const colls = await apiGet("listCollections");
         collections = Array.isArray(colls) ? colls : [];
-        collectionsWithKeys = collections.map((name, idx) => ({
-          name,
-          key: idx,
-          order: idx
-        }));
+        collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
       }
 
       const fill = (sel, { withEmpty = true } = {}) => {
@@ -927,13 +861,11 @@
           o.textContent = "Selecione";
           sel.appendChild(o);
         }
-        
-        // Ordena as coleções pela key/série (mais antiga primeiro)
+
         const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
         sorted.forEach(c => {
           const o = document.createElement("option");
           o.value = c.name;
-          // Mostra também a key para referência
           o.textContent = `${c.name} (${c.key})`;
           sel.appendChild(o);
         });
@@ -944,7 +876,7 @@
     }
 
     /***********************
-     * SAVE COLLECTION + CONFIRM use as current
+     * SAVE COLLECTION
      ***********************/
     document.getElementById("btnSaveColl").onclick = async ()=>{
       const name = document.getElementById("collName").value.trim();
@@ -965,10 +897,8 @@
         const resp = await apiPost({ action:"addCollection", colecaoNome:name, items });
         if (resp?.erro){ throw new Error(resp.erro); }
 
-        // Atualiza listas
         await loadCollections();
 
-        // Confirma se quer usar como lista atual
         Overlay.off();
         const useAsCurrent = await Modal.ask({
           title:"Usar como lista atual?",
@@ -976,13 +906,12 @@
         });
 
         if (useAsCurrent){
-          // Abre o modal de export com esta coleção selecionada
           ModalExport.open().then(async (confirmed) => {
             if (!confirmed) return;
-            
+
             const coll = name;
             const pass = document.getElementById("modalExportPass").value;
-            
+
             if (!pass){ alert("Digite a senha."); return; }
 
             try{
@@ -1013,48 +942,44 @@
     };
 
     /***********************
-     * BOTÃO PARA ABRIR MODAL DE INCLUIR REF
+     * MODAL INCLUIR REF
      ***********************/
     document.getElementById("btnAddRefModal").onclick = async () => {
       const ok = await ModalAddRef.open();
       if (!ok) return;
-      
+
       const input = document.getElementById("modalRefPrice").value.trim();
       const parsed = parseRefPriceFormat(input);
-      
+
       if (!parsed) {
         alert("Formato inválido! Use: REF (4 dígitos) + espaço + PREÇO. Ex: 0227 179,99");
         return;
       }
-      
+
       const { ref, preco } = parsed;
-      
-      // Pede senha para atualizar
       const pass = prompt("Digite a senha para incluir/atualizar a referência:");
       if (!pass) return;
 
       try {
         Overlay.on("Processando...", "Incluindo/atualizando referência na coleção atual.");
-        
+
         const resp = await apiPost({
           action: "addRefToCurrent",
           ref,
           preco,
           password: pass
         });
-        
+
         if (resp?.erro) throw new Error(resp.erro);
-        
+
         alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
-        
-        // Atualiza a lista de coleções
+
         await loadCollections();
-        
-        // Se estiver na tela de busca com esta ref, atualiza
+
         if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
           document.getElementById("btnBuscar").click();
         }
-        
+
       } catch(err) {
         alert("Erro: " + err.message);
       } finally {
@@ -1063,15 +988,15 @@
     };
 
     /***********************
-     * BOTÃO PARA ABRIR MODAL DE EXPORT
+     * MODAL EXPORT
      ***********************/
     document.getElementById("btnExportModal").onclick = async () => {
       const ok = await ModalExport.open();
       if (!ok) return;
-      
+
       const coll = document.getElementById("modalExportColl").value;
       const pass = document.getElementById("modalExportPass").value;
-      
+
       if (!pass){ alert("Digite a senha."); return; }
       if (coll === "latest" && collections.length === 0){ alert("Nenhuma coleção disponível."); return; }
 
@@ -1115,7 +1040,6 @@
           return;
         }
 
-        // KPIs
         document.getElementById("refKpis").style.display = "flex";
         document.getElementById("kpiAtual").textContent = fmtBR(res.atual?.preco);
         document.getElementById("kpiAtualColl").textContent = res.atual?.colecao || "—";
@@ -1146,21 +1070,14 @@
      * COMPARE
      ***********************/
     let cmpLast = null;
-    
-    function applyCompareFilters(data){
-      let out = data.slice();
 
+    function applyCompareFilters(data){
+      let out = (data || []).slice();
       const filterType = document.querySelector('input[name="filterType"]:checked').value;
 
-      if (filterType === "changed"){
-        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
-      }
-      if (filterType === "up"){
-        out = out.filter(r => r.direcao === "SUBIU");
-      }
-      if (filterType === "down"){
-        out = out.filter(r => r.direcao === "DESCEU");
-      }
+      if (filterType === "changed") out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
+      if (filterType === "up")      out = out.filter(r => r.direcao === "SUBIU");
+      if (filterType === "down")    out = out.filter(r => r.direcao === "DESCEU");
       return out;
     }
 
@@ -1191,7 +1108,6 @@
         rows
       );
 
-      // Mostra/oculta botão de imprimir
       const printBtn = document.getElementById("btnPrint");
       printBtn.style.display = filtered.length > 0 ? "inline-flex" : "none";
 
@@ -1224,17 +1140,17 @@
       }
     }
 
-    // botão comparar
     document.getElementById("btnCompare").onclick = runCompare;
 
-    // botão imprimir
     document.getElementById("btnPrint").onclick = () => {
-      if (!cmpLast) return;
+      if (!cmpLast || !cmpLast.data || cmpLast.data.length === 0){
+        alert("Nada para imprimir.");
+        return;
+      }
       const filtered = applyCompareFilters(cmpLast.data);
       ModalPrint.open(filtered, cmpLast.a, cmpLast.b);
     };
 
-    // filtros em "tempo real" (só se já tiver dados)
     document.querySelectorAll('input[name="filterType"]').forEach(radio=>{
       radio.onchange = ()=>{
         if (!cmpLast) return;
@@ -1253,12 +1169,8 @@
         return Array.isArray(v) ? v : null;
       }catch{ return null; }
     }
-    function saveOrder(order){
-      localStorage.setItem(LS_COLORDER, JSON.stringify(order));
-    }
-    function clearOrder(){
-      localStorage.removeItem(LS_COLORDER);
-    }
+    function saveOrder(order){ localStorage.setItem(LS_COLORDER, JSON.stringify(order)); }
+    function clearOrder(){ localStorage.removeItem(LS_COLORDER); }
 
     function reorderMatrixTable(table){
       const saved = getSavedOrder();
@@ -1267,11 +1179,8 @@
       const ths = Array.from(table.querySelectorAll("thead th"));
       if (ths.length < 2) return;
 
-      // header[0] é REF fixo
       const headerNames = ths.slice(1).map(th=>th.dataset.colname);
-      // cria ordem final: REF + (saved intersect) + (resto)
       const final = saved.filter(c=>headerNames.includes(c)).concat(headerNames.filter(c=>!saved.includes(c)));
-
       applyColumnOrder(table, final);
     }
 
@@ -1279,25 +1188,21 @@
       const headRow = table.tHead.rows[0];
       const bodyRows = Array.from(table.tBodies[0].rows);
 
-      // mapeia colName -> index atual
       const ths = Array.from(headRow.cells);
       const idxByName = new Map();
       for (let i=1;i<ths.length;i++){
         idxByName.set(ths[i].dataset.colname, i);
       }
 
-      // monta nova ordem de índices (0 = REF)
       const newIdx = [0];
       colOrder.forEach(name=>{
         const i = idxByName.get(name);
         if (i != null) newIdx.push(i);
       });
 
-      // aplica no THEAD
       const newThs = newIdx.map(i=>ths[i]);
       newThs.forEach(th=>headRow.appendChild(th));
 
-      // aplica em cada TR do TBODY
       bodyRows.forEach(tr=>{
         const tds = Array.from(tr.cells);
         const newTds = newIdx.map(i=>tds[i]);
@@ -1309,7 +1214,6 @@
       const headRow = table.tHead.rows[0];
       const ths = Array.from(headRow.cells);
 
-      // REF não arrasta (0)
       for (let i=1;i<ths.length;i++){
         const th = ths[i];
         th.classList.add("thDrag");
@@ -1351,9 +1255,7 @@
         const to = th.cellIndex;
         if (from === to) return;
 
-        // pega ordem atual (exceto REF)
         const cur = Array.from(headRow.cells).slice(1).map(x=>x.dataset.colname);
-        // move item
         const moved = cur.splice(from-1, 1)[0];
         cur.splice(to-1, 0, moved);
 
@@ -1386,14 +1288,8 @@
           return;
         }
 
-        // render
-        const header = res.header.map((h, idx)=>{
-          if (idx===0) return "REF";
-          // usamos dataset colname para reorder
-          return esc(h);
-        });
+        const header = res.header.map((h, idx)=> idx===0 ? "REF" : esc(h));
 
-        // prepara rows (format)
         const rows = res.rows.map(r=>{
           return r.map((v, idx)=>{
             if (idx===0) return `<span class="mono">${esc(v)}</span>`;
@@ -1403,7 +1299,6 @@
 
         const table = renderTable("matTableWrap", header, rows);
 
-        // seta dataset colname nos ths (exceto 0)
         const ths = Array.from(table.tHead.rows[0].cells);
         for (let i=1;i<ths.length;i++){
           ths[i].dataset.colname = res.header[i];
@@ -1412,7 +1307,6 @@
         reorderMatrixTable(table);
         enableHeaderDrag(table);
 
-        // busca em tempo real
         const input = document.getElementById("matSearch");
         input.oninput = ()=>{
           const term = input.value.trim().toLowerCase();
@@ -1444,7 +1338,6 @@
         Overlay.off();
       }
 
-      // hint: se API_URL não foi trocado
       if (API_URL.includes("COLE_AQUI")){
         alert("ATENÇÃO: você precisa colar a URL do Apps Script em API_URL (no topo do HTML).");
       }
