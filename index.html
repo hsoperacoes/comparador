@@ -3,170 +3,215 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Precificação - HS</title>
-
+  <title>Precificação — HS</title>
   <style>
     :root{
-      --bg:#000;
-      --panel:#1c1c1c;
-      --panel2:#151515;
-      --muted:#bdbdbd;
-      --pri:#673ab7;
-      --pri2:#5a31a6;
-      --ok:#28a745;
-      --warn:#f1c40f;
-      --err:#e53935;
-      --line:#2c2c2c;
-      --chip:#222;
-      --shadow: 0 10px 40px rgba(0,0,0,.65);
+      --bg:#0b0b0c;
+      --panel:#151517;
+      --panel2:#111114;
+      --line:#2a2a2f;
+      --muted:#b9b9c2;
+      --txt:#ffffff;
+      --pri:#6f3ccf;
+      --pri2:#532aa0;
+      --ok:#2ecc71;
+      --warn:#f39c12;
+      --err:#e74c3c;
+      --chip:#22222a;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius:14px;
     }
-
     *{box-sizing:border-box}
-    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:#fff}
-    .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    h1{margin:0 0 18px;font-size:22px}
+    body{
+      margin:0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(111,60,207,.25), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(46,204,113,.12), transparent 55%),
+                  var(--bg);
+      color:var(--txt);
+      min-height:100vh;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:26px 18px 60px}
+    h1{margin:0 0 18px;font-size:22px;font-weight:800;letter-spacing:.2px}
     .grid{display:grid;gap:16px}
-    .panel{background:var(--panel);padding:16px;border-radius:12px; box-shadow: 0 6px 20px rgba(0,0,0,.25)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    label{font-size:13px;color:#ddd}
-    input,select,button,textarea{
-      padding:10px 12px;border-radius:10px;border:1px solid #333;background:#121212;color:#fff
-    }
-    input::placeholder, textarea::placeholder{color:#777}
-    button{background:var(--pri);border:0;cursor:pointer;font-weight:800}
-    button:hover{background:var(--pri2)}
-    button.secondary{background:#2f2f2f}
-    button.secondary:hover{background:#3a3a3a}
-    button.danger{background:#8e1f1f}
-    button.danger:hover{background:#a52626}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .muted{color:var(--muted);font-size:12px}
-    .pill{background:var(--chip);padding:8px 10px;border-radius:10px}
-    .section-title{margin:0 0 10px;font-weight:900}
-    .right{margin-left:auto}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;background:#101010;border:1px solid #2b2b2b;padding:2px 6px;border-radius:8px;font-size:12px}
-
-    /* TABELA */
-    table{border-collapse:collapse;min-width:100%}
-    th,td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
-    th{background:var(--panel2);text-align:left}
-    .scroll{max-height:520px; overflow:auto; border:1px solid #333; border-radius:12px; margin-top:12px}
-    .scroll table th{position:sticky; top:0; z-index:3;}
-    .scroll table td:first-child,
-    .scroll table th:first-child{
-      position:sticky; left:0; z-index:4;
-      background:var(--panel);
-      border-right:1px solid #2b2b2b;
-    }
-
-    /* BADGES */
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900}
-    .b-ok{background:rgba(40,167,69,.18);color:#6fe18b}
-    .b-warn{background:rgba(241,196,15,.18);color:#ffd86b}
-    .b-err{background:rgba(229,57,53,.18);color:#ff9a9a}
-    .b-gray{background:rgba(160,160,160,.16);color:#ddd}
-
-    /* chips */
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .chip{background:#141414;border:1px solid #2b2b2b;padding:8px 10px;border-radius:999px;font-size:13px}
-    .chip strong{font-weight:900}
-    .divider{height:1px;background:#2b2b2b;margin:12px 0}
-
-    /* overlay loading (forte + trava tudo) */
-    .overlay{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.82);
-      display:none; align-items:center; justify-content:center;
-      z-index:9999;
-      backdrop-filter: blur(3px);
-    }
-    .overlay .box{
-      background:#0e0e0e;border:1px solid #2b2b2b;border-radius:16px;
-      padding:18px 18px; min-width:320px; text-align:center;
-      box-shadow: var(--shadow);
-    }
-    .spin{
-      width:34px;height:34px;border-radius:50%;
-      border:4px solid #2b2b2b;border-top-color:#fff;margin:0 auto 12px;
-      animation:rot 1s linear infinite;
-    }
-    @keyframes rot {to{transform:rotate(360deg)}}
-
-    /* bloqueio geral quando busy */
-    body.busy * { pointer-events:none; user-select:none; }
-    body.busy .overlay, body.busy .overlay * { pointer-events:auto; }
-
-    /* toggle */
-    .toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#ddd}
-    .toggle input{transform:scale(1.1)}
-
-    /* Drawer / painel escondido (Alterar lista de preço) */
-    .drawer{
-      display:none;
-      margin-top:12px;
-      border:1px solid #333;
-      border-radius:14px;
-      background:#121212;
-      padding:12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    .drawer.open{display:block}
-
-    /* Modal confirmação */
-    .modal-backdrop{
-      position:fixed; inset:0; display:none;
-      background:rgba(0,0,0,.75);
-      z-index:9998;
-      align-items:center; justify-content:center;
-      backdrop-filter: blur(2px);
-    }
-    .modal{
-      width:min(520px, 92vw);
-      background:#101010;
-      border:1px solid #2b2b2b;
-      border-radius:16px;
-      box-shadow: var(--shadow);
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 80%), var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
       padding:16px;
     }
-    .modal h3{margin:0 0 8px;font-size:16px}
-    .modal p{margin:0 0 12px;color:#ddd;font-size:13px;line-height:1.4}
-    .modal .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-    .modal .inline{
-      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-      margin-top:10px;
-      padding-top:10px;
-      border-top:1px solid #2b2b2b;
+    .panel .title{
+      display:flex;align-items:center;gap:10px;
+      font-weight:800;
+      margin:0 0 10px;
     }
-    .hint{color:#bdbdbd;font-size:12px}
+    .title small{font-weight:600;color:var(--muted);opacity:.9}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea,button{
+      border-radius:12px;border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      color:var(--txt);
+      padding:10px 12px;
+      outline:none;
+    }
+    input::placeholder, textarea::placeholder{color:#8e8ea0}
+    textarea{width:100%;min-height:140px;resize:vertical;line-height:1.35}
+    button{
+      background: linear-gradient(180deg, var(--pri), var(--pri2));
+      border:none;
+      font-weight:800;
+      cursor:pointer;
+      padding:10px 14px;
+      transition:.15s transform, .15s opacity;
+    }
+    button:active{transform:scale(.98)}
+    button.secondary{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:700;
+    }
+    button.danger{
+      background: rgba(231,76,60,.18);
+      border:1px solid rgba(231,76,60,.35);
+      color:#ffd6d1;
+    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .hint{color:var(--muted);font-size:12px}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .chip{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      padding:8px 10px;border-radius:12px;
+      font-size:13px;color:#f0f0f6;
+    }
+    .chip strong{font-weight:900}
+    .split{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px}
+    @media(max-width:980px){.split{grid-template-columns:1fr}}
+
+    /* table */
+    .scroll{max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px; background: rgba(0,0,0,.18)}
+    table{border-collapse:collapse; min-width:100%}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;white-space:nowrap}
+    th{
+      position:sticky; top:0; z-index:2;
+      background: rgba(15,15,18,.95);
+      text-align:left;
+      font-size:12px;
+      letter-spacing:.3px;
+      color:#e9e9f4;
+      user-select:none;
+    }
+    td:first-child, th:first-child{
+      position:sticky; left:0; z-index:3;
+      background: rgba(18,18,22,.98);
+    }
+    tr:hover td{background: rgba(255,255,255,.03)}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .b-ok{background: rgba(46,204,113,.14); color:#bff5d3; border-color: rgba(46,204,113,.25)}
+    .b-warn{background: rgba(243,156,18,.16); color:#ffe2b2; border-color: rgba(243,156,18,.28)}
+    .b-err{background: rgba(231,76,60,.14); color:#ffd0cb; border-color: rgba(231,76,60,.28)}
+    .right{margin-left:auto}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .kpi .box{
+      flex:1;min-width:220px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:10px;
+    }
+    .kpi .box .t{font-size:12px;color:var(--muted)}
+    .kpi .box .v{font-size:16px;font-weight:900;margin-top:6px}
+
+    /* loading overlay */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:9999;
+      backdrop-filter: blur(6px);
+    }
+    .overlay.on{display:flex}
+    .loaderBox{
+      width:min(520px, 92vw);
+      background: rgba(20,20,24,.92);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .spinner{
+      width:42px;height:42px;border-radius:50%;
+      border:4px solid rgba(255,255,255,.12);
+      border-top-color: rgba(255,255,255,.85);
+      animation:spin 1s linear infinite;
+      margin-right:12px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loaderRow{display:flex;align-items:center;gap:10px}
+    .loaderTitle{font-weight:900}
+    .loaderMsg{color:var(--muted);font-size:13px;margin-top:8px}
+
+    /* modal confirm */
+    .modalWrap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9998}
+    .modalWrap.on{display:flex}
+    .modalBackdrop{position:absolute;inset:0;background: rgba(0,0,0,.68);backdrop-filter: blur(6px)}
+    .modal{
+      position:relative;
+      width:min(560px, 92vw);
+      background: rgba(18,18,22,.96);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+    .modal h3{margin:0 0 8px;font-size:16px}
+    .modal p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.35}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .hide{display:none !important}
+
+    /* draggable headers hint */
+    .dragHint{
+      display:inline-flex;align-items:center;gap:8px;
+      color:var(--muted);font-size:12px;margin-top:8px
+    }
+    .thDrag{
+      cursor:grab;
+    }
+    .thDrag:active{cursor:grabbing}
+    .thGhost{opacity:.35}
+    .thDrop{outline:2px dashed rgba(111,60,207,.65); outline-offset:-4px}
   </style>
 </head>
-
 <body>
-  <!-- LOADING -->
-  <div class="overlay" id="overlay" aria-hidden="true">
-    <div class="box">
-      <div class="spin"></div>
-      <div id="overlayText" style="font-weight:900;font-size:15px">Processando…</div>
-      <div class="muted" style="margin-top:6px">Aguarde finalizar para continuar.</div>
+  <div class="overlay" id="overlay">
+    <div class="loaderBox">
+      <div class="loaderRow">
+        <div class="spinner"></div>
+        <div>
+          <div class="loaderTitle" id="overlayTitle">Processando...</div>
+          <div class="loaderMsg" id="overlayMsg">Aguarde.</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- MODAL CONFIRMAÇÃO (salvar e opcionalmente exportar) -->
-  <div class="modal-backdrop" id="confirmBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <h3 id="confirmTitle">Confirmar</h3>
-      <p id="confirmText"></p>
-
-      <div class="inline" id="confirmExportInline" style="display:none">
-        <label style="min-width:60px">Senha</label>
-        <input id="confirmPassword" type="password" placeholder="Digite a senha" style="min-width:220px">
-        <span class="hint">Se confirmar, vai exportar como <strong>COLEÇÃO ATUAL</strong>.</span>
-      </div>
-
+  <div class="modalWrap" id="modalWrap">
+    <div class="modalBackdrop" onclick="Modal.close(false)"></div>
+    <div class="modal">
+      <h3 id="modalTitle">Confirmar</h3>
+      <p id="modalText">...</p>
       <div class="actions">
-        <button class="secondary" id="btnConfirmNo">Não</button>
-        <button class="secondary" id="btnConfirmYes">Sim</button>
-        <button id="btnConfirmGo" style="display:none">Confirmar</button>
+        <button class="secondary" id="modalNo">Não</button>
+        <button id="modalYes">Sim</button>
       </div>
     </div>
   </div>
@@ -175,555 +220,820 @@
     <h1>Precificação — HS</h1>
 
     <!-- INCLUIR NOVA COLEÇÃO -->
-    <div class="panel">
-      <div class="section-title">Incluir nova coleção (lista de preço)</div>
+    <div class="panel" id="panelAdd">
+      <div class="title">Incluir nova coleção <small>(lista de preço)</small></div>
 
       <div class="row">
-        <label>Nome da coleção</label>
-        <input id="newCollName" placeholder="Ex.: OUTONO 25 REM 2" style="min-width:260px"/>
-
-        <button id="btnAddColl">Salvar coleção no banco</button>
-
-        <!-- BOTÃO QUE ESCONDE/MOSTRA A ÁREA “COLEÇÃO ATUAL” -->
-        <button id="btnToggleDrawer" class="secondary">Alterar lista de preço</button>
-
-        <span id="addStatus" class="muted right"></span>
-      </div>
-
-      <div class="muted" style="margin-top:10px">
-        Cole os itens (1 por linha). Aceita: <span class="kbd">REF;PREÇO</span> ou <span class="kbd">REF,PREÇO</span>.
-        Ex: <span class="kbd">0227;89,99</span>
-      </div>
-
-      <textarea id="newCollItems" style="width:100%;margin-top:10px;min-height:160px;border-radius:12px;background:#101010;color:#fff;padding:12px" placeholder="Cole aqui…"></textarea>
-
-      <!-- DRAWER (ESCONDIDO) -->
-      <div class="drawer" id="priceDrawer">
-        <div class="section-title" style="margin:0 0 10px">Gravar Coleção Atual (aba Leonardo)</div>
-
-        <div class="row">
-          <label>Gerar lista “até”</label>
-          <select id="exportBase" style="min-width:260px">
-            <!-- preenchido via loadCollections -->
-          </select>
-
-          <label>Senha</label>
-          <input id="exportPass" type="password" placeholder="Senha" style="min-width:200px"/>
-
-          <button id="btnExport">Gravar COLEÇÃO ATUAL</button>
-
-          <span id="exportStatus" class="muted right"></span>
+        <div style="min-width:280px;flex:1">
+          <label>Nome da coleção</label>
+          <input id="collName" placeholder="Ex.: OUTONO 2025 / OUTONO 2025 REM / OUTONO 2025 REM 2" style="width:100%"/>
         </div>
 
-        <div class="muted" style="margin-top:8px">
-          Isso sobrescreve a aba <strong>Leonardo</strong> nas colunas A:C (REF | VALOR | <strong>COLEÇÃO ATUAL</strong>).
+        <div class="right row">
+          <button id="btnSaveColl">Salvar coleção no banco</button>
+          <button id="btnToggleExport" class="secondary" title="Mostrar/ocultar opções de atualização da lista atual">Alterar lista de preço</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Cole os itens (1 por linha)</label>
+        <div class="hint">
+          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF,PREÇO</span> ou <span class="mono">REF PREÇO</span>.
+          Ex.: <span class="mono">0227;89,99</span>
+        </div>
+        <textarea id="collItems" placeholder="Cole aqui..."></textarea>
+      </div>
+
+      <!-- EXPORT / ATUALIZAR LISTA ATUAL (ESCONDIDO) -->
+      <div class="panel" id="panelExport" style="margin-top:14px; padding:14px; background:rgba(0,0,0,.18)">
+        <div class="title" style="margin-bottom:6px">Gravar Coleção Atual <small>(aba Leonardo)</small></div>
+
+        <div class="row">
+          <div>
+            <label>Gerar lista “até”</label>
+            <select id="exportMode" style="min-width:190px">
+              <option value="latest">ÚLTIMA (padrão)</option>
+              <option value="upto">Até uma coleção...</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Coleção (somente se “até”)</label>
+            <select id="exportColl" disabled style="min-width:260px"></select>
+          </div>
+
+          <div>
+            <label>Senha</label>
+            <input id="exportPass" type="password" placeholder="Senha" style="min-width:200px"/>
+          </div>
+
+          <button id="btnExport">Gravar COLEÇÃO ATUAL</button>
+        </div>
+
+        <div class="hint" style="margin-top:8px">
+          Isso sobrescreve a aba <b>Leonardo</b> nas colunas A:C (REF | VALOR | COLEÇÃO ATUAL).
         </div>
       </div>
     </div>
 
-    <!-- BUSCAR REFERÊNCIA -->
-    <div class="panel">
-      <div class="section-title">Buscar referência</div>
+    <!-- BUSCAR + INCLUIR REF NA COLEÇÃO ATUAL -->
+    <div class="panel" id="panelSearch">
+      <div class="title">Buscar referência <small>(histórico por coleção)</small></div>
 
       <div class="row">
-        <label>Referência</label>
-        <input id="refInput" placeholder="Ex.: 0227" style="min-width:200px" />
-        <button id="btnBuscarRef">Buscar</button>
+        <div style="min-width:220px">
+          <label>Referência</label>
+          <input id="refInput" placeholder="Ex.: 0227" style="min-width:220px"/>
+        </div>
 
-        <span id="refStatus" class="muted right"></span>
+        <button id="btnBuscar">Buscar</button>
+
+        <div class="right row">
+          <div style="min-width:180px">
+            <label>Preço para incluir/atualizar</label>
+            <input id="refPrice" placeholder="Ex.: 89,99" style="min-width:180px"/>
+          </div>
+          <button id="btnAddRefCurrent" class="secondary" title="Inclui ou substitui a referência na última coleção cadastrada">
+            Incluir ref na coleção atual
+          </button>
+        </div>
+
+        <span class="hint" id="refStatus"></span>
       </div>
 
-      <div class="chips" id="refResumo" style="display:none">
-        <div class="chip">Maior preço (histórico): <strong id="refMax">-</strong></div>
-        <div class="chip">Coleção(ões) do maior preço: <strong id="refMaxCols">-</strong></div>
-        <div class="chip">Preço atual (última coleção): <strong id="refAtualPreco">-</strong></div>
-        <div class="chip">Coleção atual: <strong id="refAtualCol">-</strong></div>
+      <div class="kpi" id="refKpis" style="display:none">
+        <div class="box">
+          <div class="t">Preço atual (última coleção)</div>
+          <div class="v" id="kpiAtual">—</div>
+        </div>
+        <div class="box">
+          <div class="t">Coleção atual</div>
+          <div class="v" id="kpiAtualColl">—</div>
+        </div>
+        <div class="box">
+          <div class="t">Maior preço (histórico)</div>
+          <div class="v" id="kpiMax">—</div>
+        </div>
       </div>
 
-      <div id="refTabelaWrap"></div>
+      <div id="refTableWrap"></div>
     </div>
 
     <!-- COMPARAR COLEÇÕES -->
-    <div class="panel">
-      <div class="section-title">Comparar coleções</div>
+    <div class="panel" id="panelCompare">
+      <div class="title">Comparar coleções <small>(subiu / desceu)</small></div>
 
       <div class="row">
-        <label>Coleção A</label>
-        <select id="collA" style="min-width:260px"></select>
+        <div>
+          <label>Coleção A</label>
+          <select id="collA" style="min-width:260px"></select>
+        </div>
 
-        <label>Coleção B</label>
-        <select id="collB" style="min-width:260px"></select>
+        <div>
+          <label>Coleção B</label>
+          <select id="collB" style="min-width:260px"></select>
+        </div>
 
-        <button id="btnComparar">Comparar</button>
+        <button id="btnCompare">Comparar</button>
 
-        <label class="toggle"><input type="checkbox" id="cmpOnlyChanged"> Somente alterou</label>
-        <label class="toggle"><input type="checkbox" id="cmpOnlyUp"> Somente subiu</label>
-        <label class="toggle"><input type="checkbox" id="cmpOnlyDown"> Somente desceu</label>
+        <div class="row">
+          <label class="row" style="gap:6px;align-items:center">
+            <input type="checkbox" id="fChanged"/>
+            <span>Somente alterou</span>
+          </label>
+          <label class="row" style="gap:6px;align-items:center">
+            <input type="checkbox" id="fUp"/>
+            <span>Somente subiu</span>
+          </label>
+          <label class="row" style="gap:6px;align-items:center">
+            <input type="checkbox" id="fDown"/>
+            <span>Somente desceu</span>
+          </label>
+        </div>
 
-        <span id="cmpStatus" class="muted right"></span>
+        <span class="hint right" id="cmpStatus"></span>
       </div>
 
-      <div id="cmpTabelaWrap"></div>
+      <div id="cmpTableWrap"></div>
     </div>
 
-    <!-- MAX POR REFERÊNCIA -->
-    <div class="panel">
-      <div class="section-title">Maior preço por referência</div>
+    <!-- MATRIZ -->
+    <div class="panel" id="panelMatrix">
+      <div class="title">Tabela preços x coleções <small>(reordenar colunas)</small></div>
 
       <div class="row">
-        <label>Filtrar coleção</label>
-        <select id="maxColl" style="min-width:260px"></select>
-        <button id="btnMax">Gerar/Atualizar</button>
-        <span id="maxStatus" class="muted right"></span>
+        <div>
+          <label>Limitar referências (opcional)</label>
+          <input id="matLimit" type="number" min="1" placeholder="Ex.: 400" style="width:150px"/>
+        </div>
+
+        <div>
+          <label>Buscar ref na matriz</label>
+          <input id="matSearch" placeholder="Ex.: 0227" style="min-width:220px"/>
+        </div>
+
+        <button id="btnMatrix">Gerar tabela</button>
+        <button id="btnResetCols" class="secondary" title="Remove ordem salva e volta pro padrão">Reset colunas</button>
+
+        <span class="hint right" id="matStatus"></span>
       </div>
 
-      <div id="maxTabelaWrap"></div>
+      <div class="dragHint">
+        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> (cabeçalho) para reorganizar. A ordem fica salva no navegador (storage).
+      </div>
+
+      <div id="matTableWrap"></div>
     </div>
-
-    <!-- MATRIZ PREÇOS x COLEÇÕES -->
-    <div class="panel">
-      <div class="section-title">Tabela preços x coleções</div>
-
-      <div class="row">
-        <label>Limitar primeiras N referências</label>
-        <input id="matLimit" type="number" min="1" style="width:160px" placeholder="ex.: 200"/>
-
-        <label>Buscar referência</label>
-        <input id="matSearch" placeholder="Ex.: 0227" style="width:220px"/>
-
-        <button id="btnMatriz">Gerar tabela</button>
-
-        <span id="matStatus" class="muted right"></span>
-      </div>
-
-      <div class="muted" style="margin-top:8px">
-        A busca filtra em tempo real pela coluna REF.
-      </div>
-
-      <div id="matTabelaWrap"></div>
-    </div>
-
   </div>
 
-<script>
-  // ======================
-  // CONFIG
-  // ======================
-  const API_URL = "https://script.google.com/macros/s/SEU_DEPLOY_AQUI/exec";
+  <script>
+    /***********************
+     * CONFIG
+     ***********************/
+    const API_URL = "COLE_AQUI_SUA_URL_DO_APPS_SCRIPT/exec"; // <<< IMPORTANTÍSSIMO
+    const fmtBR = (n) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n ?? 0);
 
-  // formatação correta (R$ 89,99)
-  const fmtBR = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n || 0));
+    /***********************
+     * LOADING
+     ***********************/
+    const Overlay = {
+      on(title="Processando...", msg="Aguarde."){
+        document.getElementById("overlayTitle").textContent = title;
+        document.getElementById("overlayMsg").textContent = msg;
+        document.getElementById("overlay").classList.add("on");
+      },
+      off(){ document.getElementById("overlay").classList.remove("on"); }
+    };
 
-  // ======================
-  // BUSY / LOADING FORTE
-  // ======================
-  function setBusy(on, msg="Processando…"){
-    const overlay = document.getElementById("overlay");
-    document.getElementById("overlayText").textContent = msg;
-    if(on){
-      document.body.classList.add("busy");
-      overlay.style.display = "flex";
-      overlay.setAttribute("aria-hidden","false");
-    } else {
-      document.body.classList.remove("busy");
-      overlay.style.display = "none";
-      overlay.setAttribute("aria-hidden","true");
+    /***********************
+     * MODAL CONFIRM
+     ***********************/
+    const Modal = {
+      _resolver:null,
+      ask({title="Confirmar", text="Tem certeza?"}){
+        document.getElementById("modalTitle").textContent = title;
+        document.getElementById("modalText").textContent = text;
+        document.getElementById("modalWrap").classList.add("on");
+
+        return new Promise((resolve)=>{
+          this._resolver = resolve;
+          document.getElementById("modalYes").onclick = ()=> this.close(true);
+          document.getElementById("modalNo").onclick  = ()=> this.close(false);
+        });
+      },
+      close(ans){
+        document.getElementById("modalWrap").classList.remove("on");
+        if (this._resolver){ this._resolver(!!ans); this._resolver=null; }
+      }
+    };
+
+    /***********************
+     * API helpers
+     ***********************/
+    async function apiGet(action, params={}){
+      const url = new URL(API_URL);
+      url.search = new URLSearchParams({ action, ...params }).toString();
+      const r = await fetch(url, { method:"GET" });
+      return r.json();
     }
-  }
 
-  // ======================
-  // API
-  // ======================
-  async function apiGet(action, params={}){
-    const url = new URL(API_URL);
-    url.search = new URLSearchParams({action, ...params}).toString();
-    const res = await fetch(url);
-    return res.json();
-  }
-  async function apiPost(payload){
-    const res = await fetch(API_URL, {method:"POST", body: JSON.stringify(payload)});
-    return res.json();
-  }
+    async function apiPost(payload){
+      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
+      return r.json();
+    }
 
-  // ======================
-  // TABLE RENDER
-  // ======================
-  function renderTable(containerId, head, rows){
-    const wrap = document.getElementById(containerId);
-    wrap.innerHTML = '';
-    const table = document.createElement('table');
-    table.innerHTML = `
-      <thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-      <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-    `;
-    const scroll = document.createElement('div');
-    scroll.className = 'scroll';
-    scroll.appendChild(table);
-    wrap.appendChild(scroll);
-  }
+    /***********************
+     * UI helpers
+     ***********************/
+    function renderTable(targetId, header, rows){
+      const wrap = document.getElementById(targetId);
+      wrap.innerHTML = "";
+      const scroll = document.createElement("div");
+      scroll.className = "scroll";
+      const table = document.createElement("table");
+      table.innerHTML =
+        `<thead><tr>${header.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+         <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      scroll.appendChild(table);
+      wrap.appendChild(scroll);
+      return table;
+    }
 
-  function badgeDirecao(dir){
-    if (dir === "SUBIU") return `<span class="badge b-ok">SUBIU</span>`;
-    if (dir === "DESCEU") return `<span class="badge b-err">DESCEU</span>`;
-    if (dir === "IGUAL") return `<span class="badge b-warn">IGUAL</span>`;
-    return `<span class="badge b-gray">${dir || "SEM DADO"}</span>`;
-  }
+    function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
-  // ======================
-  // DRAWER toggle
-  // ======================
-  const drawer = document.getElementById("priceDrawer");
-  document.getElementById("btnToggleDrawer").onclick = ()=>{
-    drawer.classList.toggle("open");
-  };
+    function parsePriceBR(str){
+      if (str == null) return null;
+      const s = String(str).trim().replace(/[R$\s]/g,"");
+      if (!s) return null;
+      // 1.234,56 => 1234.56 ; 89,99 => 89.99 ; 89.99 => 89.99
+      let x = s;
+      if (x.includes(",")){
+        x = x.replace(/\./g,"").replace(",",".");
+      }
+      const n = Number(x);
+      return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
+    }
 
-  // ======================
-  // LOAD COLLECTIONS
-  // ======================
-  async function loadCollections(){
-    setBusy(true, "Carregando coleções…");
-    try{
+    function parseItemsFromTextarea(text){
+      const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+      const out = [];
+      for (const line of lines){
+        // tenta separadores ; , espaço
+        let parts = line.split(";").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(",").map(x=>x.trim()).filter(Boolean);
+        if (parts.length < 2) parts = line.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+
+        const ref = (parts[0]||"").toUpperCase();
+        const price = parsePriceBR(parts[1]);
+        if (!ref || price == null) continue;
+        out.push({ ref, preco: price });
+      }
+      return out;
+    }
+
+    function setStatus(id, msg){ document.getElementById(id).textContent = msg || ""; }
+
+    /***********************
+     * Collections load
+     ***********************/
+    let collections = [];
+    async function loadCollections(){
       const colls = await apiGet("listCollections");
+      collections = Array.isArray(colls) ? colls : [];
 
-      const fill = (sel, addAll=false) => {
-        sel.innerHTML = (addAll ? `<option value="">ÚLTIMA (padrão)</option>` : `<option value="">Selecione</option>`);
-        colls.forEach(c=>{
-          const o = document.createElement('option');
-          o.value = o.textContent = c;
+      const fill = (sel, {withEmpty=true}={}) => {
+        sel.innerHTML = "";
+        if (withEmpty){
+          const o = document.createElement("option");
+          o.value = ""; o.textContent = "Selecione";
+          sel.appendChild(o);
+        }
+        collections.forEach(c=>{
+          const o = document.createElement("option");
+          o.value = c; o.textContent = c;
           sel.appendChild(o);
         });
       };
 
-      fill(document.getElementById('collA'));
-      fill(document.getElementById('collB'));
-      fill(document.getElementById('maxColl'), true);
-      fill(document.getElementById('exportBase'), true);
-
-    } finally {
-      setBusy(false);
-    }
-  }
-  loadCollections();
-
-  // ======================
-  // MODAL CONFIRMAÇÃO (Salvar -> usar como atual? -> senha)
-  // ======================
-  const confirmBackdrop = document.getElementById("confirmBackdrop");
-  const confirmText = document.getElementById("confirmText");
-  const confirmExportInline = document.getElementById("confirmExportInline");
-  const confirmPassword = document.getElementById("confirmPassword");
-  const btnConfirmNo = document.getElementById("btnConfirmNo");
-  const btnConfirmYes = document.getElementById("btnConfirmYes");
-  const btnConfirmGo = document.getElementById("btnConfirmGo");
-
-  let _confirmResolve = null;
-  let _confirmState = { step: 1, wantExport: false };
-
-  function openConfirmSaveModal({name, count}){
-    confirmPassword.value = "";
-    confirmExportInline.style.display = "none";
-    btnConfirmGo.style.display = "none";
-    btnConfirmNo.style.display = "inline-block";
-    btnConfirmYes.style.display = "inline-block";
-
-    _confirmState = { step: 1, wantExport: false };
-
-    document.getElementById("confirmTitle").textContent = "Confirmar envio da coleção";
-    confirmText.innerHTML = `
-      Você vai salvar a coleção <strong>${escapeHtml(name)}</strong> com <strong>${count}</strong> itens.<br><br>
-      Quer usar essa coleção como <strong>LISTA DE PREÇO ATUAL</strong> agora?
-    `;
-
-    confirmBackdrop.style.display = "flex";
-    confirmBackdrop.setAttribute("aria-hidden","false");
-
-    return new Promise(resolve => { _confirmResolve = resolve; });
-  }
-
-  function closeConfirmModal(){
-    confirmBackdrop.style.display = "none";
-    confirmBackdrop.setAttribute("aria-hidden","true");
-    const r = _confirmResolve;
-    _confirmResolve = null;
-    return r;
-  }
-
-  btnConfirmNo.onclick = ()=>{
-    const r = closeConfirmModal();
-    if(r) r({useAsCurrent:false, password:""});
-  };
-
-  btnConfirmYes.onclick = ()=>{
-    // revela senha + botão confirmar
-    confirmExportInline.style.display = "flex";
-    btnConfirmGo.style.display = "inline-block";
-    btnConfirmNo.style.display = "inline-block";
-    btnConfirmYes.style.display = "none";
-    confirmPassword.focus();
-  };
-
-  btnConfirmGo.onclick = ()=>{
-    const pass = String(confirmPassword.value || "");
-    const r = closeConfirmModal();
-    if(r) r({useAsCurrent:true, password: pass});
-  };
-
-  // fechar modal clicando fora (opcional)
-  confirmBackdrop.addEventListener("click", (e)=>{
-    if(e.target === confirmBackdrop){
-      const r = closeConfirmModal();
-      if(r) r({useAsCurrent:false, password:""});
-    }
-  });
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  // ======================
-  // ADICIONAR COLEÇÃO
-  // ======================
-  function parseItemsText(txt){
-    const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    const items = [];
-
-    for(const line of lines){
-      // aceita ; ou ,
-      let parts = line.includes(";") ? line.split(";") : line.split(",");
-      parts = parts.map(x=>x.trim());
-      if(parts.length < 2) continue;
-
-      const ref = parts[0].toUpperCase();
-      const price = parts[1];
-      if(!ref) continue;
-      items.push({ref, price});
-    }
-    return items;
-  }
-
-  document.getElementById('btnAddColl').onclick = async ()=>{
-    const name = document.getElementById('newCollName').value.trim();
-    const txt  = document.getElementById('newCollItems').value.trim();
-    const st   = document.getElementById('addStatus');
-
-    if(!name){ alert("Informe o nome da coleção."); return; }
-    if(!txt){ alert("Cole os itens no campo abaixo."); return; }
-
-    const items = parseItemsText(txt);
-    if(!items.length){ alert("Nenhuma linha válida. Use REF;PREÇO (1 por linha)."); return; }
-
-    // Confirmação + senha se quiser usar como atual
-    const decision = await openConfirmSaveModal({name, count: items.length});
-    if(decision.useAsCurrent && !decision.password){
-      alert("Você escolheu usar como lista atual, mas não digitou a senha.");
-      return;
+      fill(document.getElementById("collA"));
+      fill(document.getElementById("collB"));
+      fill(document.getElementById("exportColl"), {withEmpty:false});
     }
 
-    setBusy(true, "Salvando coleção…");
-    st.textContent = "Salvando…";
-    try{
-      const resp = await apiPost({action:"addCollection", name, items});
-      if(resp.status !== "ok"){
-        st.textContent = resp.erro || "Erro ao salvar.";
-        alert(resp.erro || "Erro ao salvar.");
-        return;
-      }
+    /***********************
+     * Toggle export panel
+     ***********************/
+    const panelExport = document.getElementById("panelExport");
+    function setExportVisible(v){
+      panelExport.classList.toggle("hide", !v);
+      localStorage.setItem("hs_export_visible", v ? "1":"0");
+    }
 
-      st.textContent = `OK — ${resp.inserted} itens gravados em "${resp.colecao}"`;
+    document.getElementById("btnToggleExport").onclick = ()=>{
+      const now = !panelExport.classList.contains("hide");
+      setExportVisible(!now);
+    };
 
-      // recarrega coleções
-      await loadCollections();
+    document.getElementById("exportMode").onchange = ()=>{
+      const mode = document.getElementById("exportMode").value;
+      const sel = document.getElementById("exportColl");
+      sel.disabled = (mode !== "upto");
+    };
 
-      // Se escolheu usar como atual -> exporta usando esta coleção como base/corte
-      if(decision.useAsCurrent){
-        setBusy(true, "Gravando como COLEÇÃO ATUAL…");
-        const exp = await apiPost({
-          action:"exportCurrentPrices",
-          password: decision.password,
-          baseCollection: resp.colecao // base = coleção recém salva
+    /***********************
+     * SAVE COLLECTION + CONFIRM use as current
+     ***********************/
+    document.getElementById("btnSaveColl").onclick = async ()=>{
+      const name = document.getElementById("collName").value.trim();
+      const itemsTxt = document.getElementById("collItems").value;
+      const items = parseItemsFromTextarea(itemsTxt);
+
+      if (!name){ alert("Informe o nome da coleção."); return; }
+      if (!items.length){ alert("Cole os itens (REF e PREÇO)."); return; }
+
+      const ok = await Modal.ask({
+        title:"Salvar coleção",
+        text:`Vou salvar a coleção "${name}" com ${items.length} itens no banco. Confirmar?`
+      });
+      if (!ok) return;
+
+      try{
+        Overlay.on("Salvando coleção...", "Gravando no banco de dados.");
+        const resp = await apiPost({ action:"addCollection", colecaoNome:name, items });
+        if (resp?.erro){ throw new Error(resp.erro); }
+
+        // Atualiza listas
+        await loadCollections();
+
+        // Confirma se quer usar como lista atual
+        Overlay.off();
+        const useAsCurrent = await Modal.ask({
+          title:"Usar como lista atual?",
+          text:`Deseja gravar a lista atual (aba Leonardo) usando esta coleção recém-salva?\n\nSe SIM, vai pedir a senha.`
         });
 
-        if(exp.status === "ok"){
-          alert(`Coleção salva e gravada como COLEÇÃO ATUAL! (${exp.exported} itens)`);
+        if (useAsCurrent){
+          // pede senha e grava usando cutoff = esta coleção
+          const pass = prompt("Digite a senha para GRAVAR COLEÇÃO ATUAL:");
+          if (!pass){ return; }
+
+          Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
+          const exp = await apiPost({
+            action:"exportCurrentPrices",
+            password: pass,
+            mode:"upto",
+            colecao: name
+          });
+          if (exp?.erro){ throw new Error(exp.erro); }
+          alert(`OK! Coleção salva e COLEÇÃO ATUAL gravada.\nItens exportados: ${exp.gravados || exp.exported || "?"}`);
         } else {
-          alert(`Coleção foi salva, mas NÃO exportou como COLEÇÃO ATUAL.\nMotivo: ${exp.erro || "erro"}`);
+          alert(`OK! Coleção "${resp.colecao || name}" salva (${resp.inseridos || "?"} itens).`);
         }
-      } else {
-        alert("Coleção salva com sucesso!");
+
+      } catch(err){
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
       }
+    };
 
-    } finally {
-      setBusy(false);
-    }
-  };
+    /***********************
+     * EXPORT BUTTON (manual)
+     ***********************/
+    document.getElementById("btnExport").onclick = async ()=>{
+      const mode = document.getElementById("exportMode").value;
+      const coll = document.getElementById("exportColl").value;
+      const pass = document.getElementById("exportPass").value;
 
-  // ======================
-  // EXPORTAR COLEÇÃO ATUAL (drawer)
-  // ======================
-  document.getElementById('btnExport').onclick = async ()=>{
-    const baseCollection = document.getElementById('exportBase').value; // vazio = última
-    const password = document.getElementById('exportPass').value;
-    const st = document.getElementById('exportStatus');
+      if (!pass){ alert("Digite a senha."); return; }
+      if (mode === "upto" && !coll){ alert("Escolha a coleção para o modo 'até'."); return; }
 
-    if(!password){ alert("Digite a senha."); return; }
+      const ok = await Modal.ask({
+        title:"Confirmar exportação",
+        text:`Isso vai SOBRESCREVER a aba Leonardo.\n\nModo: ${mode === "latest" ? "ÚLTIMA" : ("Até: " + coll)}\n\nConfirmar?`
+      });
+      if (!ok) return;
 
-    setBusy(true, "Gravando COLEÇÃO ATUAL…");
-    st.textContent = "Exportando…";
-    try{
-      const resp = await apiPost({action:"exportCurrentPrices", password, baseCollection});
-      if(resp.status === "ok"){
-        st.textContent = `OK — ${resp.exported} itens (base: ${resp.cutoff})`;
-        alert("Exportação concluída!");
-      } else {
-        st.textContent = resp.erro || "Senha inválida / erro.";
-        alert(resp.erro || "Erro.");
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // ======================
-  // BUSCAR REFERÊNCIA
-  // ======================
-  document.getElementById('btnBuscarRef').onclick = async ()=>{
-    const ref = document.getElementById('refInput').value.trim().toUpperCase();
-    const status = document.getElementById('refStatus');
-    if(!ref) return;
-
-    setBusy(true, "Buscando referência…");
-    status.textContent = "Buscando…";
-    try{
-      const res = await apiGet("searchReference", {ref});
-
-      if(!res.items || !res.items.length){
-        document.getElementById('refResumo').style.display='none';
-        document.getElementById('refTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Nenhum dado encontrado.</div>';
-        status.textContent='';
-        return;
-      }
-
-      document.getElementById('refMax').textContent = fmtBR(res.max);
-      document.getElementById('refMaxCols').textContent = (res.maxCollections||[]).join(', ') || '-';
-
-      document.getElementById('refAtualPreco').textContent = res.atual ? fmtBR(res.atual.preco) : '-';
-      document.getElementById('refAtualCol').textContent   = res.atual ? res.atual.colecao : '-';
-
-      document.getElementById('refResumo').style.display='flex';
-
-      const rows = res.items.map(i=>[i.coll, fmtBR(i.price)]);
-      renderTable('refTabelaWrap', ["Coleção","Preço"], rows);
-
-      status.textContent = '';
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // ======================
-  // COMPARAR COLEÇÕES (com filtros)
-  // ======================
-  async function runCompare(){
-    const a = document.getElementById('collA').value;
-    const b = document.getElementById('collB').value;
-    const onlyChanged = document.getElementById('cmpOnlyChanged').checked;
-    const onlyUp = document.getElementById('cmpOnlyUp').checked;
-    const onlyDown = document.getElementById('cmpOnlyDown').checked;
-
-    if(!a || !b) return;
-
-    document.getElementById('cmpStatus').textContent = 'Comparando…';
-    setBusy(true, "Comparando coleções…");
-    try{
-      let rows = await apiGet("compareCollections",{a,b});
-      rows = rows || [];
-
-      if(onlyChanged) rows = rows.filter(r => r.alterou);
-      if(onlyUp) rows = rows.filter(r => r.direcao === "SUBIU");
-      if(onlyDown) rows = rows.filter(r => r.direcao === "DESCEU");
-
-      const body = rows.map(r => ([
-        r.referencia,
-        r.precoA==null ? '-' : fmtBR(r.precoA),
-        r.precoB==null ? '-' : fmtBR(r.precoB),
-        r.delta==null ? '-' : fmtBR(r.delta),
-        badgeDirecao(r.direcao)
-      ]));
-
-      renderTable('cmpTabelaWrap', ["REF", `Preço (${a})`, `Preço (${b})`, "Δ", "Status"], body);
-      document.getElementById('cmpStatus').textContent = rows.length + " itens";
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  document.getElementById('btnComparar').onclick = runCompare;
-  document.getElementById('cmpOnlyChanged').onchange = runCompare;
-  document.getElementById('cmpOnlyUp').onchange = runCompare;
-  document.getElementById('cmpOnlyDown').onchange = runCompare;
-
-  // ======================
-  // MAX POR REFERÊNCIA
-  // ======================
-  document.getElementById('btnMax').onclick = async ()=>{
-    const coll = document.getElementById('maxColl').value;
-    const st = document.getElementById('maxStatus');
-
-    st.textContent = "Gerando…";
-    setBusy(true, "Calculando maiores preços…");
-    try{
-      const list = await apiGet("maxByReference",{colecao: coll});
-      if(!list || !list.length){
-        document.getElementById('maxTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
-        st.textContent = "";
-        return;
-      }
-      const rows = list.map(r=>[r.referencia, fmtBR(r.max)]);
-      renderTable('maxTabelaWrap', ["Referência","MAX de valor"], rows);
-      st.textContent = list.length + " refs";
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // ======================
-  // MATRIZ + filtro em tempo real
-  // ======================
-  document.getElementById('btnMatriz').onclick = async ()=>{
-    const limit = document.getElementById('matLimit').value;
-    const st = document.getElementById('matStatus');
-
-    st.textContent = "Gerando…";
-    setBusy(true, "Montando tabela…");
-    try{
-      const obj = await apiGet("matrix",{limit});
-      if(!obj || !obj.rows || !obj.rows.length){
-        document.getElementById('matTabelaWrap').innerHTML = '<div class="muted" style="margin-top:10px">Sem dados.</div>';
-        st.textContent = "";
-        return;
-      }
-
-      const rows = obj.rows.map(r=>r.map((v,i)=> i===0 ? v : (v==null ? '-' : fmtBR(v))));
-      renderTable('matTabelaWrap', obj.header, rows);
-      st.textContent = `${obj.rows.length} linhas`;
-
-      // filtro tempo real
-      document.getElementById('matSearch').oninput = ()=>{
-        const term = document.getElementById('matSearch').value.trim().toLowerCase();
-        const tbody = document.querySelector('#matTabelaWrap tbody');
-        if(!tbody) return;
-
-        [...tbody.querySelectorAll('tr')].forEach(tr=>{
-          const ref = (tr.querySelector('td')?.textContent || "").toLowerCase();
-          tr.style.display = (!term || ref.includes(term)) ? "" : "none";
+      try{
+        Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
+        const resp = await apiPost({
+          action:"exportCurrentPrices",
+          password: pass,
+          mode,
+          colecao: coll
         });
-      };
+        if (resp?.erro) throw new Error(resp.erro);
+        alert(`OK! Itens gravados: ${resp.gravados || resp.exported || "?"}`);
+      } catch(err){
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
+      }
+    };
 
-    } finally {
-      setBusy(false);
+    /***********************
+     * SEARCH REFERENCE
+     ***********************/
+    document.getElementById("btnBuscar").onclick = async ()=>{
+      const ref = document.getElementById("refInput").value.trim().toUpperCase();
+      if (!ref) return;
+
+      setStatus("refStatus", "Buscando...");
+      try{
+        Overlay.on("Buscando referência...", "Consultando o banco.");
+        const res = await apiGet("searchReference", { ref });
+        Overlay.off();
+
+        if (!res?.items?.length){
+          document.getElementById("refKpis").style.display = "none";
+          document.getElementById("refTableWrap").innerHTML = `<div class="hint">Nenhum dado encontrado para <b>${esc(ref)}</b>.</div>`;
+          setStatus("refStatus", "");
+          return;
+        }
+
+        // KPIs
+        document.getElementById("refKpis").style.display = "flex";
+        document.getElementById("kpiAtual").textContent = fmtBR(res.atual?.preco);
+        document.getElementById("kpiAtualColl").textContent = res.atual?.colecao || "—";
+        document.getElementById("kpiMax").textContent = fmtBR(res.max);
+
+        const rows = res.items.map(i=>{
+          const badge = (res.atual?.colecao === i.coll)
+            ? `<span class="badge b-ok">ATUAL</span>`
+            : ``;
+          return [
+            esc(i.coll),
+            `<span class="mono">${fmtBR(i.price)}</span>`,
+            badge
+          ];
+        });
+
+        renderTable("refTableWrap", ["Coleção", "Preço", ""], rows);
+        setStatus("refStatus","");
+
+      } catch(err){
+        Overlay.off();
+        setStatus("refStatus","");
+        alert("Erro: " + err.message);
+      }
+    };
+
+    /***********************
+     * ADD REF TO CURRENT COLLECTION
+     * (depende do GS ter a rota POST action: addRefToCurrent)
+     ***********************/
+    document.getElementById("btnAddRefCurrent").onclick = async ()=>{
+      const ref = document.getElementById("refInput").value.trim().toUpperCase();
+      const priceStr = document.getElementById("refPrice").value.trim();
+      const price = parsePriceBR(priceStr);
+
+      if (!ref){ alert("Informe a referência."); return; }
+      if (price == null){ alert("Informe um preço válido (ex.: 89,99)."); return; }
+
+      const ok = await Modal.ask({
+        title:"Incluir/atualizar na coleção atual",
+        text:`Vou incluir (ou substituir) a referência ${ref} com preço ${fmtBR(price)} na ÚLTIMA coleção cadastrada e também atualizar a planilha de COLEÇÃO ATUAL.\n\nConfirmar?`
+      });
+      if (!ok) return;
+
+      // pede senha para atualizar a Leonardo também (você pediu travar isso no GS)
+      const pass = prompt("Digite a senha para atualizar a COLEÇÃO ATUAL:");
+      if (!pass) return;
+
+      try{
+        Overlay.on("Atualizando referência...", "Incluindo na coleção atual e atualizando a lista.");
+        const resp = await apiPost({
+          action: "addRefToCurrent",
+          ref,
+          preco: price,
+          password: pass
+        });
+        if (resp?.erro) throw new Error(resp.erro);
+
+        alert(`OK! Ref ${ref} atualizada.\nColeção atual: ${resp.colecaoAtual || "?"}`);
+
+        // recarrega coleções e ref
+        await loadCollections();
+        document.getElementById("btnBuscar").click();
+
+      } catch(err){
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
+      }
+    };
+
+    /***********************
+     * COMPARE (auto em tempo real)
+     ***********************/
+    let cmpLast = null;
+    function applyCompareFilters(data){
+      let out = data.slice();
+
+      const onlyChanged = document.getElementById("fChanged").checked;
+      const onlyUp = document.getElementById("fUp").checked;
+      const onlyDown = document.getElementById("fDown").checked;
+
+      if (onlyChanged){
+        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
+      }
+      if (onlyUp){
+        out = out.filter(r => r.direcao === "SUBIU");
+      }
+      if (onlyDown){
+        out = out.filter(r => r.direcao === "DESCEU");
+      }
+      return out;
     }
-  };
-</script>
 
+    function renderCompare(data, a, b){
+      const filtered = applyCompareFilters(data);
+
+      const rows = filtered.map(r=>{
+        const s = r.direcao;
+        const badge =
+          s === "SUBIU"  ? `<span class="badge b-ok">SUBIU</span>` :
+          s === "DESCEU" ? `<span class="badge b-err">DESCEU</span>` :
+          s === "IGUAL"  ? `<span class="badge b-warn">IGUAL</span>` :
+                           `<span class="badge">SEM DADO</span>`;
+
+        const deltaTxt = (r.delta == null) ? "-" : fmtBR(r.delta);
+
+        return [
+          `<span class="mono">${esc(r.referencia)}</span>`,
+          r.precoA == null ? "-" : `<span class="mono">${fmtBR(r.precoA)}</span>`,
+          r.precoB == null ? "-" : `<span class="mono">${fmtBR(r.precoB)}</span>`,
+          `<span class="mono">${deltaTxt}</span>`,
+          badge
+        ];
+      });
+
+      renderTable("cmpTableWrap",
+        ["REF", `Preço (${esc(a)})`, `Preço (${esc(b)})`, "Δ", "Status"],
+        rows
+      );
+
+      setStatus("cmpStatus", `Itens: ${filtered.length}${filtered.length !== data.length ? " (filtrado)" : ""}`);
+    }
+
+    async function runCompare(){
+      const a = document.getElementById("collA").value;
+      const b = document.getElementById("collB").value;
+      if (!a || !b){
+        document.getElementById("cmpTableWrap").innerHTML = `<div class="hint">Selecione a Coleção A e B.</div>`;
+        setStatus("cmpStatus","");
+        return;
+      }
+
+      try{
+        Overlay.on("Comparando...", "Carregando e comparando as duas coleções.");
+        const res = await apiGet("compareCollections", { a, b });
+        Overlay.off();
+
+        if (!Array.isArray(res)){ throw new Error("Resposta inválida do servidor."); }
+        cmpLast = { data: res, a, b };
+        renderCompare(res, a, b);
+
+      } catch(err){
+        Overlay.off();
+        alert("Erro: " + err.message);
+      }
+    }
+
+    // botão comparar
+    document.getElementById("btnCompare").onclick = runCompare;
+
+    // filtros em “tempo real”
+    ["fChanged","fUp","fDown"].forEach(id=>{
+      document.getElementById(id).onchange = ()=>{
+        if (!cmpLast) return;
+        renderCompare(cmpLast.data, cmpLast.a, cmpLast.b);
+      };
+    });
+
+    // auto-run ao mudar selects (sem precisar clicar)
+    let cmpDebounce = null;
+    function debounceCompare(){
+      clearTimeout(cmpDebounce);
+      cmpDebounce = setTimeout(()=> runCompare(), 250);
+    }
+    document.getElementById("collA").onchange = debounceCompare;
+    document.getElementById("collB").onchange = debounceCompare;
+
+    /***********************
+     * MATRIX + draggable columns (storage)
+     ***********************/
+    const LS_COLORDER = "hs_matrix_col_order_v1";
+
+    function getSavedOrder(){
+      try{
+        const v = JSON.parse(localStorage.getItem(LS_COLORDER) || "null");
+        return Array.isArray(v) ? v : null;
+      }catch{ return null; }
+    }
+    function saveOrder(order){
+      localStorage.setItem(LS_COLORDER, JSON.stringify(order));
+    }
+    function clearOrder(){
+      localStorage.removeItem(LS_COLORDER);
+    }
+
+    function reorderMatrixTable(table){
+      const saved = getSavedOrder();
+      if (!saved) return;
+
+      const ths = Array.from(table.querySelectorAll("thead th"));
+      if (ths.length < 2) return;
+
+      // header[0] é REF fixo
+      const headerNames = ths.slice(1).map(th=>th.dataset.colname);
+      // cria ordem final: REF + (saved intersect) + (resto)
+      const final = saved.filter(c=>headerNames.includes(c)).concat(headerNames.filter(c=>!saved.includes(c)));
+
+      applyColumnOrder(table, final);
+    }
+
+    function applyColumnOrder(table, colOrder){
+      const headRow = table.tHead.rows[0];
+      const bodyRows = Array.from(table.tBodies[0].rows);
+
+      // mapeia colName -> index atual
+      const ths = Array.from(headRow.cells);
+      const idxByName = new Map();
+      for (let i=1;i<ths.length;i++){
+        idxByName.set(ths[i].dataset.colname, i);
+      }
+
+      // monta nova ordem de índices (0 = REF)
+      const newIdx = [0];
+      colOrder.forEach(name=>{
+        const i = idxByName.get(name);
+        if (i != null) newIdx.push(i);
+      });
+
+      // aplica no THEAD
+      const newThs = newIdx.map(i=>ths[i]);
+      newThs.forEach(th=>headRow.appendChild(th));
+
+      // aplica em cada TR do TBODY
+      bodyRows.forEach(tr=>{
+        const tds = Array.from(tr.cells);
+        const newTds = newIdx.map(i=>tds[i]);
+        newTds.forEach(td=>tr.appendChild(td));
+      });
+    }
+
+    function enableHeaderDrag(table){
+      const headRow = table.tHead.rows[0];
+      const ths = Array.from(headRow.cells);
+
+      // REF não arrasta (0)
+      for (let i=1;i<ths.length;i++){
+        const th = ths[i];
+        th.classList.add("thDrag");
+        th.draggable = true;
+      }
+
+      let dragSrc = null;
+
+      function cleanup(){
+        Array.from(headRow.cells).forEach(th=>{
+          th.classList.remove("thGhost");
+          th.classList.remove("thDrop");
+        });
+      }
+
+      headRow.addEventListener("dragstart", (e)=>{
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0) return;
+        dragSrc = th;
+        th.classList.add("thGhost");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      headRow.addEventListener("dragover", (e)=>{
+        e.preventDefault();
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0 || !dragSrc) return;
+        cleanup();
+        th.classList.add("thDrop");
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      headRow.addEventListener("drop", (e)=>{
+        e.preventDefault();
+        const th = e.target.closest("th");
+        if (!th || th.cellIndex === 0 || !dragSrc) return;
+
+        const from = dragSrc.cellIndex;
+        const to = th.cellIndex;
+        if (from === to) return;
+
+        // pega ordem atual (exceto REF)
+        const cur = Array.from(headRow.cells).slice(1).map(x=>x.dataset.colname);
+        // move item
+        const moved = cur.splice(from-1, 1)[0];
+        cur.splice(to-1, 0, moved);
+
+        applyColumnOrder(table, cur);
+        saveOrder(cur);
+        cleanup();
+        dragSrc = null;
+      });
+
+      headRow.addEventListener("dragend", ()=>{
+        cleanup();
+        dragSrc = null;
+      });
+    }
+
+    document.getElementById("btnResetCols").onclick = ()=>{
+      clearOrder();
+      alert("Ordem de colunas resetada. Gere a tabela novamente.");
+    };
+
+    document.getElementById("btnMatrix").onclick = async ()=>{
+      const limit = document.getElementById("matLimit").value.trim();
+      try{
+        Overlay.on("Gerando tabela...", "Montando matriz de preços.");
+        const res = await apiGet("matrix", { limit });
+        Overlay.off();
+
+        if (!res?.header?.length || !res?.rows?.length){
+          document.getElementById("matTableWrap").innerHTML = `<div class="hint">Sem dados.</div>`;
+          return;
+        }
+
+        // render
+        const header = res.header.map((h, idx)=>{
+          if (idx===0) return "REF";
+          // usamos dataset colname para reorder
+          return esc(h);
+        });
+
+        // prepara rows (format)
+        const rows = res.rows.map(r=>{
+          return r.map((v, idx)=>{
+            if (idx===0) return `<span class="mono">${esc(v)}</span>`;
+            return (v==null || v==="") ? "-" : `<span class="mono">${fmtBR(v)}</span>`;
+          });
+        });
+
+        const table = renderTable("matTableWrap", header, rows);
+
+        // seta dataset colname nos ths (exceto 0)
+        const ths = Array.from(table.tHead.rows[0].cells);
+        for (let i=1;i<ths.length;i++){
+          ths[i].dataset.colname = res.header[i];
+        }
+
+        reorderMatrixTable(table);
+        enableHeaderDrag(table);
+
+        // busca em tempo real
+        const input = document.getElementById("matSearch");
+        input.oninput = ()=>{
+          const term = input.value.trim().toLowerCase();
+          const trs = table.tBodies[0].rows;
+          for (const tr of trs){
+            const ref = tr.cells[0]?.textContent?.toLowerCase() || "";
+            tr.style.display = (term && !ref.includes(term)) ? "none" : "";
+          }
+        };
+
+        setStatus("matStatus", `Refs: ${res.rows.length} | Colunas: ${res.header.length-1}`);
+
+      } catch(err){
+        Overlay.off();
+        alert("Erro: " + err.message);
+      }
+    };
+
+    /***********************
+     * INIT
+     ***********************/
+    (async function init(){
+      // export panel hidden by default + storage
+      const saved = localStorage.getItem("hs_export_visible");
+      setExportVisible(saved === "1");
+
+      // export mode behavior
+      document.getElementById("exportMode").dispatchEvent(new Event("change"));
+
+      try{
+        Overlay.on("Carregando...", "Buscando coleções no banco.");
+        await loadCollections();
+      } catch(err){
+        alert("Não consegui carregar as coleções.\n\n1) Confere se API_URL está correto.\n2) Confere se o Apps Script está publicado e acessível.\n\nErro: " + err.message);
+      } finally{
+        Overlay.off();
+      }
+
+      // hint: se API_URL não foi trocado
+      if (API_URL.includes("COLE_AQUI")){
+        alert("ATENÇÃO: você precisa colar a URL do Apps Script em API_URL (no topo do HTML).");
+      }
+    })();
+  </script>
 </body>
 </html>
