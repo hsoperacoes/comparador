@@ -540,6 +540,21 @@
     const fmtBR = (n) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n ?? 0);
 
     /***********************
+     * FUNÇÕES AUXILIARES
+     ***********************/
+    
+    // Nova função para pegar a última coleção (com maior key)
+    function getLatestCollection() {
+      if (collectionsWithKeys.length === 0) return null;
+      
+      // Ordena pela key (série) em ordem DECRESCENTE para pegar a mais recente
+      const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
+      
+      // Retorna a primeira (com maior key)
+      return sorted[0];
+    }
+
+    /***********************
      * LOADING
      ***********************/
     const Overlay = {
@@ -579,15 +594,11 @@
     const ModalAddRef = {
       _resolver: null,
       open() {
-        // Busca a última coleção CORRETA (usando a série para ordenação)
-        if (collectionsWithKeys.length > 0) {
-          // Ordena pela key (série) em ordem decrescente para pegar a mais recente
-          const sorted = [...collectionsWithKeys].sort((a,b) => b.key - a.key);
-          const lastColl = sorted[0];
-          document.getElementById("modalCurrentColl").value = lastColl ? lastColl.name : "Nenhuma coleção encontrada";
-        } else {
-          document.getElementById("modalCurrentColl").value = "Nenhuma coleção encontrada";
-        }
+        // Usa a nova função para pegar a última coleção
+        const lastColl = getLatestCollection();
+        document.getElementById("modalCurrentColl").value = lastColl ? 
+          `${lastColl.name} (Série: ${lastColl.key})` : 
+          "Nenhuma coleção encontrada";
         
         // Limpa o campo
         document.getElementById("modalRefPrice").value = "";
@@ -614,19 +625,25 @@
     const ModalExport = {
       _resolver: null,
       open() {
-        // Preenche as opções de coleções
         const select = document.getElementById("modalExportColl");
         select.innerHTML = '<option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>';
         
         if (collectionsWithKeys.length > 0) {
-          // Ordena pela key (série) em ordem crescente (mais antiga primeiro)
-          const sorted = [...collectionsWithKeys].sort((a,b) => a.key - b.key);
+          // Ordena pela key (série) em ordem CRESCENTE (mais antiga primeiro)
+          const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
+          
           sorted.forEach(coll => {
             const option = document.createElement("option");
             option.value = coll.name;
             option.textContent = `${coll.name} (Série: ${coll.key})`;
             select.appendChild(option);
           });
+          
+          // Seleciona automaticamente a última coleção como padrão
+          const latest = getLatestCollection();
+          if (latest) {
+            select.value = latest.name;
+          }
         }
         
         // Limpa a senha
@@ -827,37 +844,34 @@
     let collectionsWithKeys = [];
     
     async function loadCollections(){
-      const colls = await apiGet("listCollections");
-      collections = Array.isArray(colls) ? colls : [];
-      
-      // Para usar internamente: pega também as keys para ordenação correta
-      // Precisamos fazer uma chamada especial para pegar as coleções com suas keys
       try {
-        // Faz uma chamada à matriz para pegar todas as coleções com ordem
-        const matrixRes = await apiGet("matrix", { limit: 1 });
-        if (matrixRes?.header) {
-          collectionsWithKeys = [];
-          // O header[0] é "REF", os outros são nomes de coleções
-          // Precisamos determinar a key para cada coleção
-          for (let i = 1; i < matrixRes.header.length; i++) {
-            const collName = matrixRes.header[i];
-            // Para determinar a key, precisamos de lógica especial
-            // Vamos usar uma chamada à API existente para pegar dados de uma ref
-            const sampleRef = await apiGet("searchReference", { ref: "0001" });
-            // Ou vamos simplificar e ordenar pela ordem que aparecem na matriz
-            collectionsWithKeys.push({
-              name: collName,
-              key: i, // Posição na matriz
-              order: i
-            });
-          }
+        // Primeiro tenta obter com keys
+        const res = await apiGet("listCollectionsWithKeys");
+        
+        if (res?.collections && Array.isArray(res.collections)) {
+          // Salva as coleções com keys
+          collectionsWithKeys = res.collections;
+          // Extrai apenas os nomes para o array simples
+          collections = collectionsWithKeys.map(c => c.name);
           
-          // Ordena pela key (série) - ajuste conforme sua lógica real
-          collectionsWithKeys.sort((a,b) => a.key - b.key);
+          console.log("Coleções carregadas com keys:", collectionsWithKeys);
+        } else {
+          // Fallback: carrega apenas os nomes
+          const colls = await apiGet("listCollections");
+          collections = Array.isArray(colls) ? colls : [];
+          
+          // Cria array básico com keys sequenciais
+          collectionsWithKeys = collections.map((name, idx) => ({
+            name,
+            key: idx,
+            order: idx
+          }));
         }
       } catch (err) {
-        console.warn("Não foi possível carregar coleções com keys:", err);
-        // Fallback: usa apenas os nomes
+        console.error("Erro ao carregar coleções:", err);
+        // Fallback mais básico
+        const colls = await apiGet("listCollections");
+        collections = Array.isArray(colls) ? colls : [];
         collectionsWithKeys = collections.map((name, idx) => ({
           name,
           key: idx,
@@ -865,20 +879,22 @@
         }));
       }
 
-      const fill = (sel, {withEmpty=true}={}) => {
+      const fill = (sel, { withEmpty = true } = {}) => {
         sel.innerHTML = "";
-        if (withEmpty){
+        if (withEmpty) {
           const o = document.createElement("option");
-          o.value = ""; o.textContent = "Selecione";
+          o.value = "";
+          o.textContent = "Selecione";
           sel.appendChild(o);
         }
         
         // Ordena as coleções pela key/série (mais antiga primeiro)
-        const sorted = [...collectionsWithKeys].sort((a,b) => a.key - b.key);
-        sorted.forEach(c=>{
+        const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
+        sorted.forEach(c => {
           const o = document.createElement("option");
-          o.value = c.name; 
-          o.textContent = c.name;
+          o.value = c.name;
+          // Mostra também a key para referência
+          o.textContent = `${c.name} (${c.key})`;
           sel.appendChild(o);
         });
       };
