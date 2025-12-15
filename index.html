@@ -95,10 +95,7 @@
     .split{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px}
     @media(max-width:980px){.split{grid-template-columns:1fr}}
 
-    /* =========================
-       TABELAS DO SITE (escuro)
-       (ISOLADAS NA .scroll)
-       ========================= */
+    /* table (somente as tabelas do app dentro de .scroll) */
     .scroll{
       max-height:520px;
       overflow:auto;
@@ -123,12 +120,11 @@
       color:#e9e9f4;
       user-select:none;
     }
-    .scroll td:first-child,.scroll th:first-child{
+    .scroll td:first-child, .scroll th:first-child{
       position:sticky; left:0; z-index:3;
       background: rgba(18,18,22,.98);
     }
     .scroll tr:hover td{background: rgba(255,255,255,.03)}
-
     .badge{
       display:inline-flex;align-items:center;gap:6px;
       padding:4px 10px;border-radius:999px;
@@ -193,162 +189,125 @@
       border-radius:16px;
       padding:16px;
       box-shadow:var(--shadow);
+      color: var(--txt);
     }
     .modal h3{margin:0 0 8px;font-size:16px}
     .modal p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.35}
     .modal .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
     .hide{display:none !important}
 
-    /* draggable headers hint */
-    .dragHint{
-      display:inline-flex;align-items:center;gap:8px;
-      color:var(--muted);font-size:12px;margin-top:8px
-    }
-    .thDrag{cursor:grab;}
-    .thDrag:active{cursor:grabbing}
-    .thGhost{opacity:.35}
-    .thDrop{outline:2px dashed rgba(111,60,207,.65); outline-offset:-4px}
-
     /* Filter list */
-    .filter-list{display:flex;gap:8px;margin-left:10px;}
-    .filter-list label{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    .filter-list{
+      display:flex;
+      gap:8px;
+      margin-left:10px;
+    }
+    .filter-list label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
 
-    /* Novo modal para incluir ref */
-    .add-ref-modal .row {margin: 12px 0;}
-    .add-ref-modal input {width: 100%;}
-    .add-ref-modal .hint {margin-top: 4px;}
+    /* Ajuste do campo coleção */
+    #collName { min-width: 200px; flex: 1; }
 
-    #collName {min-width: 200px;flex: 1;}
-    .button-group {display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    /* Botões inline */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-    .export-modal .row {margin:12px 0;}
-    .export-modal select,.export-modal input {width:100%;}
-
-    /* =========================================
-       MODAL DE IMPRESSÃO (VISUAL MAIS CLARO)
-       ========================================= */
+    /* Modal de impressão: branco e legível */
     #modalPrintWrap .modal{
-      width:min(980px, 95vw);
-      max-height:90vh;
-      overflow:auto;
-      background:#f6f7fb;
-      color:#111;
-      border:1px solid rgba(0,0,0,.10);
+      background:#ffffff !important;
+      color:#111 !important;
+      border:1px solid rgba(0,0,0,.10) !important;
     }
-    #modalPrintWrap .modal h3{color:#111}
-    #modalPrintWrap .modalBackdrop{background: rgba(0,0,0,.55);}
-    #modalPrintWrap .actions{
-      position: sticky;
-      bottom: 0;
-      background: #f6f7fb;
-      padding-top: 10px;
-      margin-top: 10px;
-      border-top: 1px solid rgba(0,0,0,.08);
-    }
-    #modalPrintWrap button.secondary{
-      background: rgba(0,0,0,.06);
-      border:1px solid rgba(0,0,0,.12);
-      color:#111;
-    }
-    #modalPrintWrap button.success{
-      background: linear-gradient(180deg, #2ecc71, #1f9d55);
-      border:none;
-      color:#fff;
-      font-weight:900;
+    #modalPrintWrap .modal h3{ color:#111 !important; }
+    #modalPrintWrap .modalBackdrop{
+      background: rgba(0,0,0,.62);
     }
 
-    /* Conteúdo preview */
-    .print-container{
-      background:#fff;
-      color:#000;
-      border:1px solid rgba(0,0,0,.10);
-      border-radius:12px;
-      padding:14px;
-      margin-top:12px;
+    /* Estilos para impressão/PDF */
+    .print-container{ background:#fff; color:#000; }
+
+    @media print {
+      /* força cor no PDF */
+      *{
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body * { visibility: hidden; }
+      .print-container, .print-container * { visibility: visible; }
+
+      .print-container{
+        position:absolute;
+        left:0; top:0;
+        width:100%;
+        padding:20px;
+        background:#fff !important;
+        color:#000 !important;
+        font-family: Arial, sans-serif;
+      }
+
+      .no-print { display:none !important; }
     }
 
-    /* PDF table (usada no modal e no printRoot) */
+    /* Tabela do PDF (não herda sticky/cores do app) */
     .pdf-table{
       width:100%;
       border-collapse:collapse;
       margin:10px 0;
       font-family: Arial, sans-serif;
-      font-size: 12px;
+      font-size:12px;
     }
     .pdf-table th{
-      background:#f2f3f5;
+      background:#f5f5f5 !important;
       border:1px solid #ddd;
       padding:8px 10px;
       text-align:left;
       font-weight:bold;
-      color:#111;
+      color:#333;
     }
     .pdf-table td{
       border:1px solid #ddd;
       padding:8px 10px;
       vertical-align:middle;
-      color:#111;
-      background:#fff;
+      background:#fff !important; /* garante que não fica preto */
+      color:#000 !important;
     }
     .pdf-table .ref-col{
-      font-weight:700;
+      font-weight:bold;
       font-family:'Courier New', monospace;
-      background:#fff; /* garante nada de coluna preta */
+      background:#fff !important; /* remove coluna preta */
+      color:#000 !important;
     }
     .pdf-table .price-col{
       text-align:right;
       font-family:'Courier New', monospace;
     }
-    .status-pill{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
+    .pdf-table .up{ color:#28a745 !important; font-weight:900; }
+    .pdf-table .down{ color:#dc3545 !important; font-weight:900; }
+
+    /* botão imprimir do modal (visível e forte) */
+    #modalPrintWrap button.success{
+      background: linear-gradient(180deg, #2ecc71, #1f9d55) !important;
+      border: 1px solid rgba(31,157,85,.55) !important;
+      color:#0b1a10 !important;
       font-weight:900;
-      font-size:12px;
-      border:1px solid rgba(0,0,0,.10);
     }
-    .status-up{
-      color:#0f7a2a;
-      background:#dff6e7;
-      border-color:#bde8cc;
-    }
-    .status-down{
-      color:#b42318;
-      background:#ffe3e3;
-      border-color:#ffc7c7;
-    }
-
-    /* =========================================
-       PRINT ROOT (garante que o PDF sai com dados)
-       ========================================= */
-    #printRoot{
-      display:none;
-    }
-
-    /* Impressão: mostra SOMENTE o printRoot */
-    @media print{
-      *{-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;}
-      body *{visibility:hidden !important;}
-      #printRoot, #printRoot *{visibility:visible !important;}
-      #printRoot{
-        display:block !important;
-        position:fixed;
-        inset:0;
-        padding:18px 18px 24px;
-        background:#fff;
-        color:#000;
-      }
-      /* evita cortar cabeçalho de tabela */
-      thead{display:table-header-group;}
-      tr{page-break-inside: avoid;}
-      table{page-break-inside:auto;}
+    #modalPrintWrap button.secondary{
+      background:#f2f2f2 !important;
+      border:1px solid #ddd !important;
+      color:#222 !important;
     }
   </style>
 </head>
 <body>
-  <!-- ROOT DE IMPRESSÃO (fora do modal) -->
-  <div id="printRoot" aria-hidden="true"></div>
-
   <div class="overlay" id="overlay">
     <div class="loaderBox">
       <div class="loaderRow">
@@ -379,15 +338,15 @@
     <div class="modal add-ref-modal">
       <h3>Incluir/Atualizar Referência na Coleção Atual</h3>
 
-      <div class="row">
+      <div class="row" style="margin:12px 0;">
         <label>Referência e Preço</label>
         <input id="modalRefPrice" placeholder="Ex.: 0227 179,99" style="width:100%"/>
-        <div class="hint">Formato: <span class="mono">REF PREÇO</span> (4 dígitos + espaço + valor). Ex: 0227 179,99</div>
+        <div class="hint" style="margin-top:4px;">Formato: <span class="mono">REF PREÇO</span>. Ex: <span class="mono">0227 179,99</span></div>
       </div>
 
-      <div class="row">
+      <div class="row" style="margin:12px 0;">
         <label>Coleção atual detectada</label>
-        <input id="modalCurrentColl" readonly style="background:rgba(255,255,255,.05); color:var(--muted)"/>
+        <input id="modalCurrentColl" readonly style="width:100%; background:rgba(255,255,255,.05); color:var(--muted)"/>
       </div>
 
       <div class="actions">
@@ -403,14 +362,14 @@
     <div class="modal export-modal">
       <h3>Gravar Coleção Atual</h3>
 
-      <div class="row">
+      <div class="row" style="margin:12px 0;">
         <label>Selecionar coleção</label>
         <select id="modalExportColl" style="width:100%">
           <option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>
         </select>
       </div>
 
-      <div class="row">
+      <div class="row" style="margin:12px 0;">
         <label>Senha</label>
         <input id="modalExportPass" type="password" placeholder="Digite a senha" style="width:100%"/>
       </div>
@@ -429,16 +388,14 @@
   <!-- Modal de impressão/PDF -->
   <div class="modalWrap" id="modalPrintWrap">
     <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
-    <div class="modal">
+    <div class="modal" style="width:min(900px, 95vw); max-height:90vh; overflow:auto;">
       <h3>Imprimir Comparação de Coleções</h3>
 
-      <div class="print-container" id="printContainer">
-        <!-- Preview gerado dinamicamente -->
-      </div>
+      <div class="print-container" id="printContainer"></div>
 
       <div class="actions">
         <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
-        <button class="success" onclick="ModalPrint.print()">Imprimir / Gerar PDF</button>
+        <button class="success" id="btnDoPrint">Imprimir / Gerar PDF</button>
       </div>
     </div>
   </div>
@@ -466,14 +423,14 @@
       <div style="margin-top:10px">
         <label>Cole os itens (1 por linha)</label>
         <div class="hint">
-          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF,PREÇO</span> ou <span class="mono">REF PREÇO</span>.
-          Ex.: <span class="mono">0227;89,99</span>
+          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF PREÇO</span> (recomendado).
+          Ex.: <span class="mono">0227 89,99</span>
         </div>
         <textarea id="collItems" placeholder="Cole aqui..."></textarea>
       </div>
     </div>
 
-    <!-- BUSCAR + INCLUIR REF NA COLEÇÃO ATUAL -->
+    <!-- BUSCAR -->
     <div class="panel" id="panelSearch">
       <div class="title">Buscar referência <small>(histórico por coleção)</small></div>
 
@@ -484,7 +441,6 @@
         </div>
 
         <button id="btnBuscar">Buscar</button>
-
         <span class="hint" id="refStatus"></span>
       </div>
 
@@ -506,7 +462,7 @@
       <div id="refTableWrap"></div>
     </div>
 
-    <!-- COMPARAR COLEÇÕES -->
+    <!-- COMPARAR -->
     <div class="panel" id="panelCompare">
       <div class="title">Comparar coleções <small>(subiu / desceu)</small></div>
 
@@ -525,22 +481,10 @@
         <button id="btnPrint" class="success" style="display:none">Imprimir / Gerar PDF</button>
 
         <div class="filter-list">
-          <label>
-            <input type="radio" name="filterType" value="all" checked/>
-            <span>Todos</span>
-          </label>
-          <label>
-            <input type="radio" name="filterType" value="changed"/>
-            <span>Somente alterou</span>
-          </label>
-          <label>
-            <input type="radio" name="filterType" value="up"/>
-            <span>Somente subiu</span>
-          </label>
-          <label>
-            <input type="radio" name="filterType" value="down"/>
-            <span>Somente desceu</span>
-          </label>
+          <label><input type="radio" name="filterType" value="all" checked/><span>Todos</span></label>
+          <label><input type="radio" name="filterType" value="changed"/><span>Somente alterou</span></label>
+          <label><input type="radio" name="filterType" value="up"/><span>Somente subiu</span></label>
+          <label><input type="radio" name="filterType" value="down"/><span>Somente desceu</span></label>
         </div>
 
         <span class="hint right" id="cmpStatus"></span>
@@ -570,8 +514,8 @@
         <span class="hint right" id="matStatus"></span>
       </div>
 
-      <div class="dragHint">
-        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> (cabeçalho) para reorganizar. A ordem fica salva no navegador (storage).
+      <div class="hint" style="margin-top:8px;">
+        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> (cabeçalho) para reorganizar. A ordem fica salva no navegador.
       </div>
 
       <div id="matTableWrap"></div>
@@ -638,7 +582,6 @@
         document.getElementById("modalCurrentColl").value = lastColl ?
           `${lastColl.name} (Série: ${lastColl.key})` :
           "Nenhuma coleção encontrada";
-
         document.getElementById("modalRefPrice").value = "";
         document.getElementById("modalAddRefWrap").classList.add("on");
 
@@ -667,7 +610,6 @@
 
         if (collectionsWithKeys.length > 0) {
           const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
-
           sorted.forEach(coll => {
             const option = document.createElement("option");
             option.value = coll.name;
@@ -697,15 +639,13 @@
     };
 
     /***********************
-     * MODAL PRINT (preview + printRoot)
+     * MODAL PRINT
      ***********************/
     const ModalPrint = {
       _lastHTML: "",
       open(data, collA, collB) {
         const container = document.getElementById("printContainer");
-        const printRoot = document.getElementById("printRoot");
 
-        // (se quiser: manter só alterou no PDF)
         const filteredData = data.filter(item =>
           (item.direcao === "SUBIU" || item.direcao === "DESCEU") &&
           item.precoA != null &&
@@ -713,28 +653,24 @@
         );
 
         const now = new Date();
-        const dateStr =
-          now.getDate().toString().padStart(2, '0') + '/' +
-          (now.getMonth() + 1).toString().padStart(2, '0') + '/' +
-          now.getFullYear() + ', ' +
-          now.getHours().toString().padStart(2, '0') + ':' +
-          now.getMinutes().toString().padStart(2, '0') + ':' +
-          now.getSeconds().toString().padStart(2, '0');
+        const pad = (n)=> String(n).padStart(2,"0");
+        const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
         let html = `
-          <div style="font-family: Arial, sans-serif; color:#000;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
-              <div>
-                <div style="font-size:12px;color:#333;">${dateStr}</div>
-                <h1 style="margin:6px 0 4px 0; font-size:18px; font-weight:800; color:#000;">
-                  REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
-                </h1>
-                <div style="font-size:12px;color:#555;">Itens: ${filteredData.length}</div>
-              </div>
-              <div style="font-size:12px;color:#444; font-weight:700;">Precificação — HS</div>
+          <div style="font-family: Arial, sans-serif; color:#000; margin:0; padding:0;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="font-size:12px; color:#333;">${dateStr}</div>
+              <div style="font-weight:800; font-size:12px; color:#111;">Precificação — HS</div>
             </div>
 
-            <div style="margin:12px 0 8px; border-bottom:1px solid #ddd;"></div>
+            <div style="margin:10px 0 8px 0;">
+              <div style="font-weight:900; font-size:16px; color:#000;">
+                REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
+              </div>
+              <div style="font-size:12px; color:#555;">Itens: ${filteredData.length}</div>
+            </div>
+
+            <div style="border-top:1px solid #ccc; margin:10px 0 10px 0;"></div>
 
             <table class="pdf-table">
               <thead>
@@ -749,17 +685,14 @@
         `;
 
         filteredData.forEach(item => {
-          const isUp = item.direcao === "SUBIU";
+          const statusClass = item.direcao === "SUBIU" ? "up" : "down";
+          const statusText  = item.direcao === "SUBIU" ? "SUBIU" : "DESCEU";
           html += `
             <tr>
               <td class="ref-col">${esc(item.referencia)}</td>
               <td class="price-col">${fmtBR(item.precoA)}</td>
               <td class="price-col">${fmtBR(item.precoB)}</td>
-              <td>
-                <span class="status-pill ${isUp ? "status-up" : "status-down"}">
-                  ${isUp ? "SUBIU" : "DESCEU"}
-                </span>
-              </td>
+              <td class="${statusClass}">${statusText}</td>
             </tr>
           `;
         });
@@ -768,7 +701,7 @@
               </tbody>
             </table>
 
-            <div style="margin-top:20px; font-size:10px; color:#777; text-align:center; padding-top:10px; border-top:1px solid #eee;">
+            <div style="margin-top:14px; font-size:10px; color:#777; text-align:center; padding-top:10px; border-top:1px solid #eee;">
               Sistema de Precificação HS | Relatório gerado automaticamente
             </div>
           </div>
@@ -776,19 +709,16 @@
 
         this._lastHTML = html;
         container.innerHTML = html;
-        printRoot.innerHTML = html;
-
         document.getElementById("modalPrintWrap").classList.add("on");
       },
       close() {
         document.getElementById("modalPrintWrap").classList.remove("on");
-      },
-      print() {
-        // garante que o printRoot está preenchido
-        if (!this._lastHTML) return;
-        document.getElementById("printRoot").innerHTML = this._lastHTML;
-        window.print();
       }
+    };
+
+    // botão do modal -> imprime só o conteúdo do printContainer (garante que não sai em branco)
+    document.getElementById("btnDoPrint").onclick = () => {
+      window.print();
     };
 
     /***********************
@@ -800,6 +730,7 @@
       const r = await fetch(url, { method:"GET" });
       return r.json();
     }
+
     async function apiPost(payload){
       const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
       return r.json();
@@ -821,6 +752,7 @@
       wrap.appendChild(scroll);
       return table;
     }
+
     function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
     function parsePriceBR(str){
@@ -835,27 +767,62 @@
       return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
     }
 
+    /**
+     * PARSER CORRIGIDO (resolve o seu erro do "0227 59")
+     * - NÃO usa split por vírgula como separador (vírgula é decimal do BR).
+     * - Prioriza: "REF;PREÇO" ou "REF<TAB>PREÇO" ou "REF PREÇO"
+     * - Em "REF PREÇO", pega o primeiro token como REF e o resto como preço (mantém "59,99" inteiro).
+     */
+    function parseLineToItem(line){
+      const s = String(line||"").trim();
+      if (!s) return null;
+
+      // 1) separador ; ou tab
+      let m = s.match(/^(\S+)\s*[;\t]\s*(.+)$/);
+      if (m){
+        const ref = m[1].toUpperCase();
+        const price = parsePriceBR(m[2]);
+        if (!ref || price == null) return null;
+        return { ref, preco: price };
+      }
+
+      // 2) separador "ref , preço" SOMENTE se realmente tiver vírgula como separador (ex: "0227, 89.99")
+      // (não confunde com decimal)
+      m = s.match(/^(\S+)\s*,\s*(\d[\d.,]*)$/);
+      if (m && !m[1].includes(" ")){
+        const ref = m[1].toUpperCase();
+        const price = parsePriceBR(m[2]);
+        if (!ref || price == null) return null;
+        return { ref, preco: price };
+      }
+
+      // 3) "REF PREÇO" (recomendado)
+      m = s.match(/^(\S+)\s+(.+)$/);
+      if (m){
+        const ref = m[1].toUpperCase();
+        const price = parsePriceBR(m[2]);
+        if (!ref || price == null) return null;
+        return { ref, preco: price };
+      }
+
+      return null;
+    }
+
     function parseItemsFromTextarea(text){
       const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
       const out = [];
       for (const line of lines){
-        let parts = line.split(";").map(x=>x.trim()).filter(Boolean);
-        if (parts.length < 2) parts = line.split(",").map(x=>x.trim()).filter(Boolean);
-        if (parts.length < 2) parts = line.split(/\s+/).map(x=>x.trim()).filter(Boolean);
-
-        const ref = (parts[0]||"").toUpperCase();
-        const price = parsePriceBR(parts[1]);
-        if (!ref || price == null) continue;
-        out.push({ ref, preco: price });
+        const it = parseLineToItem(line);
+        if (it) out.push(it);
       }
       return out;
     }
 
-    // Formato: 4 dígitos + espaço + valor (o que tiver depois do espaço é preço)
+    // parse do modal addRef (continua aceitando 4 dígitos)
     function parseRefPriceFormat(str) {
       if (!str) return null;
       const s = String(str).trim();
-      const match = s.match(/^(\d{4})\s+(.+)$/);
+      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
       if (!match) return null;
 
       const ref = match[1];
@@ -885,6 +852,7 @@
           collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
         }
       } catch (err) {
+        console.error("Erro ao carregar coleções:", err);
         const colls = await apiGet("listCollections");
         collections = Array.isArray(colls) ? colls : [];
         collectionsWithKeys = collections.map((name, idx) => ({ name, key: idx, order: idx }));
@@ -898,6 +866,7 @@
           o.textContent = "Selecione";
           sel.appendChild(o);
         }
+
         const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
         sorted.forEach(c => {
           const o = document.createElement("option");
@@ -912,7 +881,7 @@
     }
 
     /***********************
-     * SAVE COLLECTION + CONFIRM use as current
+     * SAVE COLLECTION
      ***********************/
     document.getElementById("btnSaveColl").onclick = async ()=>{
       const name = document.getElementById("collName").value.trim();
@@ -934,8 +903,8 @@
         if (resp?.erro){ throw new Error(resp.erro); }
 
         await loadCollections();
-        Overlay.off();
 
+        Overlay.off();
         const useAsCurrent = await Modal.ask({
           title:"Usar como lista atual?",
           text:`Deseja gravar a lista atual (aba Leonardo) usando esta coleção recém-salva?\n\nSe SIM, vai pedir a senha.`
@@ -947,7 +916,6 @@
 
             const coll = name;
             const pass = document.getElementById("modalExportPass").value;
-
             if (!pass){ alert("Digite a senha."); return; }
 
             try{
@@ -978,7 +946,7 @@
     };
 
     /***********************
-     * BOTÃO PARA ABRIR MODAL DE INCLUIR REF
+     * ADD REF MODAL
      ***********************/
     document.getElementById("btnAddRefModal").onclick = async () => {
       const ok = await ModalAddRef.open();
@@ -1025,7 +993,7 @@
     };
 
     /***********************
-     * BOTÃO PARA ABRIR MODAL DE EXPORT
+     * EXPORT MODAL
      ***********************/
     document.getElementById("btnExportModal").onclick = async () => {
       const ok = await ModalExport.open();
@@ -1112,10 +1080,15 @@
       let out = data.slice();
       const filterType = document.querySelector('input[name="filterType"]:checked').value;
 
-      if (filterType === "changed") out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
-      if (filterType === "up") out = out.filter(r => r.direcao === "SUBIU");
-      if (filterType === "down") out = out.filter(r => r.direcao === "DESCEU");
-
+      if (filterType === "changed"){
+        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
+      }
+      if (filterType === "up"){
+        out = out.filter(r => r.direcao === "SUBIU");
+      }
+      if (filterType === "down"){
+        out = out.filter(r => r.direcao === "DESCEU");
+      }
       return out;
     }
 
@@ -1155,7 +1128,6 @@
     async function runCompare(){
       const a = document.getElementById("collA").value;
       const b = document.getElementById("collB").value;
-
       if (!a || !b){
         document.getElementById("cmpTableWrap").innerHTML = `<div class="hint">Selecione a Coleção A e B.</div>`;
         setStatus("cmpStatus","");
@@ -1217,15 +1189,19 @@
 
       const headerNames = ths.slice(1).map(th=>th.dataset.colname);
       const final = saved.filter(c=>headerNames.includes(c)).concat(headerNames.filter(c=>!saved.includes(c)));
+
       applyColumnOrder(table, final);
     }
 
     function applyColumnOrder(table, colOrder){
       const headRow = table.tHead.rows[0];
       const bodyRows = Array.from(table.tBodies[0].rows);
+
       const ths = Array.from(headRow.cells);
       const idxByName = new Map();
-      for (let i=1;i<ths.length;i++) idxByName.set(ths[i].dataset.colname, i);
+      for (let i=1;i<ths.length;i++){
+        idxByName.set(ths[i].dataset.colname, i);
+      }
 
       const newIdx = [0];
       colOrder.forEach(name=>{
@@ -1249,7 +1225,7 @@
 
       for (let i=1;i<ths.length;i++){
         const th = ths[i];
-        th.classList.add("thDrag");
+        th.style.cursor = "grab";
         th.draggable = true;
       }
 
@@ -1257,8 +1233,8 @@
 
       function cleanup(){
         Array.from(headRow.cells).forEach(th=>{
-          th.classList.remove("thGhost");
-          th.classList.remove("thDrop");
+          th.style.opacity = "";
+          th.style.outline = "";
         });
       }
 
@@ -1266,7 +1242,7 @@
         const th = e.target.closest("th");
         if (!th || th.cellIndex === 0) return;
         dragSrc = th;
-        th.classList.add("thGhost");
+        th.style.opacity = ".4";
         e.dataTransfer.effectAllowed = "move";
       });
 
@@ -1275,7 +1251,7 @@
         const th = e.target.closest("th");
         if (!th || th.cellIndex === 0 || !dragSrc) return;
         cleanup();
-        th.classList.add("thDrop");
+        th.style.outline = "2px dashed rgba(111,60,207,.65)";
         e.dataTransfer.dropEffect = "move";
       });
 
@@ -1322,6 +1298,7 @@
         }
 
         const header = res.header.map((h, idx)=> idx===0 ? "REF" : esc(h));
+
         const rows = res.rows.map(r=>{
           return r.map((v, idx)=>{
             if (idx===0) return `<span class="mono">${esc(v)}</span>`;
