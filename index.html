@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Precificação — HS</title>
+
   <style>
     :root{
       --bg:#0b0b0c;
@@ -95,23 +96,11 @@
     .split{display:grid;grid-template-columns: 1.2fr .8fr; gap:14px}
     @media(max-width:980px){.split{grid-template-columns:1fr}}
 
-    /* table (somente as tabelas do app dentro de .scroll) */
-    .scroll{
-      max-height:520px;
-      overflow:auto;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
-      margin-top:10px;
-      background: rgba(0,0,0,.18)
-    }
-    .scroll table{border-collapse:collapse; min-width:100%}
-    .scroll th,.scroll td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:13px;
-      white-space:nowrap
-    }
-    .scroll th{
+    /* table */
+    .scroll{max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-top:10px; background: rgba(0,0,0,.18)}
+    table{border-collapse:collapse; min-width:100%}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;white-space:nowrap}
+    th{
       position:sticky; top:0; z-index:2;
       background: rgba(15,15,18,.95);
       text-align:left;
@@ -120,11 +109,11 @@
       color:#e9e9f4;
       user-select:none;
     }
-    .scroll td:first-child, .scroll th:first-child{
+    td:first-child, th:first-child{
       position:sticky; left:0; z-index:3;
       background: rgba(18,18,22,.98);
     }
-    .scroll tr:hover td{background: rgba(255,255,255,.03)}
+    tr:hover td{background: rgba(255,255,255,.03)}
     .badge{
       display:inline-flex;align-items:center;gap:6px;
       padding:4px 10px;border-radius:999px;
@@ -209,9 +198,6 @@
       white-space:nowrap;
     }
 
-    /* Ajuste do campo coleção */
-    #collName { min-width: 200px; flex: 1; }
-
     /* Botões inline */
     .button-group {
       display: flex;
@@ -220,93 +206,135 @@
       flex-wrap: wrap;
     }
 
-    /* Modal de impressão: branco e legível */
+    /* Modal impressão (AGORA CLARO) */
     #modalPrintWrap .modal{
-      background:#ffffff !important;
+      background:#f7f8fb !important;
       color:#111 !important;
+      border:1px solid rgba(0,0,0,.12) !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+    #modalPrintWrap h3{ color:#111 !important; }
+    #modalPrintWrap .actions button.secondary{
+      background: rgba(0,0,0,.06) !important;
+      border: 1px solid rgba(0,0,0,.14) !important;
+      color:#111 !important;
+    }
+    /* botão imprimir bonito */
+    #modalPrintWrap .actions button.print-cta{
+      background:#2563eb !important;
       border:1px solid rgba(0,0,0,.10) !important;
+      color:#fff !important;
+      font-weight:900;
+      border-radius:12px;
     }
-    #modalPrintWrap .modal h3{ color:#111 !important; }
-    #modalPrintWrap .modalBackdrop{
-      background: rgba(0,0,0,.62);
+    #modalPrintWrap .actions button.print-cta:hover{ filter:brightness(.95); }
+
+    /* Tabela do preview (clara) */
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      background:#fff;
+    }
+    .pdf-table th {
+      background: #f3f4f6;
+      border: 1px solid #d9dbe1;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: bold;
+      color: #111;
+    }
+    .pdf-table td {
+      border: 1px solid #d9dbe1;
+      padding: 8px 10px;
+      vertical-align: middle;
+      color:#111;
+    }
+    /* REMOVE A COLUNA PRETA (REF) */
+    .pdf-table td.ref-col,
+    .pdf-table th.ref-col{
+      background:#fff !important;
+      color:#111 !important;
+      font-weight:800;
+      font-family: 'Courier New', monospace;
+    }
+    .pdf-table .price-col {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .pdf-table .status-up {
+      color: #15803d;
+      font-weight: 900;
+    }
+    .pdf-table .status-down {
+      color: #b91c1c;
+      font-weight: 900;
+    }
+    .pdf-table .status-eq {
+      color: #444;
+      font-weight: 800;
     }
 
-    /* Estilos para impressão/PDF */
-    .print-container{ background:#fff; color:#000; }
-
+    /* ===== PRINT REAL: imprime apenas #printRoot ===== */
     @media print {
-      /* força cor no PDF */
-      *{
+      html, body {
+        background:#fff !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      body * { visibility: hidden; }
-      .print-container, .print-container * { visibility: visible; }
-
-      .print-container{
-        position:absolute;
-        left:0; top:0;
-        width:100%;
-        padding:20px;
-        background:#fff !important;
-        color:#000 !important;
-        font-family: Arial, sans-serif;
+      /* esconde tudo */
+      body > * {
+        display:none !important;
       }
 
-      .no-print { display:none !important; }
-    }
+      /* mostra só printRoot */
+      #printRoot, #printRoot * {
+        display:block !important;
+        visibility:visible !important;
+      }
 
-    /* Tabela do PDF (não herda sticky/cores do app) */
-    .pdf-table{
-      width:100%;
-      border-collapse:collapse;
-      margin:10px 0;
-      font-family: Arial, sans-serif;
-      font-size:12px;
-    }
-    .pdf-table th{
-      background:#f5f5f5 !important;
-      border:1px solid #ddd;
-      padding:8px 10px;
-      text-align:left;
-      font-weight:bold;
-      color:#333;
-    }
-    .pdf-table td{
-      border:1px solid #ddd;
-      padding:8px 10px;
-      vertical-align:middle;
-      background:#fff !important; /* garante que não fica preto */
-      color:#000 !important;
-    }
-    .pdf-table .ref-col{
-      font-weight:bold;
-      font-family:'Courier New', monospace;
-      background:#fff !important; /* remove coluna preta */
-      color:#000 !important;
-    }
-    .pdf-table .price-col{
-      text-align:right;
-      font-family:'Courier New', monospace;
-    }
-    .pdf-table .up{ color:#28a745 !important; font-weight:900; }
-    .pdf-table .down{ color:#dc3545 !important; font-weight:900; }
+      #printRoot{
+        position:static !important;
+        background:#fff !important;
+        color:#000 !important;
+        padding:18px;
+        width:100%;
+        font-family: Arial, Helvetica, sans-serif;
+      }
 
-    /* botão imprimir do modal (visível e forte) */
-    #modalPrintWrap button.success{
-      background: linear-gradient(180deg, #2ecc71, #1f9d55) !important;
-      border: 1px solid rgba(31,157,85,.55) !important;
-      color:#0b1a10 !important;
-      font-weight:900;
-    }
-    #modalPrintWrap button.secondary{
-      background:#f2f2f2 !important;
-      border:1px solid #ddd !important;
-      color:#222 !important;
+      #printRoot table{
+        width:100%;
+        border-collapse:collapse;
+        background:#fff !important;
+      }
+
+      #printRoot th, #printRoot td{
+        border:1px solid #cfcfcf;
+        padding:6px 8px;
+        font-size:12px;
+      }
+
+      /* REF SEM FUNDO PRETO */
+      #printRoot .ref-col{
+        background:#fff !important;
+        color:#000 !important;
+        font-weight:800;
+      }
+
+      /* status colorido no PDF */
+      #printRoot .status-up{ color:#15803d !important; font-weight:900; }
+      #printRoot .status-down{ color:#b91c1c !important; font-weight:900; }
+      #printRoot .status-eq{ color:#444 !important; font-weight:800; }
+
+      thead{ display:table-header-group; }
+      tr{ page-break-inside:avoid; }
     }
   </style>
 </head>
+
 <body>
   <div class="overlay" id="overlay">
     <div class="loaderBox">
@@ -335,16 +363,16 @@
   <!-- Modal para incluir ref na coleção atual -->
   <div class="modalWrap" id="modalAddRefWrap">
     <div class="modalBackdrop" onclick="ModalAddRef.close()"></div>
-    <div class="modal add-ref-modal">
+    <div class="modal">
       <h3>Incluir/Atualizar Referência na Coleção Atual</h3>
 
-      <div class="row" style="margin:12px 0;">
+      <div class="row" style="margin:12px 0">
         <label>Referência e Preço</label>
         <input id="modalRefPrice" placeholder="Ex.: 0227 179,99" style="width:100%"/>
-        <div class="hint" style="margin-top:4px;">Formato: <span class="mono">REF PREÇO</span>. Ex: <span class="mono">0227 179,99</span></div>
+        <div class="hint">Formato: <span class="mono">REF PREÇO</span> (4 dígitos + espaço + valor). Ex: 0227 179,99</div>
       </div>
 
-      <div class="row" style="margin:12px 0;">
+      <div class="row" style="margin:12px 0">
         <label>Coleção atual detectada</label>
         <input id="modalCurrentColl" readonly style="width:100%; background:rgba(255,255,255,.05); color:var(--muted)"/>
       </div>
@@ -359,17 +387,17 @@
   <!-- Modal para gravar coleção atual -->
   <div class="modalWrap" id="modalExportWrap">
     <div class="modalBackdrop" onclick="ModalExport.close()"></div>
-    <div class="modal export-modal">
+    <div class="modal">
       <h3>Gravar Coleção Atual</h3>
 
-      <div class="row" style="margin:12px 0;">
+      <div class="row" style="margin:12px 0">
         <label>Selecionar coleção</label>
         <select id="modalExportColl" style="width:100%">
           <option value="latest">ÚLTIMA COLEÇÃO (padrão)</option>
         </select>
       </div>
 
-      <div class="row" style="margin:12px 0;">
+      <div class="row" style="margin:12px 0">
         <label>Senha</label>
         <input id="modalExportPass" type="password" placeholder="Digite a senha" style="width:100%"/>
       </div>
@@ -395,7 +423,7 @@
 
       <div class="actions">
         <button class="secondary" onclick="ModalPrint.close()">Fechar</button>
-        <button class="success" id="btnDoPrint">Imprimir / Gerar PDF</button>
+        <button class="print-cta" onclick="ModalPrint.printNow()">Imprimir / Gerar PDF</button>
       </div>
     </div>
   </div>
@@ -423,8 +451,8 @@
       <div style="margin-top:10px">
         <label>Cole os itens (1 por linha)</label>
         <div class="hint">
-          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF PREÇO</span> (recomendado).
-          Ex.: <span class="mono">0227 89,99</span>
+          Aceita: <span class="mono">REF;PREÇO</span> ou <span class="mono">REF PREÇO</span>.
+          Ex.: <span class="mono">0227;89,99</span> ou <span class="mono">0227 89,99</span>
         </div>
         <textarea id="collItems" placeholder="Cole aqui..."></textarea>
       </div>
@@ -514,13 +542,16 @@
         <span class="hint right" id="matStatus"></span>
       </div>
 
-      <div class="hint" style="margin-top:8px;">
-        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> (cabeçalho) para reorganizar. A ordem fica salva no navegador.
+      <div class="hint" style="margin-top:8px">
+        Dica: depois de gerar, você pode <b>arrastar os nomes das coleções</b> no cabeçalho (ordem salva no navegador).
       </div>
 
       <div id="matTableWrap"></div>
     </div>
   </div>
+
+  <!-- ✅ ROOT FORA DO MODAL (PRINT REAL) -->
+  <div id="printRoot"></div>
 
   <script>
     /***********************
@@ -532,6 +563,9 @@
     /***********************
      * FUNÇÕES AUXILIARES
      ***********************/
+    let collections = [];
+    let collectionsWithKeys = [];
+
     function getLatestCollection() {
       if (collectionsWithKeys.length === 0) return null;
       const sorted = [...collectionsWithKeys].sort((a, b) => b.key - a.key);
@@ -639,43 +673,52 @@
     };
 
     /***********************
-     * MODAL PRINT
+     * MODAL PRINT (PREVIEW + PRINT REAL)
      ***********************/
     const ModalPrint = {
       _lastHTML: "",
       open(data, collA, collB) {
         const container = document.getElementById("printContainer");
 
+        // pega somente alterados (subiu/desceu) e com preços válidos
         const filteredData = data.filter(item =>
-          (item.direcao === "SUBIU" || item.direcao === "DESCEU") &&
+          (item.direcao === "SUBIU" || item.direcao === "DESCEU" || item.direcao === "IGUAL") &&
           item.precoA != null &&
           item.precoB != null
         );
 
         const now = new Date();
-        const pad = (n)=> String(n).padStart(2,"0");
-        const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const dateStr =
+          String(now.getDate()).padStart(2,'0') + '/' +
+          String(now.getMonth()+1).padStart(2,'0') + '/' +
+          now.getFullYear() + ', ' +
+          String(now.getHours()).padStart(2,'0') + ':' +
+          String(now.getMinutes()).padStart(2,'0') + ':' +
+          String(now.getSeconds()).padStart(2,'0');
 
         let html = `
-          <div style="font-family: Arial, sans-serif; color:#000; margin:0; padding:0;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div style="font-size:12px; color:#333;">${dateStr}</div>
-              <div style="font-weight:800; font-size:12px; color:#111;">Precificação — HS</div>
-            </div>
-
-            <div style="margin:10px 0 8px 0;">
-              <div style="font-weight:900; font-size:16px; color:#000;">
-                REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
+          <div style="font-family: Arial, sans-serif; color:#111; background:#fff;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px; margin-bottom:10px;">
+              <div>
+                <div style="font-size:12px;color:#555;">${dateStr}</div>
+                <div style="margin-top:6px;font-size:18px;font-weight:900;">
+                  REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
+                </div>
+                <div style="font-size:12px;color:#555;margin-top:4px;">
+                  Itens: ${filteredData.length}
+                </div>
               </div>
-              <div style="font-size:12px; color:#555;">Itens: ${filteredData.length}</div>
+              <div style="font-size:12px;color:#555;font-weight:700;">
+                Precificação — HS
+              </div>
             </div>
 
-            <div style="border-top:1px solid #ccc; margin:10px 0 10px 0;"></div>
+            <div style="height:1px;background:#d9dbe1;margin:10px 0;"></div>
 
             <table class="pdf-table">
               <thead>
                 <tr>
-                  <th>REF</th>
+                  <th class="ref-col">REF</th>
                   <th>PREÇO ANTERIOR</th>
                   <th>PREÇO ATUAL</th>
                   <th>STATUS</th>
@@ -685,14 +728,17 @@
         `;
 
         filteredData.forEach(item => {
-          const statusClass = item.direcao === "SUBIU" ? "up" : "down";
-          const statusText  = item.direcao === "SUBIU" ? "SUBIU" : "DESCEU";
+          const status = item.direcao;
+          let cls = "status-eq";
+          if (status === "SUBIU") cls = "status-up";
+          if (status === "DESCEU") cls = "status-down";
+
           html += `
             <tr>
-              <td class="ref-col">${esc(item.referencia)}</td>
+              <td class="ref-col ref-col">${esc(item.referencia)}</td>
               <td class="price-col">${fmtBR(item.precoA)}</td>
               <td class="price-col">${fmtBR(item.precoB)}</td>
-              <td class="${statusClass}">${statusText}</td>
+              <td class="${cls}">${esc(status)}</td>
             </tr>
           `;
         });
@@ -701,7 +747,7 @@
               </tbody>
             </table>
 
-            <div style="margin-top:14px; font-size:10px; color:#777; text-align:center; padding-top:10px; border-top:1px solid #eee;">
+            <div style="margin-top:18px;font-size:11px;color:#666;text-align:center;">
               Sistema de Precificação HS | Relatório gerado automaticamente
             </div>
           </div>
@@ -713,12 +759,15 @@
       },
       close() {
         document.getElementById("modalPrintWrap").classList.remove("on");
-      }
-    };
+      },
+      printNow(){
+        // ✅ PRINT REAL: joga conteúdo em #printRoot (fora do modal) e imprime
+        const root = document.getElementById("printRoot");
+        root.innerHTML = this._lastHTML || "";
 
-    // botão do modal -> imprime só o conteúdo do printContainer (garante que não sai em branco)
-    document.getElementById("btnDoPrint").onclick = () => {
-      window.print();
+        // força repaint (evita PDF branco)
+        setTimeout(()=> window.print(), 120);
+      }
     };
 
     /***********************
@@ -730,7 +779,6 @@
       const r = await fetch(url, { method:"GET" });
       return r.json();
     }
-
     async function apiPost(payload){
       const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
       return r.json();
@@ -767,64 +815,53 @@
       return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
     }
 
-    /**
-     * PARSER CORRIGIDO (resolve o seu erro do "0227 59")
-     * - NÃO usa split por vírgula como separador (vírgula é decimal do BR).
-     * - Prioriza: "REF;PREÇO" ou "REF<TAB>PREÇO" ou "REF PREÇO"
-     * - Em "REF PREÇO", pega o primeiro token como REF e o resto como preço (mantém "59,99" inteiro).
-     */
-    function parseLineToItem(line){
-      const s = String(line||"").trim();
-      if (!s) return null;
-
-      // 1) separador ; ou tab
-      let m = s.match(/^(\S+)\s*[;\t]\s*(.+)$/);
-      if (m){
-        const ref = m[1].toUpperCase();
-        const price = parsePriceBR(m[2]);
-        if (!ref || price == null) return null;
-        return { ref, preco: price };
-      }
-
-      // 2) separador "ref , preço" SOMENTE se realmente tiver vírgula como separador (ex: "0227, 89.99")
-      // (não confunde com decimal)
-      m = s.match(/^(\S+)\s*,\s*(\d[\d.,]*)$/);
-      if (m && !m[1].includes(" ")){
-        const ref = m[1].toUpperCase();
-        const price = parsePriceBR(m[2]);
-        if (!ref || price == null) return null;
-        return { ref, preco: price };
-      }
-
-      // 3) "REF PREÇO" (recomendado)
-      m = s.match(/^(\S+)\s+(.+)$/);
-      if (m){
-        const ref = m[1].toUpperCase();
-        const price = parsePriceBR(m[2]);
-        if (!ref || price == null) return null;
-        return { ref, preco: price };
-      }
-
-      return null;
-    }
-
+    // ✅ FIX DEFINITIVO DO BUG "0227 59" (NUNCA MAIS SPLIT POR VÍRGULA DO PREÇO)
     function parseItemsFromTextarea(text){
       const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
       const out = [];
+
       for (const line of lines){
-        const it = parseLineToItem(line);
-        if (it) out.push(it);
+        let ref = "";
+        let priceRaw = "";
+
+        // 1) REF;PREÇO
+        let m = line.match(/^(\S+)\s*;\s*(.+)$/);
+        if (m){
+          ref = m[1];
+          priceRaw = m[2];
+        } else {
+          // 2) REF PREÇO (espaço)
+          m = line.match(/^(\S+)\s+(.+)$/);
+          if (m){
+            ref = m[1];
+            priceRaw = m[2];
+          } else {
+            // 3) REF,PREÇO (SÓ aceita se preço vier com PONTO ou inteiro, pra não quebrar "59,99")
+            m = line.match(/^(\S+)\s*,\s*(\d+(?:\.\d{1,2})?)$/);
+            if (m){
+              ref = m[1];
+              priceRaw = m[2];
+            } else {
+              continue;
+            }
+          }
+        }
+
+        ref = String(ref||"").trim().toUpperCase();
+        const price = parsePriceBR(priceRaw);
+
+        if (!ref || price == null) continue;
+        out.push({ ref, preco: price });
       }
+
       return out;
     }
 
-    // parse do modal addRef (continua aceitando 4 dígitos)
     function parseRefPriceFormat(str) {
       if (!str) return null;
       const s = String(str).trim();
-      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
+      const match = s.match(/^(\d{4})\s+(.+)$/);
       if (!match) return null;
-
       const ref = match[1];
       const price = parsePriceBR(match[2]);
       if (!ref || price == null) return null;
@@ -836,9 +873,6 @@
     /***********************
      * Collections load
      ***********************/
-    let collections = [];
-    let collectionsWithKeys = [];
-
     async function loadCollections(){
       try {
         const res = await apiGet("listCollectionsWithKeys");
@@ -866,7 +900,6 @@
           o.textContent = "Selecione";
           sel.appendChild(o);
         }
-
         const sorted = [...collectionsWithKeys].sort((a, b) => a.key - b.key);
         sorted.forEach(c => {
           const o = document.createElement("option");
@@ -903,8 +936,8 @@
         if (resp?.erro){ throw new Error(resp.erro); }
 
         await loadCollections();
-
         Overlay.off();
+
         const useAsCurrent = await Modal.ask({
           title:"Usar como lista atual?",
           text:`Deseja gravar a lista atual (aba Leonardo) usando esta coleção recém-salva?\n\nSe SIM, vai pedir a senha.`
@@ -916,6 +949,7 @@
 
             const coll = name;
             const pass = document.getElementById("modalExportPass").value;
+
             if (!pass){ alert("Digite a senha."); return; }
 
             try{
@@ -946,7 +980,7 @@
     };
 
     /***********************
-     * ADD REF MODAL
+     * BOTÃO MODAL ADD REF
      ***********************/
     document.getElementById("btnAddRefModal").onclick = async () => {
       const ok = await ModalAddRef.open();
@@ -961,24 +995,15 @@
       }
 
       const { ref, preco } = parsed;
-
       const pass = prompt("Digite a senha para incluir/atualizar a referência:");
       if (!pass) return;
 
       try {
         Overlay.on("Processando...", "Incluindo/atualizando referência na coleção atual.");
-
-        const resp = await apiPost({
-          action: "addRefToCurrent",
-          ref,
-          preco,
-          password: pass
-        });
-
+        const resp = await apiPost({ action: "addRefToCurrent", ref, preco, password: pass });
         if (resp?.erro) throw new Error(resp.erro);
 
-        alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
-
+        alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'}.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
         await loadCollections();
 
         if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
@@ -993,7 +1018,7 @@
     };
 
     /***********************
-     * EXPORT MODAL
+     * BOTÃO EXPORT
      ***********************/
     document.getElementById("btnExportModal").onclick = async () => {
       const ok = await ModalExport.open();
@@ -1010,12 +1035,7 @@
 
       try{
         Overlay.on("Gravando COLEÇÃO ATUAL...", "Gerando lista e sobrescrevendo a aba Leonardo.");
-        const resp = await apiPost({
-          action:"exportCurrentPrices",
-          password: pass,
-          mode,
-          colecao: colecao
-        });
+        const resp = await apiPost({ action:"exportCurrentPrices", password: pass, mode, colecao });
         if (resp?.erro) throw new Error(resp.erro);
         alert(`OK! Itens gravados: ${resp.gravados || resp.exported || "?"}`);
       } catch(err){
@@ -1054,11 +1074,7 @@
           const badge = (res.atual?.colecao === i.coll)
             ? `<span class="badge b-ok">ATUAL</span>`
             : ``;
-          return [
-            esc(i.coll),
-            `<span class="mono">${fmtBR(i.price)}</span>`,
-            badge
-          ];
+          return [ esc(i.coll), `<span class="mono">${fmtBR(i.price)}</span>`, badge ];
         });
 
         renderTable("refTableWrap", ["Coleção", "Preço", ""], rows);
@@ -1081,7 +1097,7 @@
       const filterType = document.querySelector('input[name="filterType"]:checked').value;
 
       if (filterType === "changed"){
-        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
+        out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU" || r.direcao === "IGUAL");
       }
       if (filterType === "up"){
         out = out.filter(r => r.direcao === "SUBIU");
@@ -1121,7 +1137,6 @@
 
       const printBtn = document.getElementById("btnPrint");
       printBtn.style.display = filtered.length > 0 ? "inline-flex" : "none";
-
       setStatus("cmpStatus", `Itens: ${filtered.length}${filtered.length !== data.length ? " (filtrado)" : ""}`);
     }
 
@@ -1167,7 +1182,7 @@
     });
 
     /***********************
-     * MATRIZ + draggable columns (storage)
+     * MATRIZ (mantive do seu jeito)
      ***********************/
     const LS_COLORDER = "hs_matrix_col_order_v1";
 
@@ -1177,8 +1192,12 @@
         return Array.isArray(v) ? v : null;
       }catch{ return null; }
     }
-    function saveOrder(order){ localStorage.setItem(LS_COLORDER, JSON.stringify(order)); }
-    function clearOrder(){ localStorage.removeItem(LS_COLORDER); }
+    function saveOrder(order){
+      localStorage.setItem(LS_COLORDER, JSON.stringify(order));
+    }
+    function clearOrder(){
+      localStorage.removeItem(LS_COLORDER);
+    }
 
     function reorderMatrixTable(table){
       const saved = getSavedOrder();
@@ -1189,7 +1208,6 @@
 
       const headerNames = ths.slice(1).map(th=>th.dataset.colname);
       const final = saved.filter(c=>headerNames.includes(c)).concat(headerNames.filter(c=>!saved.includes(c)));
-
       applyColumnOrder(table, final);
     }
 
@@ -1231,28 +1249,16 @@
 
       let dragSrc = null;
 
-      function cleanup(){
-        Array.from(headRow.cells).forEach(th=>{
-          th.style.opacity = "";
-          th.style.outline = "";
-        });
-      }
-
       headRow.addEventListener("dragstart", (e)=>{
         const th = e.target.closest("th");
         if (!th || th.cellIndex === 0) return;
         dragSrc = th;
-        th.style.opacity = ".4";
         e.dataTransfer.effectAllowed = "move";
       });
 
       headRow.addEventListener("dragover", (e)=>{
         e.preventDefault();
-        const th = e.target.closest("th");
-        if (!th || th.cellIndex === 0 || !dragSrc) return;
-        cleanup();
-        th.style.outline = "2px dashed rgba(111,60,207,.65)";
-        e.dataTransfer.dropEffect = "move";
+        if (!dragSrc) return;
       });
 
       headRow.addEventListener("drop", (e)=>{
@@ -1270,12 +1276,10 @@
 
         applyColumnOrder(table, cur);
         saveOrder(cur);
-        cleanup();
         dragSrc = null;
       });
 
       headRow.addEventListener("dragend", ()=>{
-        cleanup();
         dragSrc = null;
       });
     }
@@ -1342,13 +1346,9 @@
         Overlay.on("Carregando...", "Buscando coleções no banco.");
         await loadCollections();
       } catch(err){
-        alert("Não consegui carregar as coleções.\n\n1) Confere se API_URL está correto.\n2) Confere se o Apps Script está publicado e acessível.\n\nErro: " + err.message);
+        alert("Não consegui carregar as coleções.\n\n1) Confere se API_URL está correto.\n2) Confere se o Apps Script está publicado.\n\nErro: " + err.message);
       } finally{
         Overlay.off();
-      }
-
-      if (API_URL.includes("COLE_AQUI")){
-        alert("ATENÇÃO: você precisa colar a URL do Apps Script em API_URL (no topo do HTML).");
       }
     })();
   </script>
