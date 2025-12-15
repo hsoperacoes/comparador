@@ -189,6 +189,43 @@
     .thDrag:active{cursor:grabbing}
     .thGhost{opacity:.35}
     .thDrop{outline:2px dashed rgba(111,60,207,.65); outline-offset:-4px}
+
+    /* Filter list */
+    .filter-list{
+      display:flex;
+      gap:8px;
+      margin-left:10px;
+    }
+    .filter-list label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    
+    /* Novo modal para incluir ref */
+    .add-ref-modal .row {
+      margin: 12px 0;
+    }
+    .add-ref-modal input {
+      width: 100%;
+    }
+    .add-ref-modal .hint {
+      margin-top: 4px;
+    }
+    
+    /* Ajuste do campo coleção */
+    #collName {
+      min-width: 200px;
+      flex: 1;
+    }
+    
+    /* Botões inline */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -216,6 +253,30 @@
     </div>
   </div>
 
+  <!-- Novo modal para incluir ref na coleção atual -->
+  <div class="modalWrap" id="modalAddRefWrap">
+    <div class="modalBackdrop" onclick="ModalAddRef.close()"></div>
+    <div class="modal add-ref-modal">
+      <h3>Incluir/Atualizar Referência na Coleção Atual</h3>
+      
+      <div class="row">
+        <label>Referência e Preço</label>
+        <input id="modalRefPrice" placeholder="Ex.: 0227 179,99" style="width:100%"/>
+        <div class="hint">Formato: <span class="mono">REF PREÇO</span> (4 dígitos + espaço + valor). Ex: 0227 179,99</div>
+      </div>
+      
+      <div class="row">
+        <label>Coleção atual detectada</label>
+        <input id="modalCurrentColl" readonly style="background:rgba(255,255,255,.05); color:var(--muted)"/>
+      </div>
+      
+      <div class="actions">
+        <button class="secondary" onclick="ModalAddRef.close()">Cancelar</button>
+        <button id="modalAddRefConfirm">Incluir/Atualizar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap grid">
     <h1>Precificação — HS</h1>
 
@@ -224,13 +285,14 @@
       <div class="title">Incluir nova coleção <small>(lista de preço)</small></div>
 
       <div class="row">
-        <div style="min-width:280px;flex:1">
+        <div style="min-width:200px;flex:1">
           <label>Nome da coleção</label>
           <input id="collName" placeholder="Ex.: OUTONO 2025 / OUTONO 2025 REM / OUTONO 2025 REM 2" style="width:100%"/>
         </div>
 
-        <div class="right row">
+        <div class="button-group">
           <button id="btnSaveColl">Salvar coleção no banco</button>
+          <button id="btnAddRefModal" class="secondary">Incluir ref na coleção atual</button>
           <button id="btnToggleExport" class="secondary" title="Mostrar/ocultar opções de atualização da lista atual">Alterar lista de preço</button>
         </div>
       </div>
@@ -250,7 +312,7 @@
 
         <div class="row">
           <div>
-            <label>Gerar lista “até”</label>
+            <label>Gerar lista "até"</label>
             <select id="exportMode" style="min-width:190px">
               <option value="latest">ÚLTIMA (padrão)</option>
               <option value="upto">Até uma coleção...</option>
@@ -258,7 +320,7 @@
           </div>
 
           <div>
-            <label>Coleção (somente se “até”)</label>
+            <label>Coleção (somente se "até")</label>
             <select id="exportColl" disabled style="min-width:260px"></select>
           </div>
 
@@ -287,16 +349,6 @@
         </div>
 
         <button id="btnBuscar">Buscar</button>
-
-        <div class="right row">
-          <div style="min-width:180px">
-            <label>Preço para incluir/atualizar</label>
-            <input id="refPrice" placeholder="Ex.: 89,99" style="min-width:180px"/>
-          </div>
-          <button id="btnAddRefCurrent" class="secondary" title="Inclui ou substitui a referência na última coleção cadastrada">
-            Incluir ref na coleção atual
-          </button>
-        </div>
 
         <span class="hint" id="refStatus"></span>
       </div>
@@ -336,17 +388,21 @@
 
         <button id="btnCompare">Comparar</button>
 
-        <div class="row">
-          <label class="row" style="gap:6px;align-items:center">
-            <input type="checkbox" id="fChanged"/>
+        <div class="filter-list">
+          <label>
+            <input type="radio" name="filterType" value="all" checked/>
+            <span>Todos</span>
+          </label>
+          <label>
+            <input type="radio" name="filterType" value="changed"/>
             <span>Somente alterou</span>
           </label>
-          <label class="row" style="gap:6px;align-items:center">
-            <input type="checkbox" id="fUp"/>
+          <label>
+            <input type="radio" name="filterType" value="up"/>
             <span>Somente subiu</span>
           </label>
-          <label class="row" style="gap:6px;align-items:center">
-            <input type="checkbox" id="fDown"/>
+          <label>
+            <input type="radio" name="filterType" value="down"/>
             <span>Somente desceu</span>
           </label>
         </div>
@@ -428,6 +484,35 @@
     };
 
     /***********************
+     * MODAL ADD REF
+     ***********************/
+    const ModalAddRef = {
+      _resolver: null,
+      open() {
+        // Busca a última coleção para mostrar
+        const lastColl = collections.length > 0 ? collections[collections.length - 1] : "Nenhuma coleção encontrada";
+        document.getElementById("modalCurrentColl").value = lastColl;
+        
+        // Limpa o campo
+        document.getElementById("modalRefPrice").value = "";
+        
+        document.getElementById("modalAddRefWrap").classList.add("on");
+        
+        return new Promise((resolve) => {
+          this._resolver = resolve;
+          document.getElementById("modalAddRefConfirm").onclick = () => this.close(true);
+        });
+      },
+      close(ans) {
+        document.getElementById("modalAddRefWrap").classList.remove("on");
+        if (this._resolver) {
+          this._resolver(ans);
+          this._resolver = null;
+        }
+      }
+    };
+
+    /***********************
      * API helpers
      ***********************/
     async function apiGet(action, params={}){
@@ -489,6 +574,21 @@
         out.push({ ref, preco: price });
       }
       return out;
+    }
+
+    // Nova função para parse específico do formato "0227 179,99"
+    function parseRefPriceFormat(str) {
+      if (!str) return null;
+      const s = String(str).trim();
+      // Formato: 4 dígitos + espaço + valor
+      const match = s.match(/^(\d{4})\s+([\d.,]+)$/);
+      if (!match) return null;
+      
+      const ref = match[1];
+      const price = parsePriceBR(match[2]);
+      
+      if (!ref || price == null) return null;
+      return { ref, preco: price };
     }
 
     function setStatus(id, msg){ document.getElementById(id).textContent = msg || ""; }
@@ -598,6 +698,53 @@
     };
 
     /***********************
+     * BOTÃO PARA ABRIR MODAL DE INCLUIR REF
+     ***********************/
+    document.getElementById("btnAddRefModal").onclick = async () => {
+      const ok = await ModalAddRef.open();
+      if (!ok) return;
+      
+      const input = document.getElementById("modalRefPrice").value.trim();
+      const parsed = parseRefPriceFormat(input);
+      
+      if (!parsed) {
+        alert("Formato inválido! Use: REF (4 dígitos) + espaço + PREÇO. Ex: 0227 179,99");
+        return;
+      }
+      
+      const { ref, preco } = parsed;
+      
+      // Pede senha para atualizar
+      const pass = prompt("Digite a senha para incluir/atualizar a referência:");
+      if (!pass) return;
+
+      try {
+        Overlay.on("Processando...", "Incluindo/atualizando referência na coleção atual.");
+        
+        const resp = await apiPost({
+          action: "addRefToCurrent",
+          ref,
+          preco,
+          password: pass
+        });
+        
+        if (resp?.erro) throw new Error(resp.erro);
+        
+        alert(`OK! Referência ${ref} ${resp.modo === 'atualizado' ? 'atualizada' : 'incluída'} na coleção atual.\nPreço: ${fmtBR(preco)}\nColeção: ${resp.colecaoAtual}`);
+        
+        // Se estiver na tela de busca com esta ref, atualiza
+        if (document.getElementById("refInput").value.trim().toUpperCase() === ref) {
+          document.getElementById("btnBuscar").click();
+        }
+        
+      } catch(err) {
+        alert("Erro: " + err.message);
+      } finally {
+        Overlay.off();
+      }
+    };
+
+    /***********************
      * EXPORT BUTTON (manual)
      ***********************/
     document.getElementById("btnExport").onclick = async ()=>{
@@ -679,68 +826,23 @@
     };
 
     /***********************
-     * ADD REF TO CURRENT COLLECTION
-     * (depende do GS ter a rota POST action: addRefToCurrent)
-     ***********************/
-    document.getElementById("btnAddRefCurrent").onclick = async ()=>{
-      const ref = document.getElementById("refInput").value.trim().toUpperCase();
-      const priceStr = document.getElementById("refPrice").value.trim();
-      const price = parsePriceBR(priceStr);
-
-      if (!ref){ alert("Informe a referência."); return; }
-      if (price == null){ alert("Informe um preço válido (ex.: 89,99)."); return; }
-
-      const ok = await Modal.ask({
-        title:"Incluir/atualizar na coleção atual",
-        text:`Vou incluir (ou substituir) a referência ${ref} com preço ${fmtBR(price)} na ÚLTIMA coleção cadastrada e também atualizar a planilha de COLEÇÃO ATUAL.\n\nConfirmar?`
-      });
-      if (!ok) return;
-
-      // pede senha para atualizar a Leonardo também (você pediu travar isso no GS)
-      const pass = prompt("Digite a senha para atualizar a COLEÇÃO ATUAL:");
-      if (!pass) return;
-
-      try{
-        Overlay.on("Atualizando referência...", "Incluindo na coleção atual e atualizando a lista.");
-        const resp = await apiPost({
-          action: "addRefToCurrent",
-          ref,
-          preco: price,
-          password: pass
-        });
-        if (resp?.erro) throw new Error(resp.erro);
-
-        alert(`OK! Ref ${ref} atualizada.\nColeção atual: ${resp.colecaoAtual || "?"}`);
-
-        // recarrega coleções e ref
-        await loadCollections();
-        document.getElementById("btnBuscar").click();
-
-      } catch(err){
-        alert("Erro: " + err.message);
-      } finally {
-        Overlay.off();
-      }
-    };
-
-    /***********************
-     * COMPARE (auto em tempo real)
+     * COMPARE (só quando clicar no botão)
      ***********************/
     let cmpLast = null;
+    
+    // Remove o auto-run em tempo real
     function applyCompareFilters(data){
       let out = data.slice();
 
-      const onlyChanged = document.getElementById("fChanged").checked;
-      const onlyUp = document.getElementById("fUp").checked;
-      const onlyDown = document.getElementById("fDown").checked;
+      const filterType = document.querySelector('input[name="filterType"]:checked').value;
 
-      if (onlyChanged){
+      if (filterType === "changed"){
         out = out.filter(r => r.direcao === "SUBIU" || r.direcao === "DESCEU");
       }
-      if (onlyUp){
+      if (filterType === "up"){
         out = out.filter(r => r.direcao === "SUBIU");
       }
-      if (onlyDown){
+      if (filterType === "down"){
         out = out.filter(r => r.direcao === "DESCEU");
       }
       return out;
@@ -803,22 +905,13 @@
     // botão comparar
     document.getElementById("btnCompare").onclick = runCompare;
 
-    // filtros em “tempo real”
-    ["fChanged","fUp","fDown"].forEach(id=>{
-      document.getElementById(id).onchange = ()=>{
+    // filtros em "tempo real" (só se já tiver dados)
+    document.querySelectorAll('input[name="filterType"]').forEach(radio=>{
+      radio.onchange = ()=>{
         if (!cmpLast) return;
         renderCompare(cmpLast.data, cmpLast.a, cmpLast.b);
       };
     });
-
-    // auto-run ao mudar selects (sem precisar clicar)
-    let cmpDebounce = null;
-    function debounceCompare(){
-      clearTimeout(cmpDebounce);
-      cmpDebounce = setTimeout(()=> runCompare(), 250);
-    }
-    document.getElementById("collA").onchange = debounceCompare;
-    document.getElementById("collB").onchange = debounceCompare;
 
     /***********************
      * MATRIX + draggable columns (storage)
