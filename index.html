@@ -242,7 +242,7 @@
       width: 100%;
     }
     
-    /* Estilos para impressão/PDF - AJUSTADOS para ficar como a versão do GS */
+    /* Estilos para impressão/PDF - ATUALIZADOS PARA FICAR COMO O PDF */
     .print-only {
       display: none;
     }
@@ -251,7 +251,7 @@
       display: block;
       margin-bottom: 20px;
       padding-bottom: 10px;
-      border-bottom: 2px solid #6f3ccf;
+      border-bottom: 1px solid #ccc;
     }
     
     @media print {
@@ -269,132 +269,74 @@
         padding: 20px;
         background: white;
         color: black;
-      }
-      .print-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 15px 0;
         font-family: Arial, sans-serif;
-      }
-      .print-table th {
-        background: #2a2a2f;
-        color: white;
-        padding: 12px 8px;
-        border: 1px solid #444;
-        font-size: 13px;
-        text-align: center;
-      }
-      .print-table td {
-        padding: 10px 8px;
-        border: 1px solid #ddd;
-        font-size: 12px;
-        text-align: center;
-      }
-      .print-table .ref-col {
-        font-weight: bold;
-        background: #f5f5f5;
-        text-align: center;
-      }
-      .print-table .up {
-        color: #2ecc71;
-        font-weight: bold;
-      }
-      .print-table .down {
-        color: #e74c3c;
-        font-weight: bold;
-      }
-      .print-table .same {
-        color: #f39c12;
-        font-weight: bold;
-      }
-      .print-table .na {
-        color: #7f8c8d;
-        font-style: italic;
       }
       .no-print {
         display: none !important;
       }
+      .print-btn {
+        display: none !important;
+      }
     }
     
-    /* Tabela de impressão no modal */
-    .print-table {
+    /* Botão de imprimir no modal - SEMPRE VISÍVEL */
+    #modalPrintWrap .success {
+      display: inline-block !important;
+    }
+    
+    /* Estilos para tabela de impressão (formato PDF) */
+    .pdf-table {
       width: 100%;
       border-collapse: collapse;
       margin: 10px 0;
       font-family: Arial, sans-serif;
-    }
-    .print-table th {
-      background: #2a2a2f;
-      color: white;
-      padding: 12px 8px;
-      border: 1px solid #444;
-      font-size: 13px;
-      text-align: center;
-    }
-    .print-table td {
-      padding: 10px 8px;
-      border: 1px solid #ddd;
       font-size: 12px;
-      text-align: center;
     }
-    .print-table .ref-col {
-      font-weight: bold;
+    .pdf-table th {
       background: #f5f5f5;
-      text-align: center;
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: bold;
+      color: #333;
     }
-    .print-table .up {
-      color: #2ecc71;
+    .pdf-table td {
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      vertical-align: middle;
+    }
+    .pdf-table .ref-col {
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+    .pdf-table .price-col {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .pdf-table .up {
+      color: #28a745;
       font-weight: bold;
     }
-    .print-table .down {
-      color: #e74c3c;
+    .pdf-table .down {
+      color: #dc3545;
       font-weight: bold;
-    }
-    .print-table .same {
-      color: #f39c12;
-      font-weight: bold;
-    }
-    .print-table .na {
-      color: #7f8c8d;
-      font-style: italic;
     }
     
-    /* Estilo dos totais (igual GS) */
-    .print-totals {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8f9fa;
+    /* Botão de impressão dentro do conteúdo */
+    .print-btn {
+      background: #6f3ccf;
+      color: white;
+      border: none;
+      padding: 10px 20px;
       border-radius: 8px;
-      border: 1px solid #ddd;
-      font-family: Arial, sans-serif;
-    }
-    .print-totals h4 {
-      margin-top: 0;
-      color: #2a2a2f;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 8px;
-    }
-    .print-totals .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .print-totals .total-row:last-child {
-      border-bottom: none;
       font-weight: bold;
-      background: #e9ecef;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 20px;
+      display: inline-block;
     }
-    .print-totals .label {
-      font-weight: bold;
-      color: #555;
-    }
-    .print-totals .value {
-      font-weight: bold;
-      color: #2a2a2f;
+    .print-btn:hover {
+      background: #532aa0;
     }
   </style>
 </head>
@@ -476,7 +418,7 @@
     </div>
   </div>
 
-  <!-- Modal de impressão/PDF - ATUALIZADO -->
+  <!-- Modal de impressão/PDF - ATUALIZADO PARA FORMATO PDF -->
   <div class="modalWrap" id="modalPrintWrap">
     <div class="modalBackdrop" onclick="ModalPrint.close()"></div>
     <div class="modal" style="width:min(800px, 95vw); max-height:90vh; overflow:auto;">
@@ -762,117 +704,86 @@
     };
 
     /***********************
-     * MODAL PRINT - ATUALIZADO
+     * MODAL PRINT - ATUALIZADO PARA FORMATO PDF SIMPLES
      ***********************/
     const ModalPrint = {
       open(data, collA, collB) {
         const container = document.getElementById("printContainer");
         
-        // Cria o conteúdo para impressão no estilo do GS
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+        // Filtra apenas subiu/desceu (igual ao PDF)
+        const filteredData = data.filter(item => 
+          (item.direcao === "SUBIU" || item.direcao === "DESCEU") && 
+          item.precoA != null && 
+          item.precoB != null
+        );
         
-        // Estilo mais limpo, parecido com o GS
+        // Formata a data EXATAMENTE como no PDF: "15/12/2025, 15:11:32"
+        const now = new Date();
+        const dateStr = now.getDate().toString().padStart(2, '0') + '/' +
+                       (now.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                       now.getFullYear() + ', ' +
+                       now.getHours().toString().padStart(2, '0') + ':' +
+                       now.getMinutes().toString().padStart(2, '0') + ':' +
+                       now.getSeconds().toString().padStart(2, '0');
+        
+        // Cria o conteúdo para impressão NO FORMATO EXATO DO PDF
         let html = `
-          <div class="print-header">
-            <h2 style="margin:0; color:#333; font-size:18px;">Comparação de Coleções - HS</h2>
-            <p style="margin:5px 0; color:#666; font-size:12px;">Gerado em: ${dateStr}</p>
-            <p style="margin:5px 0; color:#666; font-size:12px;">
-              <strong>Coleção A (Antiga):</strong> ${esc(collA)} | 
-              <strong>Coleção B (Atual):</strong> ${esc(collB)}
-            </p>
-            <hr style="border:none; border-top:2px solid #6f3ccf; margin:15px 0;">
-          </div>
-          
-          <table class="print-table">
-            <thead>
-              <tr>
-                <th style="width:15%;">REF</th>
-                <th style="width:25%;">${esc(collA)}</th>
-                <th style="width:25%;">${esc(collB)}</th>
-                <th style="width:15%;">Variação</th>
-                <th style="width:20%;">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div style="font-family: Arial, sans-serif; color: #000; margin: 0; padding: 0;">
+            <!-- CABEÇALHO IGUAL AO PDF -->
+            <div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+              <h1 style="margin: 0 0 5px 0; font-size: 18px; font-weight: bold; color: #000;">
+                REMARCAÇÃO — ${esc(collA)} → ${esc(collB)}
+              </h1>
+              <p style="margin: 0; font-size: 12px; color: #555;">
+                Gerado em ${dateStr}. Itens: ${filteredData.length}
+              </p>
+            </div>
+            
+            <!-- TABELA IGUAL AO PDF -->
+            <table class="pdf-table">
+              <thead>
+                <tr>
+                  <th>REF</th>
+                  <th>PREÇO ANTERIOR</th>
+                  <th>PREÇO ATUAL</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
         
-        // Contadores para totais
-        let totalSubiu = 0;
-        let totalDesceu = 0;
-        let totalIgual = 0;
-        let totalSemDado = 0;
-        
-        data.forEach(item => {
-          const priceA = item.precoA != null ? fmtBR(item.precoA) : "-";
-          const priceB = item.precoB != null ? fmtBR(item.precoB) : "-";
-          const delta = item.delta != null ? fmtBR(item.delta) : "-";
-          
-          let statusClass = "";
-          let statusText = "";
-          
-          switch(item.direcao) {
-            case "SUBIU":
-              statusClass = "up";
-              statusText = "▲ SUBIU";
-              totalSubiu++;
-              break;
-            case "DESCEU":
-              statusClass = "down";
-              statusText = "▼ DESCEU";
-              totalDesceu++;
-              break;
-            case "IGUAL":
-              statusClass = "same";
-              statusText = "● IGUAL";
-              totalIgual++;
-              break;
-            default:
-              statusClass = "na";
-              statusText = "-";
-              totalSemDado++;
-          }
+        // Adiciona as linhas da tabela (SÓ SUBIU/DESCEU, igual ao PDF)
+        filteredData.forEach(item => {
+          const statusClass = item.direcao === "SUBIU" ? "up" : "down";
+          const statusText = item.direcao === "SUBIU" ? "SUBIU" : "DESCEU";
           
           html += `
-            <tr>
-              <td class="ref-col">${esc(item.referencia)}</td>
-              <td>${priceA}</td>
-              <td>${priceB}</td>
-              <td>${delta}</td>
-              <td class="${statusClass}">${statusText}</td>
-            </tr>
+                <tr>
+                  <td class="ref-col">${esc(item.referencia)}</td>
+                  <td class="price-col">${fmtBR(item.precoA)}</td>
+                  <td class="price-col">${fmtBR(item.precoB)}</td>
+                  <td class="${statusClass}">${statusText}</td>
+                </tr>
           `;
         });
         
         html += `
-            </tbody>
-          </table>
-          
-          <div class="print-totals">
-            <h4>Resumo da Comparação</h4>
-            <div class="total-row">
-              <span class="label">Total de itens:</span>
-              <span class="value">${data.length}</span>
+              </tbody>
+            </table>
+            
+            <!-- RODAPÉ SIMPLES -->
+            <div style="margin-top: 30px; font-size: 10px; color: #777; text-align: center; padding-top: 10px; border-top: 1px solid #eee;">
+              Sistema de Precificação HS | Relatório gerado automaticamente
             </div>
-            <div class="total-row">
-              <span class="label">Itens que subiram:</span>
-              <span class="value" style="color:#2ecc71;">${totalSubiu}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens que desceram:</span>
-              <span class="value" style="color:#e74c3c;">${totalDesceu}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens iguais:</span>
-              <span class="value" style="color:#f39c12;">${totalIgual}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Sem dados:</span>
-              <span class="value" style="color:#7f8c8d;">${totalSemDado}</span>
-            </div>
-            <div class="total-row">
-              <span class="label">Itens que alteraram:</span>
-              <span class="value">${totalSubiu + totalDesceu}</span>
+            
+            <!-- BOTÃO DE IMPRESSÃO (visível apenas na tela) -->
+            <div class="no-print" style="margin-top: 20px; text-align: center;">
+              <button onclick="window.print()" class="print-btn">
+                🖨️ Imprimir / Gerar PDF
+              </button>
+              <p style="font-size: 11px; color: #666; margin-top: 10px;">
+                Dica: Para salvar como PDF, clique no botão acima e escolha "Salvar como PDF" na impressora.
+              </p>
             </div>
           </div>
         `;
@@ -1332,7 +1243,7 @@
     });
 
     /***********************
-     * MATRIX + draggable columns (storage)
+     * MATRIZ + draggable columns (storage)
      ***********************/
     const LS_COLORDER = "hs_matrix_col_order_v1";
 
