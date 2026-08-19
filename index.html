@@ -255,8 +255,8 @@
     .pdf-wrap{
       background:#fff;
       color:#000;
-      padding:18px;
-      border-radius:12px;
+      padding:0;
+      border-radius:0;
     }
     .pdf-top{
       display:flex;
@@ -266,6 +266,9 @@
       margin-bottom:12px;
       border-bottom:1px solid #ddd;
       padding-bottom:10px;
+      position: static !important;
+      page-break-after: avoid;
+      break-after: avoid;
     }
     .pdf-top .left h1{
       margin:0 0 4px 0;
@@ -336,43 +339,61 @@
       border-top:1px solid #eee;
     }
 
-    /* Impressão real: imprime APENAS o #printRoot de forma fluida */
-   @media print {
-  /* Evita que o cabeçalho e elementos fixos sobreponham o conteúdo */
-  header, .header, .top-bar {
-    position: static !important;
-    page-break-after: avoid;
-  }
+    /* Impressão real: corrige sobreposição da página 2 */
+    @media print {
+      *{
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
 
-  /* Impede que linhas da tabela ou o cabeçalho fiquem cortados entre páginas */
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
+      html, body {
+        background:#fff !important;
+        color:#000 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        position: static !important;
+      }
 
-  tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
+      body *{
+        visibility:hidden !important;
+      }
 
-  thead {
-    display: table-header-group; /* Repete o cabeçalho da tabela de forma limpa */
-  }
+      #printRoot, #printRoot *{
+        visibility:visible !important;
+      }
 
-  tbody {
-    display: table-row-group;
-  }
+      #printRoot{
+        display:block !important;
+        position:static !important;
+        width:100% !important;
+        height:auto !important;
+        padding:10px !important;
+        margin:0 !important;
+        overflow:visible !important;
+      }
 
-  /* Garante que o container principal tenha fluxo normal na impressão */
-  body, container, .main-content {
-    position: static !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-}
+      .pdf-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
 
-      /* Oculta modais e overlays */
-      .modalWrap, .overlay { display: none !important; }
+      .pdf-table thead {
+        display: table-header-group !important;
+      }
+
+      .pdf-table tbody {
+        display: table-row-group !important;
+      }
+
+      .pdf-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .modalWrap, .overlay { display:none !important; }
     }
   </style>
 </head>
