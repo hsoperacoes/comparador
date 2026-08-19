@@ -337,44 +337,39 @@
     }
 
     /* Impressão real: imprime APENAS o #printRoot de forma fluida */
-    @media print {
-      *{
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
+   @media print {
+  /* Evita que o cabeçalho e elementos fixos sobreponham o conteúdo */
+  header, .header, .top-bar {
+    position: static !important;
+    page-break-after: avoid;
+  }
 
-      body {
-        background: #fff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
+  /* Impede que linhas da tabela ou o cabeçalho fiquem cortados entre páginas */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
 
-      /* Oculta os elementos da interface do app */
-      body > *:not(#printRoot) {
-        display: none !important;
-      }
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 
-      #printRoot {
-        display: block !important;
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        width: 100% !important;
-        height: auto !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
+  thead {
+    display: table-header-group; /* Repete o cabeçalho da tabela de forma limpa */
+  }
 
-      /* Garante a repetição do cabeçalho da tabela no topo de cada página */
-      .pdf-table thead {
-        display: table-header-group !important;
-      }
+  tbody {
+    display: table-row-group;
+  }
 
-      /* Evita cortar uma linha no meio entre páginas */
-      .pdf-table tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
+  /* Garante que o container principal tenha fluxo normal na impressão */
+  body, container, .main-content {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
 
       /* Oculta modais e overlays */
       .modalWrap, .overlay { display: none !important; }
