@@ -306,13 +306,13 @@
       border:1px solid #d6d6d6;
       padding:8px 10px;
       vertical-align:middle;
-      background:#fff; /* garante que não fica escuro */
+      background:#fff;
       color:#000;
     }
     .pdf-table .ref-col{
       font-weight:800;
       font-family:'Courier New', monospace;
-      background:#fff !important; /* força a 1ª coluna clara */
+      background:#fff !important;
       color:#000 !important;
     }
     .pdf-table .price-col{
@@ -336,37 +336,48 @@
       border-top:1px solid #eee;
     }
 
-    /* Impressão real: imprime APENAS o #printRoot */
+    /* Impressão real: imprime APENAS o #printRoot de forma fluida */
     @media print {
-      /* tenta manter cores */
       *{
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      body{
-        background:#fff !important;
+      body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
-      body *{
-        visibility:hidden !important;
+      /* Oculta os elementos da interface do app */
+      body > *:not(#printRoot) {
+        display: none !important;
       }
 
-      #printRoot, #printRoot *{
-        visibility:visible !important;
+      #printRoot {
+        display: block !important;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
-      #printRoot{
-        display:block !important;
-        position:fixed;
-        left:0; top:0;
-        width:100%;
-        height:auto;
-        padding:18px;
+      /* Garante a repetição do cabeçalho da tabela no topo de cada página */
+      .pdf-table thead {
+        display: table-header-group !important;
       }
 
-      /* remove qualquer coisa do modal */
-      .modalWrap, .overlay { display:none !important; }
+      /* Evita cortar uma linha no meio entre páginas */
+      .pdf-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Oculta modais e overlays */
+      .modalWrap, .overlay { display: none !important; }
     }
   </style>
 </head>
@@ -817,15 +828,6 @@
       return Number.isFinite(n) ? Math.round((n + Number.EPSILON)*100)/100 : null;
     }
 
-    /**
-     * FIX IMPORTANTE:
-     * - NÃO separar por vírgula, porque a vírgula é decimal (59,99)
-     * - Aceita:
-     *   0227 59,99
-     *   0227;59,99
-     *   0227\t59,99
-     * - Aceita "0227,59.99" SOMENTE se decimal for ponto (caso raro)
-     */
     function parseItemsFromTextarea(text){
       const lines = String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
       const out = [];
@@ -834,7 +836,6 @@
         let ref = "";
         let priceStr = "";
 
-        // 1) separador ;
         if (line.includes(";")){
           const parts = line.split(";").map(x=>x.trim()).filter(Boolean);
           if (parts.length >= 2){
@@ -843,7 +844,6 @@
           }
         }
 
-        // 2) separador por espaço(s) (RECOMENDADO)
         if (!ref){
           const m = line.match(/^(\S+)\s+(.+)$/);
           if (m){
@@ -852,7 +852,6 @@
           }
         }
 
-        // 3) separador por vírgula SÓ se preço vier com ponto decimal (ex: 89.99)
         if (!ref){
           const m2 = line.match(/^(\S+)\s*,\s*(\d+(?:\.\d{1,2})?)$/);
           if (m2){
